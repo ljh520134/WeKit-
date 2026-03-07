@@ -1,6 +1,5 @@
 package moe.ouom.wekit.hooks.items.chat
 
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -12,6 +11,7 @@ import com.highcapable.kavaref.KavaRef.Companion.asResolver
 import moe.ouom.wekit.core.model.BaseSwitchFunctionHookItem
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import moe.ouom.wekit.hooks.sdk.ui.WeChatMessageContextMenuApi
+import moe.ouom.wekit.ui.content.AlertDialogContent
 import moe.ouom.wekit.ui.utils.showComposeDialog
 import moe.ouom.wekit.utils.common.ModuleRes
 
@@ -39,11 +39,10 @@ object ModifyTextMessageDisplay : BaseSwitchFunctionHookItem(),
                 lazy { ModuleRes.getDrawable("edit_24px") },
                 { msgInfo -> msgInfo.isText }
             ) { view, _, _ ->
-                showComposeDialog(view.context) { onDismiss ->
+                showComposeDialog(view.context, true) { onDismiss ->
                     var input by remember { mutableStateOf("") } // TODO: figure out how to find initial value
 
-                    AlertDialog(
-                        onDismissRequest = onDismiss,
+                    AlertDialogContent(
                         title = { Text("修改消息显示") },
                         text = {
                             TextField(

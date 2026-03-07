@@ -47,6 +47,7 @@ import moe.ouom.wekit.core.dsl.dexMethod
 import moe.ouom.wekit.core.model.BaseClickableFunctionHookItem
 import moe.ouom.wekit.dexkit.intf.IDexFind
 import moe.ouom.wekit.hooks.core.annotation.HookItem
+import moe.ouom.wekit.ui.content.AlertDialogContent
 import moe.ouom.wekit.ui.utils.showComposeDialog
 import moe.ouom.wekit.utils.common.ToastUtils
 import moe.ouom.wekit.utils.log.WeLogger
@@ -172,7 +173,7 @@ object FeatureFlagManager : BaseClickableFunctionHookItem(), IDexFind {
 
     @OptIn(ExperimentalMaterial3ExpressiveApi::class)
     override fun onClick(context: Context) {
-        showComposeDialog(context) { onDismiss ->
+        showComposeDialog(context, true) { onDismiss ->
             var isLoading by remember { mutableStateOf(true) }
             var featureFlagClasses by remember { mutableStateOf<List<String>>(emptyList()) }
             // 1. 搜索状态
@@ -205,8 +206,7 @@ object FeatureFlagManager : BaseClickableFunctionHookItem(), IDexFind {
                 }
             }
 
-            AlertDialog(
-                onDismissRequest = onDismiss,
+            AlertDialogContent(
                 title = { Text("灰度测试管理器") },
                 text = {
                     Column(

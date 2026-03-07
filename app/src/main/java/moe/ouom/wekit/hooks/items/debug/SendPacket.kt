@@ -4,7 +4,6 @@ import android.content.Context
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -18,6 +17,7 @@ import dev.ujhhgtg.nameof.nameof
 import moe.ouom.wekit.core.model.BaseClickableFunctionHookItem
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import moe.ouom.wekit.hooks.sdk.protocol.WePkgHelper
+import moe.ouom.wekit.ui.content.AlertDialogContent
 import moe.ouom.wekit.ui.utils.showComposeDialog
 import moe.ouom.wekit.utils.common.ToastUtils
 import moe.ouom.wekit.utils.log.WeLogger
@@ -27,15 +27,14 @@ object SendPacket : BaseClickableFunctionHookItem() {
     private val TAG = nameof(SendPacket)
 
     override fun onClick(context: Context) {
-        showComposeDialog(context) { onDismiss ->
+        showComposeDialog(context, true) { onDismiss ->
             var uri by remember { mutableStateOf("/cgi-bin/micromsg-bin/oplog") }
             var cmdIdStr by remember { mutableStateOf("681") }
             var funcIdStr by remember { mutableStateOf("0") }
             var routeIdStr by remember { mutableStateOf("0") }
             var jsonPayloadStr by remember { mutableStateOf("{}") }
 
-            AlertDialog(
-                onDismissRequest = onDismiss,
+            AlertDialogContent(
                 title = { Text("发包调试") },
                 text = {
                     Column {
@@ -91,9 +90,8 @@ object SendPacket : BaseClickableFunctionHookItem() {
                         ) {
                             onSuccess { json, byteArray ->
                                 WeLogger.i(TAG, "success: $json")
-                                showComposeDialog(context) { onDismiss ->
-                                    AlertDialog(
-                                        onDismissRequest = onDismiss,
+                                showComposeDialog(context, true) { onDismiss ->
+                                    AlertDialogContent(
                                         title = { Text("发送成功, 响应结果:") },
                                         text = { Text("json: $json\n\nbyteArray: ${byteArray?.size ?: 0} 字节") },
                                         confirmButton = {
@@ -104,9 +102,8 @@ object SendPacket : BaseClickableFunctionHookItem() {
                             }
                             onFail { type, code, msg ->
                                 WeLogger.e(TAG, "失败: $type, $code, $msg")
-                                showComposeDialog(context) { onDismiss ->
-                                    AlertDialog(
-                                        onDismissRequest = onDismiss,
+                                showComposeDialog(context, true) { onDismiss ->
+                                    AlertDialogContent(
                                         title = { Text("发送失败, 响应结果:") },
                                         text = { Text("type: $type, code: $code, msg: $msg") },
                                         confirmButton = {

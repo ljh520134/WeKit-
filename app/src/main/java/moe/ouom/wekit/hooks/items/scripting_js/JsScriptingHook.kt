@@ -31,7 +31,7 @@ import moe.ouom.wekit.hooks.core.annotation.HookItem
 import moe.ouom.wekit.hooks.item.scripting_js.EmbeddedBuiltinJs
 import moe.ouom.wekit.hooks.sdk.base.WeDatabaseListenerApi
 import moe.ouom.wekit.hooks.sdk.protocol.intf.IWePkgInterceptor
-import moe.ouom.wekit.ui.content.BaseHooksSettingsDialogContent
+import moe.ouom.wekit.ui.content.AlertDialogContent
 import moe.ouom.wekit.ui.utils.showComposeDialog
 import moe.ouom.wekit.utils.WeProtoData
 import moe.ouom.wekit.utils.log.WeLogger
@@ -76,10 +76,69 @@ object JsScriptingHook : BaseClickableFunctionHookItem(),
 
     // --- ui ---
     override fun onClick(context: Context) {
-        showComposeDialog(context) { onDismiss ->
-            BaseHooksSettingsDialogContent("管理规则", onDismiss) {
-                AutomationSettingsDialogContent(rules)
-            }
+        showComposeDialog(context, true) {
+            AlertDialogContent(
+                title = { Text("管理规则") },
+                text = {
+                var snapshot by remember { mutableStateOf(rules.toList()) }
+                var showAddDialog by remember { mutableStateOf(false) }
+
+                fun refresh() {
+                    snapshot = rules.toList()
+                }
+
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text("规则列表 (${snapshot.size})", style = MaterialTheme.typography.titleSmall)
+                        TextButton(onClick = { showAddDialog = true }) { Text("+ 添加") }
+                    }
+
+                    Spacer(Modifier.height(8.dp))
+
+                    if (snapshot.isEmpty()) {
+                        Text(
+                            "暂无规则",
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    } else {
+                        Column(modifier = Modifier.fillMaxWidth()) {
+                            snapshot.forEach { rule ->
+                                AutomationRuleCard(
+                                    rule = rule,
+                                    onToggle = {
+                                        val idx = rules.indexOfFirst { it.id == rule.id }
+                                        if (idx != -1) {
+                                            rules[idx] = rule.copy(enabled = !rule.enabled)
+                                        }
+                                        refresh()
+                                    },
+                                    onDelete = {
+                                        rules.removeAll { it.id == rule.id }
+                                        refresh()
+                                    }
+                                )
+                                Spacer(Modifier.height(6.dp))
+                            }
+                        }
+                    }
+                }
+
+                if (showAddDialog) {
+                    AddAutomationRuleDialog(
+                        onConfirm = { newRule ->
+                            rules.add(newRule)
+                            refresh()
+                            showAddDialog = false
+                        },
+                        onDismiss = { showAddDialog = false }
+                    )
+                }
+            })
         }
     }
 
@@ -165,64 +224,7 @@ object JsScriptingHook : BaseClickableFunctionHookItem(),
 
 @Composable
 private fun AutomationSettingsDialogContent(rules: MutableList<JsScript>) {
-    var snapshot by remember { mutableStateOf(rules.toList()) }
-    var showAddDialog by remember { mutableStateOf(false) }
 
-    fun refresh() {
-        snapshot = rules.toList()
-    }
-
-    Column(modifier = Modifier.fillMaxWidth()) {
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.SpaceBetween,
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Text("规则列表 (${snapshot.size})", style = MaterialTheme.typography.titleSmall)
-            TextButton(onClick = { showAddDialog = true }) { Text("+ 添加") }
-        }
-
-        Spacer(Modifier.height(8.dp))
-
-        if (snapshot.isEmpty()) {
-            Text(
-                "暂无规则",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
-        } else {
-            Column(modifier = Modifier.fillMaxWidth()) {
-                snapshot.forEach { rule ->
-                    AutomationRuleCard(
-                        rule = rule,
-                        onToggle = {
-                            val idx = rules.indexOfFirst { it.id == rule.id }
-                            if (idx != -1) {
-                                rules[idx] = rule.copy(enabled = !rule.enabled)
-                            }
-                            refresh()
-                        },
-                        onDelete = {
-                            rules.removeAll { it.id == rule.id }
-                            refresh()
-                        }
-                    )
-                    Spacer(Modifier.height(6.dp))
-                }
-            }
-        }
-    }
-
-    if (showAddDialog) {
-        AddAutomationRuleDialog(
-            onConfirm = { newRule ->
-                rules.add(newRule)
-                refresh()
-                showAddDialog = false
-            },
-            onDismiss = { showAddDialog = false }
-        )
-    }
 }
 
 @Composable

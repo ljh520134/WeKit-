@@ -2,11 +2,11 @@ package moe.ouom.wekit.hooks.items.chat
 
 import android.annotation.SuppressLint
 import android.content.Context
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import moe.ouom.wekit.core.model.BaseSwitchFunctionHookItem
 import moe.ouom.wekit.hooks.core.annotation.HookItem
+import moe.ouom.wekit.ui.content.AlertDialogContent
 import moe.ouom.wekit.ui.utils.showComposeDialog
 
 @SuppressLint("DiscouragedApi")
@@ -16,9 +16,8 @@ object SendCustomAppMessage : BaseSwitchFunctionHookItem() {
 
     override fun onBeforeToggle(newState: Boolean, context: Context): Boolean {
         if (newState) {
-            showComposeDialog(context = context) { onDismiss ->
-                AlertDialog(
-                    onDismissRequest = { onDismiss() },
+            showComposeDialog(context, true) { onDismiss ->
+                AlertDialogContent(
                     title = { Text(text = "警告") },
                     text = { Text(text = "此功能可能导致账号异常, 确定要启用吗?") },
                     confirmButton = {

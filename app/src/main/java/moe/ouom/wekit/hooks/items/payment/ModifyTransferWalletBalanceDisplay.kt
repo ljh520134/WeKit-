@@ -13,13 +13,11 @@ import moe.ouom.wekit.utils.log.WeLogger
 import org.json.JSONArray
 import org.json.JSONObject
 
-@HookItem(path = "红包与支付/修改转账时显示的余额", desc = "点击配置")
-object ModifyCashTransferAmountDisplay : BaseClickableFunctionHookItem(), IWePkgInterceptor {
+@HookItem(path = "红包与支付/修改转账显示余额", desc = "点击配置")
+object ModifyTransferWalletBalanceDisplay : BaseClickableFunctionHookItem(), IWePkgInterceptor {
 
     private const val KEY_CFT_BALANCE = "cashier_cft_balance"
     private const val KEY_LQT_BALANCE = "cashier_lqt_balance"
-
-    // 默认值
     private const val DEFAULT_CFT = "¥999,999.00"
     private const val DEFAULT_LQT = "¥8,888,888.88"
 

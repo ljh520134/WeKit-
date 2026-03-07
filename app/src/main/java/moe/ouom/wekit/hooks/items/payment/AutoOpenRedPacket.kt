@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.content.ContentValues
 import android.content.Context
 import android.text.InputType
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.core.net.toUri
@@ -18,6 +17,7 @@ import moe.ouom.wekit.dexkit.intf.IDexFind
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import moe.ouom.wekit.hooks.sdk.base.WeDatabaseListenerApi
 import moe.ouom.wekit.hooks.sdk.base.WeNetworkApi
+import moe.ouom.wekit.ui.content.AlertDialogContent
 import moe.ouom.wekit.ui.content.BaseRikkaDialog
 import moe.ouom.wekit.ui.utils.showComposeDialog
 import moe.ouom.wekit.utils.log.WeLogger
@@ -315,9 +315,8 @@ object AutoOpenRedPacket : BaseClickableFunctionHookItem(), WeDatabaseListenerAp
 
     override fun onBeforeToggle(newState: Boolean, context: Context): Boolean {
         if (newState) {
-            showComposeDialog(context = context) { onDismiss ->
-                AlertDialog(
-                    onDismissRequest = { onDismiss() },
+            showComposeDialog(context, true) { onDismiss ->
+                AlertDialogContent(
                     title = { Text(text = "警告") },
                     text = { Text(text = "此功能可能导致账号异常, 确定要启用吗?") },
                     confirmButton = {

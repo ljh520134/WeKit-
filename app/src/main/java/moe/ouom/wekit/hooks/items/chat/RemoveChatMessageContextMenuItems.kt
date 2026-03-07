@@ -2,7 +2,6 @@ package moe.ouom.wekit.hooks.items.chat
 
 import android.content.Context
 import android.view.MenuItem
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextField
@@ -17,6 +16,7 @@ import moe.ouom.wekit.core.dsl.dexMethod
 import moe.ouom.wekit.core.model.BaseClickableFunctionHookItem
 import moe.ouom.wekit.dexkit.intf.IDexFind
 import moe.ouom.wekit.hooks.core.annotation.HookItem
+import moe.ouom.wekit.ui.content.AlertDialogContent
 import moe.ouom.wekit.ui.utils.showComposeDialog
 import org.luckypray.dexkit.DexKitBridge
 
@@ -109,7 +109,7 @@ object RemoveChatMessageContextMenuItems : BaseClickableFunctionHookItem(), IDex
     }
 
     override fun onClick(context: Context) {
-        showComposeDialog(context) { onDismiss ->
+        showComposeDialog(context, true) { onDismiss ->
             var removedNames by remember {
                 mutableStateOf(
                     config.getStringPrek(
@@ -118,8 +118,7 @@ object RemoveChatMessageContextMenuItems : BaseClickableFunctionHookItem(), IDex
                     )
                 )
             }
-            AlertDialog(
-                onDismissRequest = onDismiss,
+            AlertDialogContent(
                 title = { Text("移除消息菜单项") },
                 text = {
                     TextField(

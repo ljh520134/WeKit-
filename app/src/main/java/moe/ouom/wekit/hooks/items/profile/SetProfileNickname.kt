@@ -12,6 +12,7 @@ import androidx.compose.runtime.setValue
 import moe.ouom.wekit.core.model.BaseClickableFunctionHookItem
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import moe.ouom.wekit.hooks.sdk.protocol.WePkgHelper
+import moe.ouom.wekit.ui.content.AlertDialogContent
 import moe.ouom.wekit.ui.utils.showComposeDialog
 import moe.ouom.wekit.utils.log.WeLogger
 
@@ -19,11 +20,10 @@ import moe.ouom.wekit.utils.log.WeLogger
 object SetProfileNickname : BaseClickableFunctionHookItem() {
 
     override fun onClick(context: Context) {
-        showComposeDialog(context) { onDismiss ->
+        showComposeDialog(context, true) { onDismiss ->
             var nickname by remember { mutableStateOf("") }
 
-            AlertDialog(
-                onDismissRequest = onDismiss,
+            AlertDialogContent(
                 title = { Text("设置微信昵称") },
                 text = {
                     TextField(

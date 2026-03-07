@@ -136,7 +136,7 @@ fun DexFinderContent(
         scope.launch {
             try {
                 val dexKit = withContext(Dispatchers.IO) { DexKitBridge.create(appInfo.sourceDir) }
-                try {
+                dexKit.use { dexKit ->
                     val progressChannel = Channel<ScanProgress>(Channel.UNLIMITED)
 
                     // progress consumer on Main
@@ -163,8 +163,6 @@ fun DexFinderContent(
 
                     val failed = results.filterIsInstance<ScanResult.Failed>()
                     phase = DialogPhase.Done(failed)
-                } finally {
-                    dexKit.close()
                 }
             } catch (e: Exception) {
                 WeLogger.e("[DexFinderDialog] Scanning failed", e)
@@ -192,16 +190,11 @@ fun DexFinderContent(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Text(
-                        text = "DEX 缓存更新",
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
+                Text(
+                    text = "DEX 缓存更新",
+                    style = MaterialTheme.typography.headlineSmall,
+                    fontWeight = FontWeight.Bold
+                )
 
                 // Badge showing count
                 if (phase is DialogPhase.Idle || phase is DialogPhase.Scanning) {

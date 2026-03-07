@@ -23,7 +23,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Language
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -44,6 +43,7 @@ import moe.ouom.wekit.core.model.BaseSwitchFunctionHookItem
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import moe.ouom.wekit.hooks.sdk.ui.WeStartActivityApi
 import moe.ouom.wekit.host.HostInfo
+import moe.ouom.wekit.ui.content.AlertDialogContent
 import moe.ouom.wekit.ui.utils.showComposeDialog
 import moe.ouom.wekit.utils.common.ToastUtils
 import moe.ouom.wekit.utils.log.WeLogger
@@ -114,8 +114,7 @@ object LinkExternalAppJump : BaseSwitchFunctionHookItem(),
 
         val context = param.thisObject as Context
         showComposeDialog(context) { onDismiss ->
-            AlertDialog(
-                onDismissRequest = onDismiss,
+            AlertDialogContent(
                 title = { Text("选择打开方式") },
                 text = {
                     LazyColumn {
