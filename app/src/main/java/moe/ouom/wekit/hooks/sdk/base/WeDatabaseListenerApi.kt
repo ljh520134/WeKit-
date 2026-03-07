@@ -3,6 +3,7 @@ package moe.ouom.wekit.hooks.sdk.base
 import android.annotation.SuppressLint
 import android.content.ContentValues
 import de.robv.android.xposed.XposedHelpers
+import dev.ujhhgtg.nameof.nameof
 import moe.ouom.wekit.config.WeConfig
 import moe.ouom.wekit.constants.Constants
 import moe.ouom.wekit.constants.WeChatVersion
@@ -29,7 +30,7 @@ object WeDatabaseListenerApi : ApiHookItem() {
         fun onQuery(sql: String): String?
     }
 
-    private const val TAG = "WeDatabaseApi"
+    private val TAG = nameof(WeDatabaseApi)
 
     private val insertListeners = CopyOnWriteArrayList<IInsertListener>()
     private val updateListeners = CopyOnWriteArrayList<IUpdateListener>()

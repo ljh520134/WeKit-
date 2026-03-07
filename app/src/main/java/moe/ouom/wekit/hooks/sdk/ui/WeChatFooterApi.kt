@@ -5,6 +5,7 @@ import android.util.AttributeSet
 import android.view.View
 import android.widget.Button
 import de.robv.android.xposed.XposedHelpers
+import dev.ujhhgtg.nameof.nameof
 import moe.ouom.wekit.core.model.ApiHookItem
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import moe.ouom.wekit.hooks.items.chat.SendCustomAppMessage
@@ -16,7 +17,7 @@ import moe.ouom.wekit.utils.log.WeLogger
 @HookItem(path = "API/聊天界面底栏扩展", desc = "为聊天界面底栏的发送按钮提供长按事件监听功能")
 object WeChatFooterApi : ApiHookItem() {
 
-    private const val TAG = "WeChatFooterApi"
+    private val TAG = nameof(WeChatFooterApi)
     private const val CLASS_CHAT_FOOTER = "com.tencent.mm.pluginsdk.ui.chat.ChatFooter"
     private const val FIELD_TO_USER = "wekit_cache_toUser"
 

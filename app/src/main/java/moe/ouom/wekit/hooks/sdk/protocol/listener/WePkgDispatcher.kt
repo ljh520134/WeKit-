@@ -2,6 +2,7 @@ package moe.ouom.wekit.hooks.sdk.protocol.listener
 
 import com.highcapable.kavaref.KavaRef.Companion.asResolver
 import de.robv.android.xposed.XposedHelpers
+import dev.ujhhgtg.nameof.nameof
 import moe.ouom.wekit.core.dsl.dexClass
 import moe.ouom.wekit.core.model.ApiHookItem
 import moe.ouom.wekit.dexkit.intf.IDexFind
@@ -17,7 +18,7 @@ import java.util.concurrent.ConcurrentHashMap
 @HookItem(path = "API/数据包拦截与篡改服务", desc = "响应数据包拦截与篡改")
 object WePkgDispatcher : ApiHookItem(), IDexFind {
 
-    private const val TAG = "WePkgDispatcher"
+    private val TAG = nameof(WePkgDispatcher)
     private val classOnGYNetEnd by dexClass()
 
     // 缓存最近 10 条记录，避免因脚本引起的无限递归

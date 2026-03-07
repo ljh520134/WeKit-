@@ -9,6 +9,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.core.net.toUri
 import de.robv.android.xposed.XposedHelpers
+import dev.ujhhgtg.nameof.nameof
 import moe.ouom.wekit.config.WeConfig
 import moe.ouom.wekit.core.dsl.dexClass
 import moe.ouom.wekit.core.dsl.dexMethod
@@ -30,7 +31,7 @@ import kotlin.random.Random
 object AutoOpenRedPacket : BaseClickableFunctionHookItem(), WeDatabaseListenerApi.IInsertListener,
     IDexFind {
 
-    private const val TAG = "AutoOpenRedPacket"
+    private val TAG = nameof(AutoOpenRedPacket)
 
     private val classReceiveLuckyMoney by dexClass()
     private val classOpenLuckyMoney by dexClass()

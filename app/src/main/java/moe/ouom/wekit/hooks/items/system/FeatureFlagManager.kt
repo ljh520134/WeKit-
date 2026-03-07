@@ -37,6 +37,7 @@ import androidx.compose.ui.unit.dp
 import com.highcapable.kavaref.KavaRef.Companion.asResolver
 import com.highcapable.kavaref.extension.createInstance
 import com.highcapable.kavaref.extension.toClass
+import dev.ujhhgtg.nameof.nameof
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import moe.ouom.wekit.config.WeConfig
@@ -55,7 +56,7 @@ import java.lang.reflect.Modifier
 @HookItem(path = "系统与隐私/灰度测试管理器", desc = "覆盖应用灰度测试 (Feature Flag) 的值")
 object FeatureFlagManager : BaseClickableFunctionHookItem(), IDexFind {
 
-    private const val TAG = "FeatureFlagManager"
+    private val TAG = nameof(FeatureFlagManager)
 
     private val config = WeConfig.getDefaultConfig()
     private const val KEY_HOOKED_FEATURE_FLAGS = Constants.PrekXXX + "hooked_feature_flags"

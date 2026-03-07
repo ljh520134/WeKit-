@@ -6,6 +6,7 @@ import android.provider.MediaStore
 import com.highcapable.kavaref.KavaRef.Companion.asResolver
 import com.highcapable.kavaref.condition.type.Modifiers
 import com.highcapable.kavaref.extension.toClass
+import dev.ujhhgtg.nameof.nameof
 import moe.ouom.wekit.core.dsl.dexClass
 import moe.ouom.wekit.core.model.BaseSwitchFunctionHookItem
 import moe.ouom.wekit.dexkit.intf.IDexFind
@@ -22,7 +23,7 @@ import org.luckypray.dexkit.DexKitBridge
 object SaveStickersToLocalStorage : BaseSwitchFunctionHookItem(), IDexFind,
     WeChatMessageContextMenuApi.IMenuItemsProvider {
 
-    private const val TAG = "SaveStickersToLocalStorage"
+    private val TAG = nameof(SaveStickersToLocalStorage)
 
     private val classEmojiFileEncryptMgr by dexClass()
 

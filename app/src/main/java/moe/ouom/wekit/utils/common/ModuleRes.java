@@ -5,9 +5,6 @@ import android.content.Context;
 import android.content.pm.PackageManager;
 import android.content.res.Resources;
 import android.graphics.drawable.Drawable;
-import android.view.LayoutInflater;
-import android.view.View;
-import android.view.ViewGroup;
 
 import moe.ouom.wekit.utils.log.WeLogger;
 
@@ -84,6 +81,7 @@ public class ModuleRes {
         return id == 0 ? 0 : sResources.getColor(id, null);
     }
 
+    @SuppressLint("UseCompatLoadingForDrawables")
     public static Drawable getDrawable(String resName) {
         var id = getId(resName, "drawable");
         // 尝试去 mipmap 找
@@ -94,21 +92,5 @@ public class ModuleRes {
     public static float getDimen(String resName) {
         var id = getId(resName, "dimen");
         return id == 0 ? 0 : sResources.getDimension(id);
-    }
-
-    /**
-     * 加载模块内的 XML 布局
-     *
-     * @param layoutName 布局文件名 (不带 .xml)
-     * @param root       父布局 (可以为 null)
-     * @return Inflate 出来的 View
-     */
-    public static View inflate(String layoutName, ViewGroup root) {
-        if (sModuleContext == null) return null;
-        var id = getId(layoutName, "layout");
-        if (id == 0) return null;
-
-        // 使用模块的 Context 创建 LayoutInflater，这样才能解析 XML 内部引用的模块资源 (@drawable/xxx)
-        return LayoutInflater.from(sModuleContext).inflate(id, root, false);
     }
 }

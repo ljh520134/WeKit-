@@ -39,6 +39,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.graphics.drawable.toBitmap
 import androidx.core.net.toUri
 import de.robv.android.xposed.XC_MethodHook
+import dev.ujhhgtg.nameof.nameof
 import moe.ouom.wekit.core.model.BaseSwitchFunctionHookItem
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import moe.ouom.wekit.hooks.sdk.ui.WeStartActivityApi
@@ -54,7 +55,7 @@ import moe.ouom.wekit.utils.log.WeLogger
 object LinkExternalAppJump : BaseSwitchFunctionHookItem(),
     WeStartActivityApi.IStartActivityListener {
 
-    private const val TAG = "ExternalBrowsableAppJump"
+    private val TAG = nameof(LinkExternalAppJump)
 
     private val WECHAT_INTERNAL_HOSTS = setOf(
         "weixin.com",

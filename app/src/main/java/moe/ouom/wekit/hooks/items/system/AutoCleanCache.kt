@@ -2,6 +2,7 @@ package moe.ouom.wekit.hooks.items.system
 
 import android.content.Context
 import android.widget.Toast
+import dev.ujhhgtg.nameof.nameof
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -25,7 +26,7 @@ import kotlin.io.path.exists
 @HookItem(path = "系统与隐私/清理缓存垃圾", desc = "自动或手动清理应用的缓存")
 object AutoCleanCache : BaseClickableFunctionHookItem() {
 
-    private const val TAG = "AutoCleanCache"
+    private val TAG = nameof(AutoCleanCache)
     private const val CLEAN_INTERVAL = 30 * 60 * 1000L // 每 30 分钟清理一次
 
     private var cleanJob: Job? = null

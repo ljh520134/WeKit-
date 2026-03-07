@@ -2,6 +2,7 @@ package moe.ouom.wekit.hooks.items.payment
 
 import android.content.Intent
 import de.robv.android.xposed.XC_MethodHook
+import dev.ujhhgtg.nameof.nameof
 import moe.ouom.wekit.core.model.BaseSwitchFunctionHookItem
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import moe.ouom.wekit.hooks.sdk.ui.WeStartActivityApi
@@ -11,7 +12,7 @@ import moe.ouom.wekit.utils.log.WeLogger
 object AllowPrivateChatReceiveOutgoingRedPackets : BaseSwitchFunctionHookItem(),
     WeStartActivityApi.IStartActivityListener {
 
-    private const val TAG = "AllowPrivateChatReceiveOutgoingRedPackets"
+    private val TAG = nameof(AllowPrivateChatReceiveOutgoingRedPackets)
 
     override fun entry(classLoader: ClassLoader) {
         WeStartActivityApi.addListener(this)

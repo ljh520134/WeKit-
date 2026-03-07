@@ -3,6 +3,7 @@ package moe.ouom.wekit.hooks.sdk.ui
 import android.view.View
 import com.highcapable.kavaref.KavaRef.Companion.asResolver
 import de.robv.android.xposed.XC_MethodHook
+import dev.ujhhgtg.nameof.nameof
 import moe.ouom.wekit.core.dsl.dexMethod
 import moe.ouom.wekit.core.model.ApiHookItem
 import moe.ouom.wekit.dexkit.intf.IDexFind
@@ -42,7 +43,7 @@ object WeChatMessageViewApi : ApiHookItem(), IDexFind {
         )
     }
 
-    private const val TAG = "WeChatItemCreateViewListenerApi"
+    private val TAG = nameof(WeChatMessageViewApi)
 
     private val methodChatItemOnBindView by dexMethod()
 

@@ -3,6 +3,7 @@ import com.android.build.gradle.internal.api.ApkVariantOutputImpl
 import org.gradle.internal.extensions.core.serviceOf
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
+import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
 import java.io.ByteArrayOutputStream
 import java.security.MessageDigest
 import java.text.SimpleDateFormat
@@ -427,4 +428,17 @@ dependencies {
 
     compileOnly(libs.lombok)
     annotationProcessor(libs.lombok)
+
+    implementation(project(":libs:external:nameof-kt:api"))
+}
+
+evaluationDependsOn(":libs:external:nameof-kt:plugin")
+tasks.withType<KotlinJvmCompile>().configureEach {
+    val pluginJarTask = project(":libs:external:nameof-kt:plugin").tasks.named<org.gradle.jvm.tasks.Jar>("jar")
+    dependsOn(pluginJarTask)
+
+    compilerOptions {
+        val pluginJarPath = pluginJarTask.get().archiveFile.get().asFile.absolutePath
+        freeCompilerArgs.add("-Xplugin=$pluginJarPath")
+    }
 }

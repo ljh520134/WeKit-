@@ -10,7 +10,7 @@ import java.nio.charset.StandardCharsets
  */
 object ProtoJsonBuilder {
 
-    private const val WIRETYPE_VARINT = 0
+    private const val WIRETYPE_VAR_INT = 0
     private const val WIRETYPE_LENGTH_DELIMITED = 2
 
     fun makeBytes(json: JSONObject): ByteArray {
@@ -47,8 +47,8 @@ object ProtoJsonBuilder {
     }
 
     private fun writeVarintTag(os: ByteArrayOutputStream, tag: Int, value: Long) {
-        writeRawVarint32(os, (tag shl 3) or WIRETYPE_VARINT)
-        writeRawVarint64(os, value)
+        writeRawVarInt32(os, (tag shl 3) or WIRETYPE_VAR_INT)
+        writeRawVarInt64(os, value)
     }
 
     private fun writeStringTag(os: ByteArrayOutputStream, tag: Int, value: String) {
@@ -57,12 +57,12 @@ object ProtoJsonBuilder {
     }
 
     private fun writeLengthDelimitedTag(os: ByteArrayOutputStream, tag: Int, bytes: ByteArray) {
-        writeRawVarint32(os, (tag shl 3) or WIRETYPE_LENGTH_DELIMITED)
-        writeRawVarint32(os, bytes.size)
+        writeRawVarInt32(os, (tag shl 3) or WIRETYPE_LENGTH_DELIMITED)
+        writeRawVarInt32(os, bytes.size)
         os.write(bytes)
     }
 
-    private fun writeRawVarint32(os: ByteArrayOutputStream, value: Int) {
+    private fun writeRawVarInt32(os: ByteArrayOutputStream, value: Int) {
         var v = value
         while (true) {
             if ((v and 0x7F.inv()) == 0) {
@@ -75,7 +75,7 @@ object ProtoJsonBuilder {
         }
     }
 
-    private fun writeRawVarint64(os: ByteArrayOutputStream, value: Long) {
+    private fun writeRawVarInt64(os: ByteArrayOutputStream, value: Long) {
         var v = value
         while (true) {
             if ((v and 0x7F.inv()) == 0L) {

@@ -4,6 +4,7 @@ import android.os.Handler
 import android.os.Looper
 import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
+import dev.ujhhgtg.nameof.nameof
 import moe.ouom.wekit.hooks.sdk.base.WeMessageApi
 import moe.ouom.wekit.hooks.sdk.protocol.WeApi
 import moe.ouom.wekit.utils.io.PathUtils
@@ -37,8 +38,7 @@ import kotlin.io.path.readText
 import kotlin.io.path.writeText
 
 object JsApiExposer {
-    private const val TAG = "JsApiExposer"
-    private const val TAG_WECHAT_API = "JsApiExposer.WeApi"
+    private val TAG = nameof(JsApiExposer)
     private const val TAG_LOG_API = "JsApiExposer.LogApi"
     private const val TAG_HTTP_API = "JsApiExposer.HttpApi"
 

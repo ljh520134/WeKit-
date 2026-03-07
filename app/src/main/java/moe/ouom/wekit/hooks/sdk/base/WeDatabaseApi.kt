@@ -3,6 +3,7 @@ package moe.ouom.wekit.hooks.sdk.base
 import android.annotation.SuppressLint
 import android.database.Cursor
 import com.highcapable.kavaref.KavaRef.Companion.asResolver
+import dev.ujhhgtg.nameof.nameof
 import moe.ouom.wekit.core.dsl.dexClass
 import moe.ouom.wekit.core.dsl.dexMethod
 import moe.ouom.wekit.core.model.ApiHookItem
@@ -35,7 +36,7 @@ object WeDatabaseApi : ApiHookItem(), IDexFind {
     var execQueryMethod: Method? = null
     var execStatementMethod: Method? = null
 
-    private const val TAG = "WeDatabaseApi"
+    private val TAG = nameof(WeDatabaseApi)
 
     val coreStorage by lazy {
         classMmKernel.clazz.asResolver()

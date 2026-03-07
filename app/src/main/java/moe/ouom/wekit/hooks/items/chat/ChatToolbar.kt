@@ -31,6 +31,7 @@ import androidx.compose.ui.platform.ComposeView
 import androidx.compose.ui.unit.dp
 import com.highcapable.kavaref.KavaRef.Companion.asResolver
 import com.highcapable.kavaref.extension.toClass
+import dev.ujhhgtg.nameof.nameof
 import moe.ouom.wekit.core.dsl.dexMethod
 import moe.ouom.wekit.core.model.BaseSwitchFunctionHookItem
 import moe.ouom.wekit.dexkit.intf.IDexFind
@@ -46,7 +47,7 @@ import org.luckypray.dexkit.DexKitBridge
 @HookItem(path = "聊天/聊天工具栏", desc = "在输入框上方添加工具栏")
 object ChatToolbar : BaseSwitchFunctionHookItem(), IDexFind {
 
-    private const val TAG = "ChatToolbar"
+    private val TAG = nameof(ChatToolbar)
     private const val VIEW_TAG = "wekit_chat_toolbar"
 
     private val methodAppPanelInitAppGrid by dexMethod()

@@ -8,4 +8,14 @@
       <module name="wekit.libs.util.libxposed.api" target="21" />
     </bytecodeTargetLevel>
   </component>
+  <component name="JavacSettings">
+    <option name="ADDITIONAL_OPTIONS_OVERRIDE">
+      <module name="wekit.libs.external.nameof-kt.plugin" options="-proc:none" />
+      <module name="wekit.libs.external.nameof-kt.plugin.main" options="-proc:none" />
+      <module name="wekit.libs.external.nameof-kt.plugin.test" options="-proc:none" />
+      <module name="wekit.libs.external.nameofkt.plugin" options="-proc:none" />
+      <module name="wekit.libs.external.nameofkt.plugin.main" options="-proc:none" />
+      <module name="wekit.libs.external.nameofkt.plugin.test" options="-proc:none" />
+    </option>
+  </component>
 </project>

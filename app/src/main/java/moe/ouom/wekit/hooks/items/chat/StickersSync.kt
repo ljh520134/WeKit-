@@ -20,6 +20,7 @@ import com.highcapable.kavaref.KavaRef.Companion.asResolver
 import com.highcapable.kavaref.condition.type.Modifiers
 import com.highcapable.kavaref.extension.createInstance
 import com.highcapable.kavaref.extension.toClass
+import dev.ujhhgtg.nameof.nameof
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
 import kotlinx.coroutines.awaitAll
@@ -58,7 +59,7 @@ import kotlin.io.path.writeText
 )
 object StickersSync : BaseClickableFunctionHookItem(), IDexFind {
 
-    private const val TAG = "StickersSync"
+    private val TAG = nameof(StickersSync)
     private const val STICKER_PACK_ID_PREFIX = "wekit.stickers.sync"
     private val ALLOWED_STICKER_EXTENSIONS = setOf("png", "jpg", "jpeg", "gif", "webp")
 

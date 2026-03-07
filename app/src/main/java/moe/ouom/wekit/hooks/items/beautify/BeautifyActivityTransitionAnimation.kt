@@ -7,6 +7,7 @@ import android.view.ViewGroup
 import android.view.animation.PathInterpolator
 import android.widget.FrameLayout
 import com.highcapable.kavaref.KavaRef.Companion.asResolver
+import dev.ujhhgtg.nameof.nameof
 import moe.ouom.wekit.core.model.BaseSwitchFunctionHookItem
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import moe.ouom.wekit.utils.log.WeLogger
@@ -18,7 +19,7 @@ import moe.ouom.wekit.utils.log.WeLogger
 )
 object BeautifyActivityTransitionAnimation : BaseSwitchFunctionHookItem() {
 
-    private const val TAG = "BeautifyActivityTransitionAnimation"
+    private val TAG = nameof(BeautifyActivityTransitionAnimation)
     private var width = 0
     private var height = 0
     private var x = 0f

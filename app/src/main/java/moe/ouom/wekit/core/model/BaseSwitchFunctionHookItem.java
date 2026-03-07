@@ -83,16 +83,16 @@ public abstract class BaseSwitchFunctionHookItem extends BaseHookItem {
         this.enabled = enabled;
         if (!enabled) {
             if (isLoaded) {
-                WeLogger.i("[BaseSwitchFunctionHookItem] Unloading HookItem: " + getPath());
+                WeLogger.i("Unloading BaseSwitchFunctionHookItem: " + getPath());
                 try {
                     this.unload(HybridClassLoader.getHostClassLoader());
                     isLoaded = false;
                 } catch (Throwable e) {
-                    WeLogger.e("[BaseSwitchFunctionHookItem] Unload HookItem Failed", e);
+                    WeLogger.e("Unload BaseSwitchFunctionHookItem Failed", e);
                 }
             }
         } else {
-            WeLogger.i("[BaseSwitchFunctionHookItem] Loading HookItem: " + getPath());
+            WeLogger.i("Loading BaseSwitchFunctionHookItem: " + getPath());
             this.startLoad();
             isLoaded = true;
         }

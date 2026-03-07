@@ -28,6 +28,7 @@ import androidx.lifecycle.setViewTreeLifecycleOwner
 import androidx.lifecycle.setViewTreeViewModelStoreOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import com.highcapable.kavaref.KavaRef.Companion.asResolver
+import dev.ujhhgtg.nameof.nameof
 import moe.ouom.wekit.core.model.BaseSwitchFunctionHookItem
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import moe.ouom.wekit.hooks.sdk.ui.WeMainActivityBeautifyApi
@@ -41,7 +42,7 @@ import moe.ouom.wekit.utils.log.WeLogger
 )
 object BeautifyMainScreenTabBar : BaseSwitchFunctionHookItem() {
 
-    private const val TAG = "BeautifyMainScreenTabBar"
+    private val TAG = nameof(BeautifyMainScreenTabBar)
 
     override fun entry(classLoader: ClassLoader) {
         WeMainActivityBeautifyApi.methodDoOnCreate.toDexMethod {

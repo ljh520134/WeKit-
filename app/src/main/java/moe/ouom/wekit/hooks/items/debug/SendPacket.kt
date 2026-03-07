@@ -14,6 +14,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import dev.ujhhgtg.nameof.nameof
 import moe.ouom.wekit.core.model.BaseClickableFunctionHookItem
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import moe.ouom.wekit.hooks.sdk.protocol.WePkgHelper
@@ -23,7 +24,7 @@ import moe.ouom.wekit.utils.log.WeLogger
 
 @HookItem(path = "调试/发包调试", desc = "发送自定义数据包到微信服务器")
 object SendPacket : BaseClickableFunctionHookItem() {
-    private const val TAG = "WePacketDebugger"
+    private val TAG = nameof(SendPacket)
 
     override fun onClick(context: Context) {
         showComposeDialog(context) { onDismiss ->

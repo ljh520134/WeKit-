@@ -55,6 +55,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.highcapable.kavaref.KavaRef.Companion.asResolver
+import dev.ujhhgtg.nameof.nameof
 import moe.ouom.wekit.constants.PackageConstants
 import moe.ouom.wekit.core.model.BaseSwitchFunctionHookItem
 import moe.ouom.wekit.hooks.core.annotation.HookItem
@@ -96,7 +97,7 @@ object AddMainScreenFab : BaseSwitchFunctionHookItem() {
         )
     }
 
-    private const val TAG = "AddMainScreenFab"
+    private val TAG = nameof(AddMainScreenFab)
 
     private fun startActivityByName(context: Context, className: String) {
         val intent = Intent().apply {

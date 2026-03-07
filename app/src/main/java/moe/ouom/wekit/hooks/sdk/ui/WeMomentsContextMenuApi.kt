@@ -5,6 +5,7 @@ import android.app.Activity
 import android.graphics.drawable.Drawable
 import android.view.ContextMenu
 import de.robv.android.xposed.XC_MethodHook
+import dev.ujhhgtg.nameof.nameof
 import moe.ouom.wekit.core.dsl.dexMethod
 import moe.ouom.wekit.core.model.ApiHookItem
 import moe.ouom.wekit.dexkit.intf.IDexFind
@@ -16,7 +17,7 @@ import java.lang.reflect.Modifier
 @HookItem(path = "API/朋友圈菜单增强扩展", desc = "为朋友圈消息长按菜单提供添加菜单项功能")
 object WeMomentsContextMenuApi : ApiHookItem(), IDexFind {
 
-    private const val TAG = "WeMomentsContextMenuApi"
+    private val TAG = nameof(WeMomentsContextMenuApi)
 
     interface IMenuItemsProvider {
         fun getMenuItems(): List<MenuItem>

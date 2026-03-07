@@ -5,6 +5,7 @@ import android.content.ContentValues
 import com.highcapable.kavaref.KavaRef.Companion.asResolver
 import com.highcapable.kavaref.extension.createInstance
 import de.robv.android.xposed.XposedHelpers
+import dev.ujhhgtg.nameof.nameof
 import moe.ouom.wekit.core.dsl.dexClass
 import moe.ouom.wekit.core.dsl.dexMethod
 import moe.ouom.wekit.core.model.ApiHookItem
@@ -121,7 +122,7 @@ object WeMessageApi : ApiHookItem(), IDexFind {
     private var unsafeInstance: Any? = null
     private var allocateInstanceMethod: Method? = null
 
-    private const val TAG = "WeMessageApi"
+    private val TAG = nameof(WeMessageApi)
     private const val KEY_MAP_FIELD = "dexFieldImageMetadataMap"
 
     @SuppressLint("NonUniqueDexKitData")

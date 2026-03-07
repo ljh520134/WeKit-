@@ -5,10 +5,11 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import android.widget.Toast
+import dev.ujhhgtg.nameof.nameof
 import moe.ouom.wekit.core.model.BaseSwitchFunctionHookItem
 import moe.ouom.wekit.hooks.core.annotation.HookItem
-import moe.ouom.wekit.hooks.sdk.ui.WeChatContactInfoAdapterItemHook
-import moe.ouom.wekit.hooks.sdk.ui.WeChatContactInfoAdapterItemHook.ContactInfoItem
+import moe.ouom.wekit.hooks.sdk.ui.WeChatContactDetailsApi
+import moe.ouom.wekit.hooks.sdk.ui.WeChatContactDetailsApi.ContactInfoItem
 import moe.ouom.wekit.utils.log.WeLogger
 
 @HookItem(
@@ -17,11 +18,11 @@ import moe.ouom.wekit.utils.log.WeLogger
 )
 object ShowWxIdInContactDetails : BaseSwitchFunctionHookItem() {
 
-    private const val TAG = "ShowWxIdInContactDetails"
+    private val TAG = nameof(ShowWxIdInContactDetails)
     private const val PREF_KEY = "wechat_id_display"
 
     private val initCallback =
-        WeChatContactInfoAdapterItemHook.InitContactInfoViewCallback { activity ->
+        WeChatContactDetailsApi.InitContactInfoViewCallback { activity ->
             val wechatId = try {
                 "微信 ID: ${activity.intent.getStringExtra("Contact_User") ?: "未知"}"
             } catch (e: Exception) {
@@ -37,7 +38,7 @@ object ShowWxIdInContactDetails : BaseSwitchFunctionHookItem() {
         }
 
     private val clickListener =
-        WeChatContactInfoAdapterItemHook.OnContactInfoItemClickListener { activity, key ->
+        WeChatContactDetailsApi.OnContactInfoItemClickListener { activity, key ->
             if (key == PREF_KEY) {
                 handleWeChatIdClick(activity)
                 true
@@ -48,8 +49,8 @@ object ShowWxIdInContactDetails : BaseSwitchFunctionHookItem() {
 
     override fun entry(classLoader: ClassLoader) {
         try {
-            WeChatContactInfoAdapterItemHook.addInitCallback(initCallback)
-            WeChatContactInfoAdapterItemHook.addClickListener(clickListener)
+            WeChatContactDetailsApi.addInitCallback(initCallback)
+            WeChatContactDetailsApi.addClickListener(clickListener)
         } catch (e: Exception) {
             WeLogger.e(TAG, "注册失败", e)
         }
@@ -71,8 +72,8 @@ object ShowWxIdInContactDetails : BaseSwitchFunctionHookItem() {
 
 
     override fun unload(classLoader: ClassLoader) {
-        WeChatContactInfoAdapterItemHook.removeInitCallback(initCallback)
-        WeChatContactInfoAdapterItemHook.removeClickListener(clickListener)
+        WeChatContactDetailsApi.removeInitCallback(initCallback)
+        WeChatContactDetailsApi.removeClickListener(clickListener)
         WeLogger.i(TAG, "已移除显示微信ID Hook")
     }
 }

@@ -1,12 +1,13 @@
 package moe.ouom.wekit.loader.core
 
+import dev.ujhhgtg.nameof.nameof
 import moe.ouom.wekit.core.bridge.HookFactoryBridge.registerDelegate
 import moe.ouom.wekit.hooks.core.HookItemLoader
 import moe.ouom.wekit.hooks.core.factory.HookItemFactory
 import moe.ouom.wekit.utils.log.WeLogger
 
 object HooksLoader {
-    private const val TAG = "HooksLoader"
+    private val TAG = nameof(HooksLoader)
 
     @JvmStatic
     fun load(processType: Int) {

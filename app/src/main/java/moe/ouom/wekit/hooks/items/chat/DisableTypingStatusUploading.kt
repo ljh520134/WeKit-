@@ -1,6 +1,7 @@
 package moe.ouom.wekit.hooks.items.chat
 
 import com.highcapable.kavaref.KavaRef.Companion.asResolver
+import dev.ujhhgtg.nameof.nameof
 import moe.ouom.wekit.core.dsl.dexClass
 import moe.ouom.wekit.core.model.BaseSwitchFunctionHookItem
 import moe.ouom.wekit.dexkit.intf.IDexFind
@@ -11,7 +12,7 @@ import org.luckypray.dexkit.DexKitBridge
 @HookItem(path = "聊天/禁止上传正在输入状态", desc = "禁止应用上传 '正在输入...' 状态")
 object DisableTypingStatusUploading : BaseSwitchFunctionHookItem(), IDexFind {
 
-    private const val TAG = "DisableTypingStatusUploading"
+    private val TAG = nameof(DisableTypingStatusUploading)
     private val classMmTypingSendReq by dexClass()
 
     override fun entry(classLoader: ClassLoader) {

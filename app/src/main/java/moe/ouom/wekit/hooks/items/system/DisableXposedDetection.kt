@@ -1,5 +1,6 @@
 package moe.ouom.wekit.hooks.items.system
 
+import dev.ujhhgtg.nameof.nameof
 import moe.ouom.wekit.core.dsl.dexMethod
 import moe.ouom.wekit.core.model.BaseSwitchFunctionHookItem
 import moe.ouom.wekit.dexkit.intf.IDexFind
@@ -10,7 +11,7 @@ import org.luckypray.dexkit.DexKitBridge
 @HookItem(path = "系统与隐私/禁止应用检测 Xposed", desc = "防止应用检测 Xposed 框架是否存在")
 object DisableXposedDetection : BaseSwitchFunctionHookItem(), IDexFind {
 
-    private const val TAG = "DisableXposedDetection"
+    private val TAG = nameof(DisableXposedDetection)
     private val methodCheckStackTraceElements by dexMethod()
 
     override fun entry(classLoader: ClassLoader) {

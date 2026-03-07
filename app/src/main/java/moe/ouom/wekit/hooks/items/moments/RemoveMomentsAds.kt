@@ -2,6 +2,7 @@ package moe.ouom.wekit.hooks.items.moments
 
 import com.highcapable.kavaref.KavaRef.Companion.asResolver
 import com.highcapable.kavaref.extension.toClass
+import dev.ujhhgtg.nameof.nameof
 import moe.ouom.wekit.core.model.BaseSwitchFunctionHookItem
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import moe.ouom.wekit.utils.log.WeLogger
@@ -9,7 +10,7 @@ import moe.ouom.wekit.utils.log.WeLogger
 @HookItem(path = "朋友圈/拦截朋友圈广告", desc = "拦截朋友圈广告")
 object RemoveMomentsAds : BaseSwitchFunctionHookItem() {
 
-    private const val TAG = "RemoveMomentsAds"
+    private val TAG = nameof(RemoveMomentsAds)
 
     override fun entry(classLoader: ClassLoader) {
         val adInfoClass = "com.tencent.mm.plugin.sns.storage.ADInfo".toClass(classLoader)

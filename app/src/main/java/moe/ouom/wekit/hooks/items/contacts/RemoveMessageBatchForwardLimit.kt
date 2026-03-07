@@ -2,6 +2,7 @@ package moe.ouom.wekit.hooks.items.contacts
 
 import android.content.Intent
 import de.robv.android.xposed.XC_MethodHook
+import dev.ujhhgtg.nameof.nameof
 import moe.ouom.wekit.core.model.BaseSwitchFunctionHookItem
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import moe.ouom.wekit.hooks.sdk.ui.WeStartActivityApi
@@ -11,7 +12,7 @@ import moe.ouom.wekit.utils.log.WeLogger
 object RemoveMessageBatchForwardLimit : BaseSwitchFunctionHookItem(),
     WeStartActivityApi.IStartActivityListener {
 
-    private const val TAG = "RemoveMessageBatchForwardLimit"
+    private val TAG = nameof(RemoveMessageBatchForwardLimit)
 
     override fun entry(classLoader: ClassLoader) {
         WeStartActivityApi.addListener(this)

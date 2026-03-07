@@ -5,6 +5,7 @@ import android.content.ContentValues
 import com.afollestad.materialdialogs.MaterialDialog
 import com.afollestad.materialdialogs.list.listItemsMultiChoice
 import com.highcapable.kavaref.extension.toClass
+import dev.ujhhgtg.nameof.nameof
 import moe.ouom.wekit.core.model.BaseSwitchFunctionHookItem
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import moe.ouom.wekit.hooks.sdk.base.WeDatabaseApi
@@ -24,7 +25,7 @@ import java.util.LinkedList
 )
 object FakeMomentsLikes : BaseSwitchFunctionHookItem(), WeMomentsContextMenuApi.IMenuItemsProvider, WeDatabaseListenerApi.IUpdateListener {
 
-    private const val TAG = "FakeMomentsLikes"
+    private val TAG = nameof(FakeMomentsLikes)
     private const val TBL_SNS_INFO = "SnsInfo"
 
     // 存储每个朋友圈动态的伪点赞用户配置 (snsId -> Set<微信id>)

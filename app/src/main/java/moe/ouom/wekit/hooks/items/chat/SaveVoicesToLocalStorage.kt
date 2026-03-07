@@ -5,6 +5,7 @@ import android.os.Environment
 import android.provider.MediaStore
 import com.highcapable.kavaref.KavaRef.Companion.asResolver
 import com.highcapable.kavaref.extension.toClass
+import dev.ujhhgtg.nameof.nameof
 import moe.ouom.wekit.core.dsl.dexClass
 import moe.ouom.wekit.core.dsl.dexMethod
 import moe.ouom.wekit.core.model.BaseSwitchFunctionHookItem
@@ -30,7 +31,7 @@ import kotlin.io.path.inputStream
 object SaveVoicesToLocalStorage : BaseSwitchFunctionHookItem(), IDexFind,
     WeChatMessageContextMenuApi.IMenuItemsProvider {
 
-    private const val TAG = "SaveVoicesToLocalStorage"
+    private val TAG = nameof(SaveVoicesToLocalStorage)
 
     private val classVoiceLogic by dexClass()
     private val methodGetAmrFullPath by dexMethod()

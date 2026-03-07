@@ -6,6 +6,7 @@ import android.content.Context
 import androidx.annotation.Keep
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XposedHelpers
+import dev.ujhhgtg.nameof.nameof
 import moe.ouom.wekit.loader.hookapi.IHookBridge
 import moe.ouom.wekit.loader.hookapi.ILoaderService
 import moe.ouom.wekit.utils.Initiator.init
@@ -15,7 +16,8 @@ import java.lang.reflect.InvocationTargetException
 @Keep
 @Suppress("unused")
 object UnifiedEntryPoint {
-    private const val TAG = "UnifiedEntryPoint"
+
+    private val TAG = nameof(UnifiedEntryPoint)
 
     private var initialized = false
 

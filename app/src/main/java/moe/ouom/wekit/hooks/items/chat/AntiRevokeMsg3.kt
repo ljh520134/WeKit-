@@ -3,6 +3,7 @@ package moe.ouom.wekit.hooks.items.chat
 import android.content.ContentValues
 import android.database.Cursor
 import com.highcapable.kavaref.KavaRef.Companion.asResolver
+import dev.ujhhgtg.nameof.nameof
 import moe.ouom.wekit.core.dsl.dexMethod
 import moe.ouom.wekit.core.model.BaseSwitchFunctionHookItem
 import moe.ouom.wekit.dexkit.intf.IDexFind
@@ -18,7 +19,7 @@ import kotlin.random.Random
 @HookItem(path = "聊天/阻止消息撤回 3", desc = "有撤回提示")
 object AntiRevokeMsg3 : BaseSwitchFunctionHookItem(), IDexFind {
 
-    private const val TAG = "AntiRevokeMsg3"
+    private val TAG = nameof(AntiRevokeMsg3)
 
     private val methodXmlParser by dexMethod()
 

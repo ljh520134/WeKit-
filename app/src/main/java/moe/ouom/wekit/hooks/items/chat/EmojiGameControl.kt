@@ -34,6 +34,7 @@ import androidx.compose.ui.unit.dp
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XposedBridge
 import de.robv.android.xposed.XposedHelpers
+import dev.ujhhgtg.nameof.nameof
 import moe.ouom.wekit.core.dsl.dexMethod
 import moe.ouom.wekit.core.model.BaseSwitchFunctionHookItem
 import moe.ouom.wekit.dexkit.intf.IDexFind
@@ -49,7 +50,7 @@ object EmojiGameControl : BaseSwitchFunctionHookItem(), IDexFind {
 
     private const val MD5_MORRA = "9bd1281af3a31710a45b84d736363691"
     private const val MD5_DICE = "08f223fa83f1ca34e143d1e580252c7c"
-    private const val TAG = "EmojiGameControl"
+    private val TAG = nameof(EmojiGameControl)
 
     private val methodRandom by dexMethod()
     private val methodPanelClick by dexMethod()

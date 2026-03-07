@@ -25,6 +25,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import dev.ujhhgtg.nameof.nameof
 import moe.ouom.wekit.core.model.BaseClickableFunctionHookItem
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import moe.ouom.wekit.hooks.item.scripting_js.EmbeddedBuiltinJs
@@ -40,7 +41,8 @@ import java.util.concurrent.CopyOnWriteArrayList
 object JsScriptingHook : BaseClickableFunctionHookItem(),
     WeDatabaseListenerApi.IInsertListener,
     IWePkgInterceptor {
-    private const val TAG = "ScriptingHook"
+
+    private val TAG = nameof(JsScriptingHook)
 
     // type=0 post
     // type=1 plain text

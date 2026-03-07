@@ -14,7 +14,7 @@
 //object ShowWxIdInContactDetailsNew : BaseSwitchFunctionHookItem(),
 //    WePreferenceScreenApi.IPrefItemsProvider {
 //
-//    private const val TAG = "ShowWxIdInContactDetailsNew"
+//    private val TAG = nameof(ShowWxIdInContactDetailsNew)
 //
 //    override fun entry(classLoader: ClassLoader) {
 //        WePreferenceScreenApi.addProvider(this)

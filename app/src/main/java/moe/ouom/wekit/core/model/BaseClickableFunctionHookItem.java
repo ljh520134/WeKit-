@@ -78,16 +78,16 @@ public abstract class BaseClickableFunctionHookItem extends BaseHookItem {
         this.enabled = enabled;
         if (!enabled) {
             if (isLoaded) {
-                WeLogger.i("[BaseClickableFunctionHookItem] Unloading HookItem: " + getPath());
+                WeLogger.i("Unloading BaseClickableFunctionHookItem: " + getPath());
                 try {
                     this.unload(HybridClassLoader.getHostClassLoader());
                     isLoaded = false;
                 } catch (Throwable e) {
-                    WeLogger.e("[BaseClickableFunctionHookItem] Unload HookItem Failed", e);
+                    WeLogger.e("Unload BaseClickableFunctionHookItem Failed", e);
                 }
             }
         } else {
-            WeLogger.i("[BaseClickableFunctionHookItem] Loading HookItem: " + getPath());
+            WeLogger.i("Loading BaseClickableFunctionHookItem: " + getPath());
             this.startLoad();
             isLoaded = true;
         }

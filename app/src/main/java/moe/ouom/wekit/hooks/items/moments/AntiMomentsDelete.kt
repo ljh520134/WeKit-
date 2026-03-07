@@ -1,6 +1,7 @@
 package moe.ouom.wekit.hooks.items.moments
 
 import android.content.ContentValues
+import dev.ujhhgtg.nameof.nameof
 import moe.ouom.wekit.core.model.BaseSwitchFunctionHookItem
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import moe.ouom.wekit.hooks.sdk.base.WeDatabaseListenerApi
@@ -13,7 +14,7 @@ import moe.ouom.wekit.utils.log.WeLogger
 )
 object AntiMomentsDelete : BaseSwitchFunctionHookItem(), WeDatabaseListenerApi.IUpdateListener {
 
-    private const val TAG = "AntiMomentsDelete"
+    private val TAG = nameof(AntiMomentsDelete)
     private const val TBL_SNS_INFO = "SnsInfo"
     private const val DEFAULT_WATERMARK = "[拦截删除]"
 

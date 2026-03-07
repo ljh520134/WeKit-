@@ -1,5 +1,6 @@
 package moe.ouom.wekit.hooks.items.scripting_js
 
+import dev.ujhhgtg.nameof.nameof
 import moe.ouom.wekit.hooks.sdk.base.WeMessageApi
 import moe.ouom.wekit.utils.log.WeLogger
 import org.json.JSONObject
@@ -10,7 +11,7 @@ import org.mozilla.javascript.ScriptableObject
 
 object JsEngine {
 
-    private const val TAG = "AutomationEngine"
+    private val TAG = nameof(JsEngine)
 
     fun executeAllOnMessage(
         rules: List<JsScript>,

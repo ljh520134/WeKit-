@@ -1,6 +1,7 @@
 package moe.ouom.wekit.hooks.sdk.base
 
 import android.annotation.SuppressLint
+import dev.ujhhgtg.nameof.nameof
 import moe.ouom.wekit.core.dsl.dexClass
 import moe.ouom.wekit.core.dsl.dexMethod
 import moe.ouom.wekit.core.model.ApiHookItem
@@ -35,7 +36,7 @@ object WeAppMsgApi : ApiHookItem(), IDexFind {
     private var sendAppMsgMethod: Method? = null
     private var appMsgContentClass: Class<*>? = null
 
-    private const val TAG = "WeAppMsgApi"
+    private val TAG = nameof(WeAppMsgApi)
 
     @SuppressLint("NonUniqueDexKitData")
     override fun dexFind(dexKit: DexKitBridge): Map<String, String> {

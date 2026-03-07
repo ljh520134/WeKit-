@@ -2,6 +2,7 @@ package moe.ouom.wekit.hooks.sdk.base
 
 import android.database.Cursor
 import com.highcapable.kavaref.KavaRef.Companion.asResolver
+import dev.ujhhgtg.nameof.nameof
 import moe.ouom.wekit.core.dsl.dexClass
 import moe.ouom.wekit.core.dsl.dexMethod
 import moe.ouom.wekit.core.model.ApiHookItem
@@ -13,7 +14,7 @@ import org.luckypray.dexkit.DexKitBridge
 @HookItem(path = "API/对话服务", desc = "为其他功能提供对话管理能力")
 object WeConversationApi : ApiHookItem(), IDexFind {
 
-    private const val TAG = "WeConversationApi"
+    private val TAG = nameof(WeConversationApi)
     val classConversationStorage by dexClass()
     val methodUpdateUnreadByTalker by dexMethod()
     val methodHiddenConvParent by dexMethod()

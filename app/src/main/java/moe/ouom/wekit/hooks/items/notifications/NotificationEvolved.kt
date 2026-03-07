@@ -13,6 +13,7 @@ import android.graphics.BitmapFactory
 import android.graphics.drawable.Icon
 import androidx.core.content.ContextCompat
 import com.highcapable.kavaref.KavaRef.Companion.asResolver
+import dev.ujhhgtg.nameof.nameof
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -34,7 +35,7 @@ import java.net.URL
 )
 object NotificationEvolved : BaseSwitchFunctionHookItem() {
 
-    private const val TAG = "NotificationEvolved"
+    private val TAG = nameof(NotificationEvolved)
     private const val ACTION_REPLY = "${PackageConstants.PACKAGE_NAME_WECHAT}.ACTION_WEKIT_REPLY"
     private const val ACTION_MARK_READ =
         "${PackageConstants.PACKAGE_NAME_WECHAT}.ACTION_WEKIT_MARK_READ"

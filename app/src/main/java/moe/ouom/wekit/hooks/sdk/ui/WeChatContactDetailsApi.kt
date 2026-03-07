@@ -6,6 +6,7 @@ import android.widget.BaseAdapter
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XposedBridge
 import de.robv.android.xposed.XposedHelpers
+import dev.ujhhgtg.nameof.nameof
 import moe.ouom.wekit.core.model.ApiHookItem
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import moe.ouom.wekit.utils.Initiator.loadClass
@@ -17,9 +18,9 @@ import java.lang.reflect.Modifier
 import java.util.concurrent.CopyOnWriteArrayList
 
 @HookItem(path = "API/用户联系页面扩展")
-object WeChatContactInfoAdapterItemHook : ApiHookItem() {
+object WeChatContactDetailsApi : ApiHookItem() {
 
-    private const val TAG = "ContactInfoAdapterItemHook"
+    private val TAG = nameof(WeChatContactDetailsApi)
     private val initCallbacks = CopyOnWriteArrayList<InitContactInfoViewCallback>()
     private val clickListeners = CopyOnWriteArrayList<OnContactInfoItemClickListener>()
 

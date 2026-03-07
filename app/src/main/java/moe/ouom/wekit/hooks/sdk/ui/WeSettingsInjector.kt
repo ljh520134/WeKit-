@@ -10,6 +10,7 @@ import com.highcapable.kavaref.extension.toClass
 import com.highcapable.kavaref.extension.toClassOrNull
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XposedHelpers
+import dev.ujhhgtg.nameof.nameof
 import moe.ouom.wekit.core.dsl.dexMethod
 import moe.ouom.wekit.core.model.ApiHookItem
 import moe.ouom.wekit.dexkit.DexMethodDescriptor
@@ -30,7 +31,7 @@ object WeSettingsInjector : ApiHookItem(), IDexFind {
     private val methodGetKey by dexMethod()
     private val methodAddPref by dexMethod()
 
-    private const val TAG = "WeSettingInjector"
+    private val TAG = nameof(WeSettingsInjector)
     private const val KEY_WEKIT_ENTRY = "wekit_settings_entry"
     private const val TITLE_WEKIT_ENTRY = "WeKit 设置"
     private const val PREFERENCE_CLASS_NAME = "com.tencent.mm.ui.base.preference.Preference"

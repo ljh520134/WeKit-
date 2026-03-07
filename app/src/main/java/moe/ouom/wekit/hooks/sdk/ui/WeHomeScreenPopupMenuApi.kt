@@ -6,6 +6,7 @@ import androidx.core.util.size
 import com.highcapable.kavaref.KavaRef.Companion.asResolver
 import com.highcapable.kavaref.extension.createInstance
 import de.robv.android.xposed.XC_MethodHook
+import dev.ujhhgtg.nameof.nameof
 import moe.ouom.wekit.core.dsl.dexClass
 import moe.ouom.wekit.core.dsl.dexMethod
 import moe.ouom.wekit.core.model.ApiHookItem
@@ -47,7 +48,7 @@ object WeHomeScreenPopupMenuApi : ApiHookItem(), IDexFind {
         )
     }
 
-    private const val TAG = "WeHomeScreenPopupMenuApi"
+    private val TAG = nameof(WeHomeScreenPopupMenuApi)
 
     private val methodAddItem by dexMethod()
     private val methodHandleItemClick by dexMethod()
