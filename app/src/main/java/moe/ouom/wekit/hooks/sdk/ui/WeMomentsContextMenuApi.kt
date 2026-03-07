@@ -122,7 +122,7 @@ object WeMomentsContextMenuApi : ApiHookItem(), IDexFind {
 
         for (item in menuItems.values.flatten()) {
             try {
-                menu.add(ContextMenu.NONE, item.id, 0, item.text).setIcon(item.drawable.value)
+                menu.add(ContextMenu.NONE, item.id, 0, item.text).icon = item.drawable.value
             } catch (e: Throwable) {
                 WeLogger.e(TAG, "OnCreate 回调执行异常", e)
             }

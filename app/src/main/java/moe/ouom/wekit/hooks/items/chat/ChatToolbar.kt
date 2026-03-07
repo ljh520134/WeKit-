@@ -72,7 +72,7 @@ object ChatToolbar : BaseSwitchFunctionHookItem(), IDexFind {
             .self
             .hookAfter { param ->
                 val frameLayout = param.thisObject as FrameLayout
-                // FIXME: change with wechat version
+                // TODO: might change with WeChat version
                 val linearLayout = frameLayout.findViewByIdStr<LinearLayout>("bl8") // LinearLayout
                 if (linearLayout.findViewWithTag<ComposeView>(VIEW_TAG) != null) return@hookAfter
 
@@ -87,7 +87,8 @@ object ChatToolbar : BaseSwitchFunctionHookItem(), IDexFind {
 
                     setContent {
                         AppTheme {
-                            LazyRow(horizontalArrangement = Arrangement.spacedBy(8.dp),
+                            LazyRow(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
                                 contentPadding = PaddingValues(horizontal = 8.dp),
                             ) {
                                 item {
@@ -160,8 +161,7 @@ object ChatToolbar : BaseSwitchFunctionHookItem(), IDexFind {
                 .firstField { type = AdapterView.OnItemClickListener::class }
                 .get()!! as AdapterView.OnItemClickListener
             onClick.onItemClick(appGrid, view, itemIndex, 0)
-        }
-        catch (ex: Exception) {
+        } catch (ex: Exception) {
             WeLogger.e(TAG, "exception while clicking on menu item", ex)
         }
     }
@@ -177,8 +177,7 @@ object ChatToolbar : BaseSwitchFunctionHookItem(), IDexFind {
                 .get()!! as AdapterView.OnItemLongClickListener
             // arg 0,1,3 are all not used in WeChat's code
             onLongClick.onItemLongClick(null, null, itemIndex, 0)
-        }
-        catch (ex: Exception) {
+        } catch (ex: Exception) {
             WeLogger.e(TAG, "exception while long clicking on menu item", ex)
         }
     }

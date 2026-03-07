@@ -48,11 +48,10 @@ public class SyncUtils {
     public static final int PROC_MAGIC_EMOJI = 1 << 26; // :magic_emoji
 
     public static final int PROC_OTHERS = 1 << 30;      // 其他未知进程
-
+    private static final ExecutorService sExecutor = Executors.newCachedThreadPool();
     private static int mProcType = 0;
     private static String mProcName = null;
     private static Handler sHandler;
-    private static final ExecutorService sExecutor = Executors.newCachedThreadPool();
 
     private SyncUtils() {
         throw new AssertionError("No instance for you!");

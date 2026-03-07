@@ -13,19 +13,17 @@ import moe.ouom.wekit.loader.hookapi.ILoaderService;
 
 public class StartupInfo {
 
-    private StartupInfo() {
-        throw new AssertionError("No instance for you!");
-    }
-
+    public static Application hostApp;
     private static String modulePath;
 
     private static Boolean isInitMethod;
-    public static Application hostApp;
     private static ILoaderService loaderService;
     private static IHookBridge hookBridge;
-
     private static Boolean inHostProcess = null;
 
+    private StartupInfo() {
+        throw new AssertionError("No instance for you!");
+    }
 
     public static String getModulePath() {
         if (modulePath == null) {
@@ -34,6 +32,10 @@ public class StartupInfo {
         return modulePath;
     }
 
+    public static void setModulePath(@NonNull String modulePath) {
+        Objects.requireNonNull(modulePath);
+        StartupInfo.modulePath = modulePath;
+    }
 
     public static Application getHostApp() {
         return hostApp;
@@ -43,13 +45,6 @@ public class StartupInfo {
         Objects.requireNonNull(hostApp);
         StartupInfo.hostApp = hostApp;
     }
-
-
-    public static void setModulePath(@NonNull String modulePath) {
-        Objects.requireNonNull(modulePath);
-        StartupInfo.modulePath = modulePath;
-    }
-
 
     public static Boolean isInitMethod() {
         if (isInitMethod == null) {

@@ -12,8 +12,8 @@ import moe.ouom.wekit.loader.startup.UnifiedEntryPoint;
 
 public class ModuleLoader {
 
-    private static boolean sLoaded = false;
     private static final ArrayList<Throwable> sInitErrors = new ArrayList<>(1);
+    private static boolean sLoaded = false;
 
     public static void initialize(
             @NonNull String hostDataDir,

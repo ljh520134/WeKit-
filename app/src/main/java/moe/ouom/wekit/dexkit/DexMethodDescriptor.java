@@ -146,6 +146,33 @@ public class DexMethodDescriptor implements Serializable {
         return "L" + type.getName().replace('.', '/') + ";";
     }
 
+    public static List<String> splitParameterTypes(String s) {
+        var i = 0;
+        var list = new ArrayList<String>();
+        while (i < s.length()) {
+            var c = s.charAt(i);
+            if (c == 'L') {
+                var j = s.indexOf(';', i);
+                list.add(s.substring(i, j + 1));
+                i = j + 1;
+            } else if (c == '[') {
+                var j = i;
+                while (j < s.length() && s.charAt(j) == '[') {
+                    j++;
+                }
+                if (j < s.length() && s.charAt(j) == 'L') {
+                    j = s.indexOf(';', j);
+                }
+                list.add(s.substring(i, j + 1));
+                i = j + 1;
+            } else {
+                list.add(String.valueOf(c));
+                i++;
+            }
+        }
+        return list;
+    }
+
     public String getDeclaringClassName() {
         return declaringClass.substring(1, declaringClass.length() - 1).replace('/', '.');
     }
@@ -212,33 +239,6 @@ public class DexMethodDescriptor implements Serializable {
     public String getReturnType() {
         var index = signature.indexOf(')');
         return signature.substring(index + 1);
-    }
-
-    public static List<String> splitParameterTypes(String s) {
-        var i = 0;
-        var list = new ArrayList<String>();
-        while (i < s.length()) {
-            var c = s.charAt(i);
-            if (c == 'L') {
-                var j = s.indexOf(';', i);
-                list.add(s.substring(i, j + 1));
-                i = j + 1;
-            } else if (c == '[') {
-                var j = i;
-                while (j < s.length() && s.charAt(j) == '[') {
-                    j++;
-                }
-                if (j < s.length() && s.charAt(j) == 'L') {
-                    j = s.indexOf(';', j);
-                }
-                list.add(s.substring(i, j + 1));
-                i = j + 1;
-            } else {
-                list.add(String.valueOf(c));
-                i++;
-            }
-        }
-        return list;
     }
 
 }

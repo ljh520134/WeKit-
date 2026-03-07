@@ -18,8 +18,8 @@ import moe.ouom.wekit.hooks.sdk.base.WeMessageApi
 import moe.ouom.wekit.hooks.sdk.base.WeServiceApi
 import moe.ouom.wekit.hooks.sdk.base.model.MessageInfo
 import moe.ouom.wekit.hooks.sdk.ui.WeChatMessageViewApi
-import moe.ouom.wekit.utils.common.SimpleLruCache
 import moe.ouom.wekit.ui.utils.findViewByIdStr
+import moe.ouom.wekit.utils.common.SimpleLruCache
 import org.luckypray.dexkit.DexKitBridge
 import kotlin.math.PI
 import kotlin.math.abs
@@ -51,7 +51,8 @@ object SwipeToQuote : BaseSwitchFunctionHookItem(), IDexFind,
         if (cache[msgInfo.talker to msgInfo.id] == true) return
 
         val viewGroup = view as? ViewGroup ?: return
-        val messageView = runCatching { viewGroup.findViewByIdStr<View>("bkj") as ViewGroup }.getOrNull() ?: return
+        // TODO: might change with WeChat version
+        val messageView = viewGroup.findViewByIdStr<View>("bkj") as ViewGroup
 
         attachSwipeGesture(messageView, chattingContext, msgInfo)
     }
@@ -65,7 +66,7 @@ object SwipeToQuote : BaseSwitchFunctionHookItem(), IDexFind,
         var startX = 0f
         var startY = 0f
         var isDragging = false
-        val triggerThreshold = dpToPx(messageView.context, 80).toFloat()
+        val triggerThreshold = dpToPx(messageView.context, 60).toFloat()
         var triggered = false
 
         ViewGroup::class.asResolver()
@@ -109,63 +110,62 @@ object SwipeToQuote : BaseSwitchFunctionHookItem(), IDexFind,
                 }
             }
 
-        View::class.asResolver().
-            firstMethod {
-                name = "onTouchEvent"
-                superclass()
-            }
-            .hookAfter { param ->
-                val v = param.thisObject as View
-                if (v !== messageView) return@hookAfter
+        View::class.asResolver().firstMethod {
+            name = "onTouchEvent"
+            superclass()
+        }
+        .hookAfter { param ->
+            val v = param.thisObject as View
+            if (v !== messageView) return@hookAfter
 
-                val event = param.args[0] as MotionEvent
+            val event = param.args[0] as MotionEvent
 
-                when (event.action) {
-                    MotionEvent.ACTION_MOVE -> {
-                        if (isDragging) {
-                            val rawDx = event.x - startX
-                            val dx = rawDx.coerceIn(-triggerThreshold, 0f)
-                            v.translationX = dx
+            when (event.action) {
+                MotionEvent.ACTION_MOVE -> {
+                    if (isDragging) {
+                        val rawDx = event.x - startX
+                        val dx = rawDx.coerceIn(-triggerThreshold, 0f)
+                        v.translationX = dx
 
-                            if (!triggered && rawDx < -triggerThreshold) {
-                                triggered = true
-                                v.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
-                            }
-
-                            param.result = true
+                        if (!triggered && rawDx < -triggerThreshold) {
+                            triggered = true
+                            v.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
                         }
-                    }
 
-                    MotionEvent.ACTION_UP -> {
-                        if (isDragging) {
-                            v.animate()
-                                .translationX(0f)
-                                .setDuration(250)
-                                .setInterpolator(SpringInterpolator())
-                                .start()
-
-                            if (triggered) onSwipeLeft(chattingContext, msgInfo)
-
-                            v.parent?.requestDisallowInterceptTouchEvent(false)
-                            isDragging = false
-
-                            param.result = true
-                        }
-                    }
-
-                    MotionEvent.ACTION_CANCEL -> {
-                        if (isDragging) {
-                            v.animate()
-                                .translationX(0f)
-                                .setDuration(150)
-                                .start()
-
-                            v.parent?.requestDisallowInterceptTouchEvent(false)
-
-                            isDragging = false
-                        }
+                        param.result = true
                     }
                 }
+
+                MotionEvent.ACTION_UP -> {
+                    if (isDragging) {
+                        v.animate()
+                            .translationX(0f)
+                            .setDuration(250)
+                            .setInterpolator(SpringInterpolator())
+                            .start()
+
+                        if (triggered) onSwipeLeft(chattingContext, msgInfo)
+
+                        v.parent?.requestDisallowInterceptTouchEvent(false)
+                        isDragging = false
+
+                        param.result = true
+                    }
+                }
+
+                MotionEvent.ACTION_CANCEL -> {
+                    if (isDragging) {
+                        v.animate()
+                            .translationX(0f)
+                            .setDuration(150)
+                            .start()
+
+                        v.parent?.requestDisallowInterceptTouchEvent(false)
+
+                        isDragging = false
+                    }
+                }
+            }
         }
 
         cache[msgInfo.talker to msgInfo.id] = true
@@ -196,8 +196,7 @@ object SwipeToQuote : BaseSwitchFunctionHookItem(), IDexFind,
             }.self
         if (quoteMethod.parameterCount == 1) {
             quoteMethod.invoke(chatFooter, msgInfo.instance)
-        }
-        else {
+        } else {
             quoteMethod.invoke(chatFooter, msgInfo.instance, null)
         }
     }
@@ -213,7 +212,10 @@ object SwipeToQuote : BaseSwitchFunctionHookItem(), IDexFind,
         classChattingUiFootComponent.find(dexKit, descriptors) {
             searchPackages("com.tencent.mm.ui.chatting.component")
             matcher {
-                usingEqStrings("MicroMsg.ChattingUI.FootComponent", "onNotifyChange event %s talker %s")
+                usingEqStrings(
+                    "MicroMsg.ChattingUI.FootComponent",
+                    "onNotifyChange event %s talker %s"
+                )
             }
         }
 

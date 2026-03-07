@@ -254,7 +254,7 @@ abstract class BasePrefDialog(
     private fun nextKey(base: String) = "${base}_${rowCounter++}"
 
     private fun resolveKey(key: String, useFullKey: Boolean) =
-        if (useFullKey) key else "${Constants.PrekXXX}$key"
+        if (useFullKey) key else "${Constants.PREF_KEY_PREFIX}$key"
 }
 
 // ---------------------------------------------------------------------------
@@ -408,7 +408,10 @@ private fun DialogContent(
                                             switchStates[row.configKey] = checked
                                             WeConfig.getDefaultConfig().edit()
                                                 .putBoolean(row.configKey, checked).apply()
-                                            WeLogger.d(TAG, "Config changed [${row.configKey}] -> $checked")
+                                            WeLogger.d(
+                                                TAG,
+                                                "Config changed [${row.configKey}] -> $checked"
+                                            )
                                         },
                                     )
                                 }

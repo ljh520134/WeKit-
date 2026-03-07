@@ -79,10 +79,19 @@ object WeConversationApi : ApiHookItem(), IDexFind {
     fun setConversationsVisibility(visible: Boolean, talkers: List<String>) {
         val operation = if (visible) "" else "hidden_conv_parent"
         if (methodHiddenConvParent.method.parameterCount == 4) {
-            methodHiddenConvParent.method.invoke(conversationStorage, talkers.toTypedArray(), operation, true, false)
-        }
-        else {
-            methodHiddenConvParent.method.invoke(conversationStorage, talkers.toTypedArray(), operation)
+            methodHiddenConvParent.method.invoke(
+                conversationStorage,
+                talkers.toTypedArray(),
+                operation,
+                true,
+                false
+            )
+        } else {
+            methodHiddenConvParent.method.invoke(
+                conversationStorage,
+                talkers.toTypedArray(),
+                operation
+            )
         }
     }
 

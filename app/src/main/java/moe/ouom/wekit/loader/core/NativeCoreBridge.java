@@ -14,6 +14,8 @@ import moe.ouom.wekit.utils.log.WeLogger;
 
 
 public class NativeCoreBridge {
+    private static boolean sPrimaryNativeLibraryInitialized = false;
+
     static {
         System.loadLibrary("dexkit");
         System.loadLibrary("wekit");
@@ -22,8 +24,6 @@ public class NativeCoreBridge {
     private NativeCoreBridge() {
         throw new AssertionError("No instances for you!");
     }
-
-    private static boolean sPrimaryNativeLibraryInitialized = false;
 
     public static void initNativeCore() {
         Context context = HostInfo.getApplication();

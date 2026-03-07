@@ -13,8 +13,8 @@ import moe.ouom.wekit.utils.log.WeLogger;
 
 public abstract class BaseSwitchFunctionHookItem extends BaseHookItem {
 
-    private boolean enabled;
     private final int targetProcess = targetProcess();
+    private boolean enabled;
     private boolean isLoaded = false;
     private Runnable toggleCompletionCallback;
 
@@ -35,7 +35,7 @@ public abstract class BaseSwitchFunctionHookItem extends BaseHookItem {
      */
     public void applyToggle(boolean newState) {
         // 保存配置
-        var configKey = Constants.PrekXXX + this.getPath();
+        var configKey = Constants.PREF_KEY_PREFIX + this.getPath();
         WeConfig.getDefaultConfig().edit().putBoolean(configKey, newState).apply();
 
         // 更新状态
@@ -105,7 +105,7 @@ public abstract class BaseSwitchFunctionHookItem extends BaseHookItem {
     }
 
     public boolean configIsEnable() {
-        return WeConfig.getDefaultConfig().getBooleanOrFalse(Constants.PrekXXX + this.getPath());
+        return WeConfig.getDefaultConfig().getBooleanOrFalse(Constants.PREF_KEY_PREFIX + this.getPath());
     }
 
 }

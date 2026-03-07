@@ -2,6 +2,8 @@ package moe.ouom.wekit.hooks.sdk.base
 
 import android.annotation.SuppressLint
 import android.content.ContentValues
+import com.highcapable.kavaref.KavaRef.Companion.asResolver
+import com.highcapable.kavaref.extension.toClass
 import de.robv.android.xposed.XposedHelpers
 import dev.ujhhgtg.nameof.nameof
 import moe.ouom.wekit.config.WeConfig
@@ -31,6 +33,9 @@ object WeDatabaseListenerApi : ApiHookItem() {
     }
 
     private val TAG = nameof(WeDatabaseApi)
+
+    private const val DB_CLASS_NAME = "com.tencent.wcdb.database.SQLiteDatabase"
+    private const val DB_COMPAT_CLASS_NAME = "com.tencent.wcdb.compat.SQLiteDatabase"
 
     private val insertListeners = CopyOnWriteArrayList<IInsertListener>()
     private val updateListeners = CopyOnWriteArrayList<IUpdateListener>()
@@ -94,8 +99,8 @@ object WeDatabaseListenerApi : ApiHookItem() {
 
     private fun shouldLogDatabase(): Boolean {
         val config = WeConfig.getDefaultConfig()
-        return config.getBooleanOrFalse(Constants.PrekVerboseLog) &&
-                config.getBooleanOrFalse(Constants.PrekDatabaseVerboseLog)
+        return config.getBooleanOrFalse(Constants.VERBOSE_LOG_PREF_KEY) &&
+                config.getBooleanOrFalse(Constants.DB_VERBOSE_LOG_PREF_KEY)
     }
 
     private fun formatArgs(args: Array<out Any?>): String {
@@ -123,30 +128,25 @@ object WeDatabaseListenerApi : ApiHookItem() {
 
     private fun hookDatabaseInsert() {
         try {
-            val clsSQLite = loadClass(Constants.CLAZZ_SQLITE_DATABASE)
-            val method = XposedHelpers.findMethodExact(
-                clsSQLite,
-                "insertWithOnConflict",
-                String::class.java,
-                String::class.java,
-                ContentValues::class.java,
-                Int::class.javaPrimitiveType
-            )
+            val clsDb = DB_CLASS_NAME.toClass()
+            clsDb.asResolver()
+                .firstMethod {
+                    name = "insertWithOnConflict"
+                    parameters(String::class, String::class, ContentValues::class, Int::class)
+                }.hookAfter { param ->
+                    try {
+                        if (insertListeners.isEmpty()) return@hookAfter
 
-            hookAfter(method) { param ->
-                try {
-                    if (insertListeners.isEmpty()) return@hookAfter
+                        val table = param.args[0] as String
+                        val values = param.args[2] as ContentValues
+                        val result = param.result
 
-                    val table = param.args[0] as String
-                    val values = param.args[2] as ContentValues
-                    val result = param.result
-
-                    logWithStack("Insert", table, param.args, result)
-                    insertListeners.forEach { it.onInsert(table, values) }
-                } catch (e: Throwable) {
-                    WeLogger.e(TAG, "Insert dispatch failed", e)
+                        logWithStack("Insert", table, param.args, result)
+                        insertListeners.forEach { it.onInsert(table, values) }
+                    } catch (e: Throwable) {
+                        WeLogger.e(TAG, "Insert dispatch failed", e)
+                    }
                 }
-            }
             WeLogger.i(TAG, "Insert hook success")
         } catch (e: Throwable) {
             WeLogger.e(TAG, "Hook insert failed", e)
@@ -163,45 +163,46 @@ object WeDatabaseListenerApi : ApiHookItem() {
                     (isPlay && version >= WeChatVersion.MM_8_0_48_PLAY)
 
             val clsName =
-                if (isNewVersion) Constants.CLAZZ_COMPAT_SQLITE_DATABASE else Constants.CLAZZ_SQLITE_DATABASE
-            val clsSQLite = loadClass(clsName)
+                if (isNewVersion) DB_COMPAT_CLASS_NAME else DB_CLASS_NAME
+            val clsDb = clsName.toClass()
 
-            val method = XposedHelpers.findMethodExact(
-                clsSQLite,
-                "updateWithOnConflict",
-                String::class.java,
-                ContentValues::class.java,
-                String::class.java,
-                Array<String>::class.java,
-                Int::class.javaPrimitiveType
-            )
-
-            hookBefore(method) { param ->
-                try {
-                    if (updateListeners.isEmpty()) return@hookBefore
-
-                    val table = param.args[0] as String
-                    val values = param.args[1] as ContentValues
-                    param.args[2] as? String
-                    @Suppress("UNCHECKED_CAST")
-                    param.args[3] as? Array<String>
-
-                    logWithStack("Update", table, param.args)
-
-                    // 如果有任何一个监听器返回 true，则阻止更新
-                    val shouldBlock = updateListeners.any { it.onUpdate(table, values) }
-
-                    if (shouldBlock) {
-                        param.result = 0 // 返回0表示没有行被更新
-                        WeLogger.d(
-                            TAG,
-                            "[Update] 被监听器阻止, table=$table, stack=${WeLogger.getStackTraceString()}"
-                        )
-                    }
-                } catch (e: Throwable) {
-                    WeLogger.e(TAG, "Update dispatch failed", e)
+            clsDb.asResolver()
+                .firstMethod {
+                    name = "updateWithOnConflict"
+                    parameters(
+                        String::class,
+                        ContentValues::class,
+                        String::class,
+                        Array<String>::class,
+                        Int::class
+                    )
                 }
-            }
+                .hookBefore { param ->
+                    try {
+                        if (updateListeners.isEmpty()) return@hookBefore
+
+                        val table = param.args[0] as String
+                        val values = param.args[1] as ContentValues
+                        param.args[2] as? String
+                        @Suppress("UNCHECKED_CAST")
+                        param.args[3] as? Array<String>
+
+                        logWithStack("Update", table, param.args)
+
+                        // 如果有任何一个监听器返回 true，则阻止更新
+                        val shouldBlock = updateListeners.any { it.onUpdate(table, values) }
+
+                        if (shouldBlock) {
+                            param.result = 0 // 返回0表示没有行被更新
+                            WeLogger.d(
+                                TAG,
+                                "[Update] 被监听器阻止, table=$table, stack=${WeLogger.getStackTraceString()}"
+                            )
+                        }
+                    } catch (e: Throwable) {
+                        WeLogger.e(TAG, "Update dispatch failed", e)
+                    }
+                }
             WeLogger.i(TAG, "Update hook success")
         } catch (e: Throwable) {
             WeLogger.e(TAG, "Hook update failed", e)
@@ -218,9 +219,9 @@ object WeDatabaseListenerApi : ApiHookItem() {
                     (isPlay && version >= WeChatVersion.MM_8_0_48_PLAY)
 
             if (isNewVersion) {
-                hookNewVersionQuery()
+                hookNewQueryMethod()
             } else {
-                hookOldVersionQuery()
+                hookOldQueryMethod()
             }
             WeLogger.i(TAG, "Query hook success")
         } catch (e: Throwable) {
@@ -228,48 +229,46 @@ object WeDatabaseListenerApi : ApiHookItem() {
         }
     }
 
-    private fun hookNewVersionQuery() {
-        val clsSQLite = loadClass(Constants.CLAZZ_COMPAT_SQLITE_DATABASE)
-        val method = XposedHelpers.findMethodExact(
-            clsSQLite,
-            "rawQuery",
-            String::class.java,
-            Array<Any>::class.java,
-        )
-
-        hookBefore(method) { param ->
-            try {
-                if (queryListeners.isEmpty()) return@hookBefore
-
-                val sql = param.args[0] as? String ?: return@hookBefore
-                var currentSql = sql
-
-                logWithStack("rawQuery", "N/A", param.args)
-
-                queryListeners.forEach { listener ->
-                    listener.onQuery(currentSql)?.let { currentSql = it }
-                }
-
-                if (currentSql != sql) {
-                    param.args[0] = currentSql
-                    WeLogger.d(
-                        TAG,
-                        "[rawQuery] SQL被修改: $sql -> $currentSql, stack=${WeLogger.getStackTraceString()}"
-                    )
-                }
-            } catch (e: Throwable) {
-                WeLogger.e(TAG, "New version query dispatch failed", e)
+    private fun hookNewQueryMethod() {
+        val clsDb = DB_COMPAT_CLASS_NAME.toClass()
+        clsDb.asResolver()
+            .firstMethod {
+                name = "rawQuery"
+                parameters(String::class, Array<Any>::class)
             }
-        }
+            .hookBefore { param ->
+                try {
+                    if (queryListeners.isEmpty()) return@hookBefore
+
+                    val sql = param.args[0] as? String ?: return@hookBefore
+                    var currentSql = sql
+
+                    logWithStack("rawQuery", "N/A", param.args)
+
+                    queryListeners.forEach { listener ->
+                        listener.onQuery(currentSql)?.let { currentSql = it }
+                    }
+
+                    if (currentSql != sql) {
+                        param.args[0] = currentSql
+                        WeLogger.d(
+                            TAG,
+                            "[rawQuery] SQL被修改: $sql -> $currentSql, stack=${WeLogger.getStackTraceString()}"
+                        )
+                    }
+                } catch (e: Throwable) {
+                    WeLogger.e(TAG, "New version query dispatch failed", e)
+                }
+            }
     }
 
-    private fun hookOldVersionQuery() {
-        val clsSQLite = loadClass(Constants.CLAZZ_SQLITE_DATABASE)
+    private fun hookOldQueryMethod() {
+        val clsSQLite = loadClass(DB_CLASS_NAME)
         val cursorFactoryClass =
-            loadClass("com.tencent.wcdb.database.SQLiteDatabase\$CursorFactory")
+            loadClass($$"com.tencent.wcdb.database.SQLiteDatabase$CursorFactory")
         val cancellationSignalClass = loadClass("com.tencent.wcdb.support.CancellationSignal")
 
-        val method = XposedHelpers.findMethodExact(
+        XposedHelpers.findMethodExact(
             clsSQLite,
             "rawQueryWithFactory",
             cursorFactoryClass,
@@ -278,30 +277,33 @@ object WeDatabaseListenerApi : ApiHookItem() {
             String::class.java,
             cancellationSignalClass
         )
+            .hookBefore { param ->
+                try {
+                    if (queryListeners.isEmpty()) return@hookBefore
 
-        hookBefore(method) { param ->
-            try {
-                if (queryListeners.isEmpty()) return@hookBefore
+                    val sql = param.args[1] as? String ?: return@hookBefore
+                    var currentSql = sql
 
-                val sql = param.args[1] as? String ?: return@hookBefore
-                var currentSql = sql
-
-                logWithStack("rawQueryWithFactory", param.args[3] as? String ?: "N/A", param.args)
-
-                queryListeners.forEach { listener ->
-                    listener.onQuery(currentSql)?.let { currentSql = it }
-                }
-
-                if (currentSql != sql) {
-                    param.args[1] = currentSql
-                    WeLogger.d(
-                        TAG,
-                        "[rawQueryWithFactory] SQL被修改: $sql -> $currentSql, stack=${WeLogger.getStackTraceString()}"
+                    logWithStack(
+                        "rawQueryWithFactory",
+                        param.args[3] as? String ?: "N/A",
+                        param.args
                     )
+
+                    queryListeners.forEach { listener ->
+                        listener.onQuery(currentSql)?.let { currentSql = it }
+                    }
+
+                    if (currentSql != sql) {
+                        param.args[1] = currentSql
+                        WeLogger.d(
+                            TAG,
+                            "[rawQueryWithFactory] SQL被修改: $sql -> $currentSql, stack=${WeLogger.getStackTraceString()}"
+                        )
+                    }
+                } catch (e: Throwable) {
+                    WeLogger.e(TAG, "Old version query dispatch failed", e)
                 }
-            } catch (e: Throwable) {
-                WeLogger.e(TAG, "Old version query dispatch failed", e)
             }
-        }
     }
 }

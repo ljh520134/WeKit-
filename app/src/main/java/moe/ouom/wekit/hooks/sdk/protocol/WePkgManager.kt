@@ -15,7 +15,7 @@ object WePkgManager {
     fun removeInterceptor(interceptor: IWePkgInterceptor) = listeners.remove(interceptor)
 
     internal fun handleRequestTamper(uri: String, cgiId: Int, reqBytes: ByteArray): ByteArray? {
-        if (WeConfig.dGetBoolean(Constants.PrekVerboseLog)) {
+        if (WeConfig.dGetBoolean(Constants.VERBOSE_LOG_PREF_KEY)) {
             val data = WeProtoData()
             data.fromBytes(reqBytes)
             WeLogger.logChunkedI(
@@ -32,7 +32,7 @@ object WePkgManager {
     }
 
     internal fun handleResponseTamper(uri: String, cgiId: Int, respBytes: ByteArray): ByteArray? {
-        if (WeConfig.dGetBoolean(Constants.PrekVerboseLog)) {
+        if (WeConfig.dGetBoolean(Constants.VERBOSE_LOG_PREF_KEY)) {
             val data = WeProtoData()
             data.fromBytes(respBytes)
             WeLogger.logChunkedI(

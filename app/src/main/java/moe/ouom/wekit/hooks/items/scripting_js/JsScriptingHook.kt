@@ -80,65 +80,68 @@ object JsScriptingHook : BaseClickableFunctionHookItem(),
             AlertDialogContent(
                 title = { Text("管理规则") },
                 text = {
-                var snapshot by remember { mutableStateOf(rules.toList()) }
-                var showAddDialog by remember { mutableStateOf(false) }
+                    var snapshot by remember { mutableStateOf(rules.toList()) }
+                    var showAddDialog by remember { mutableStateOf(false) }
 
-                fun refresh() {
-                    snapshot = rules.toList()
-                }
-
-                Column(modifier = Modifier.fillMaxWidth()) {
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text("规则列表 (${snapshot.size})", style = MaterialTheme.typography.titleSmall)
-                        TextButton(onClick = { showAddDialog = true }) { Text("+ 添加") }
+                    fun refresh() {
+                        snapshot = rules.toList()
                     }
 
-                    Spacer(Modifier.height(8.dp))
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                "规则列表 (${snapshot.size})",
+                                style = MaterialTheme.typography.titleSmall
+                            )
+                            TextButton(onClick = { showAddDialog = true }) { Text("+ 添加") }
+                        }
 
-                    if (snapshot.isEmpty()) {
-                        Text(
-                            "暂无规则",
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    } else {
-                        Column(modifier = Modifier.fillMaxWidth()) {
-                            snapshot.forEach { rule ->
-                                AutomationRuleCard(
-                                    rule = rule,
-                                    onToggle = {
-                                        val idx = rules.indexOfFirst { it.id == rule.id }
-                                        if (idx != -1) {
-                                            rules[idx] = rule.copy(enabled = !rule.enabled)
+                        Spacer(Modifier.height(8.dp))
+
+                        if (snapshot.isEmpty()) {
+                            Text(
+                                "暂无规则",
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        } else {
+                            Column(modifier = Modifier.fillMaxWidth()) {
+                                snapshot.forEach { rule ->
+                                    AutomationRuleCard(
+                                        rule = rule,
+                                        onToggle = {
+                                            val idx = rules.indexOfFirst { it.id == rule.id }
+                                            if (idx != -1) {
+                                                rules[idx] = rule.copy(enabled = !rule.enabled)
+                                            }
+                                            refresh()
+                                        },
+                                        onDelete = {
+                                            rules.removeAll { it.id == rule.id }
+                                            refresh()
                                         }
-                                        refresh()
-                                    },
-                                    onDelete = {
-                                        rules.removeAll { it.id == rule.id }
-                                        refresh()
-                                    }
-                                )
-                                Spacer(Modifier.height(6.dp))
+                                    )
+                                    Spacer(Modifier.height(6.dp))
+                                }
                             }
                         }
                     }
-                }
 
-                if (showAddDialog) {
-                    AddAutomationRuleDialog(
-                        onConfirm = { newRule ->
-                            rules.add(newRule)
-                            refresh()
-                            showAddDialog = false
-                        },
-                        onDismiss = { showAddDialog = false }
-                    )
-                }
-            })
+                    if (showAddDialog) {
+                        AddAutomationRuleDialog(
+                            onConfirm = { newRule ->
+                                rules.add(newRule)
+                                refresh()
+                                showAddDialog = false
+                            },
+                            onDismiss = { showAddDialog = false }
+                        )
+                    }
+                })
         }
     }
 

@@ -26,11 +26,9 @@ import moe.ouom.wekit.utils.log.WeLogger;
 
 public class MmkvConfigManagerImpl extends WeConfig {
 
-    private final MMKV mmkv;
-    private final File file;
-    private final String mmkvId;
     // keep the following the same as ConfigManager.cc
     public static final String TYPE_SUFFIX = "$shadow$type";
+    public static final int TYPE_JSON = 0x80 + 42;
     private static final String CLASS_SUFFIX = "$shadow$class";
     private static final int TYPE_BOOL = 0x80 + 2;
     private static final int TYPE_INT = 0x80 + 4;
@@ -40,48 +38,23 @@ public class MmkvConfigManagerImpl extends WeConfig {
     private static final int TYPE_STRING_SET = 0x80 + 32;
     private static final int TYPE_BYTES = 0x80 + 33;
     private static final int TYPE_SERIALIZABLE = 0x80 + 41;
-    public static final int TYPE_JSON = 0x80 + 42;
-
+    private final MMKV mmkv;
+    private final File file;
+    private final String mmkvId;
     HashMap<String, Entry<String, Object>> mCacheMap = new HashMap<>();
 
-    class VirtEntry implements Entry<String, Object> {
-
-        VirtEntry(String key) {
-            this.key = key;
-        }
-
-        final String key;
-
-        @Override
-        public String getKey() {
-            return key;
-        }
-
-        @Override
-        public Object getValue() {
-            return getObject(key);
-        }
-
-        @Override
-        public Object setValue(Object value) {
-            return putObject(key, value);
-        }
-
-        @Override
-        public boolean equals(@Nullable Object o) {
-            if (o instanceof VirtEntry) {
-                return key.equals(((VirtEntry) o).key);
-            }
-            return false;
-        }
-
-        @Override
-        public int hashCode() {
-            return key.hashCode();
-        }
+    protected MmkvConfigManagerImpl(@NonNull String name) {
+        mmkvId = Objects.requireNonNull(name, "name");
+        // 调用前需要等待模块mmkv初始化完毕
+        mmkv = MMKV.mmkvWithID(name, MMKV.MULTI_PROCESS_MODE);
+        file = new File(MMKV.getRootDir(), name);
     }
 
-    final Set<Entry<String, Object>> mVirtEntrySet = new Set<>() {
+    @NonNull
+    @Override
+    public File getFile() {
+        return file;
+    }    final Set<Entry<String, Object>> mVirtEntrySet = new Set<>() {
         @Override
         public int size() {
             return mShadowMap.size();
@@ -178,7 +151,11 @@ public class MmkvConfigManagerImpl extends WeConfig {
         }
     };
 
-    final Collection<Object> mVirtValues = new Collection<>() {
+    @Nullable
+    @Override
+    public String getString(@NonNull String key) {
+        return mmkv.getString(key, null);
+    }    final Collection<Object> mVirtValues = new Collection<>() {
         @Override
         public int size() {
             return mShadowMap.size();
@@ -269,7 +246,46 @@ public class MmkvConfigManagerImpl extends WeConfig {
             throw new UnsupportedOperationException("entry set");
         }
     };
-    final Map<String, Object> mShadowMap = new Map<>() {
+
+    @Nullable
+    @Override
+    public Object getObject(@NonNull String key) {
+        if (!mmkv.contains(key)) {
+            return null;
+        }
+        switch (mmkv.getInt(key.concat(TYPE_SUFFIX), 0)) {
+            case TYPE_BOOL:
+                return mmkv.getBoolean(key, false);
+            case TYPE_FLOAT:
+                return mmkv.getFloat(key, 0);
+            case TYPE_INT:
+                return mmkv.getInt(key, 0);
+            case TYPE_LONG:
+                return mmkv.getLong(key, 0L);
+            case TYPE_STRING:
+                return mmkv.getString(key, null);
+            case TYPE_STRING_SET:
+                return mmkv.getStringSet(key, null);
+            case TYPE_BYTES:
+                return mmkv.getBytes(key, null);
+            case TYPE_SERIALIZABLE: {
+                var bytes = mmkv.getBytes(key, null);
+                if (bytes == null) {
+                    return null;
+                }
+                var inputStream = new ByteArrayInputStream(bytes);
+                try {
+                    var objectInputStream = new ObjectInputStream(inputStream);
+                    return objectInputStream.readObject();
+                } catch (Exception e) {
+                    WeLogger.e(e);
+                    return null;
+                }
+            }
+            default:
+                return null;
+        }
+    }    final Map<String, Object> mShadowMap = new Map<>() {
         @Override
         public int size() {
             return entrySet().size();
@@ -365,65 +381,6 @@ public class MmkvConfigManagerImpl extends WeConfig {
             return mVirtEntrySet;
         }
     };
-
-    protected MmkvConfigManagerImpl(@NonNull String name) {
-        mmkvId = Objects.requireNonNull(name, "name");
-        // 调用前需要等待模块mmkv初始化完毕
-        mmkv = MMKV.mmkvWithID(name, MMKV.MULTI_PROCESS_MODE);
-        file = new File(MMKV.getRootDir(), name);
-    }
-
-    @NonNull
-    @Override
-    public File getFile() {
-        return file;
-    }
-
-    @Nullable
-    @Override
-    public String getString(@NonNull String key) {
-        return mmkv.getString(key, null);
-    }
-
-    @Nullable
-    @Override
-    public Object getObject(@NonNull String key) {
-        if (!mmkv.contains(key)) {
-            return null;
-        }
-        switch (mmkv.getInt(key.concat(TYPE_SUFFIX), 0)) {
-            case TYPE_BOOL:
-                return mmkv.getBoolean(key, false);
-            case TYPE_FLOAT:
-                return mmkv.getFloat(key, 0);
-            case TYPE_INT:
-                return mmkv.getInt(key, 0);
-            case TYPE_LONG:
-                return mmkv.getLong(key, 0L);
-            case TYPE_STRING:
-                return mmkv.getString(key, null);
-            case TYPE_STRING_SET:
-                return mmkv.getStringSet(key, null);
-            case TYPE_BYTES:
-                return mmkv.getBytes(key, null);
-            case TYPE_SERIALIZABLE: {
-                var bytes = mmkv.getBytes(key, null);
-                if (bytes == null) {
-                    return null;
-                }
-                var inputStream = new ByteArrayInputStream(bytes);
-                try {
-                    var objectInputStream = new ObjectInputStream(inputStream);
-                    return objectInputStream.readObject();
-                } catch (Exception e) {
-                    WeLogger.e(e);
-                    return null;
-                }
-            }
-            default:
-                return null;
-        }
-    }
 
     @NonNull
     @Override
@@ -631,4 +588,47 @@ public class MmkvConfigManagerImpl extends WeConfig {
     public MMKV getInternalMmkv() {
         return mmkv;
     }
+
+    class VirtEntry implements Entry<String, Object> {
+
+        final String key;
+
+        VirtEntry(String key) {
+            this.key = key;
+        }
+
+        @Override
+        public String getKey() {
+            return key;
+        }
+
+        @Override
+        public Object getValue() {
+            return getObject(key);
+        }
+
+        @Override
+        public Object setValue(Object value) {
+            return putObject(key, value);
+        }
+
+        @Override
+        public boolean equals(@Nullable Object o) {
+            if (o instanceof VirtEntry) {
+                return key.equals(((VirtEntry) o).key);
+            }
+            return false;
+        }
+
+        @Override
+        public int hashCode() {
+            return key.hashCode();
+        }
+    }
+
+
+
+
+
+
 }

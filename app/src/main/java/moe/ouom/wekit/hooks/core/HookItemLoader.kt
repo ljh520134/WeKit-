@@ -6,9 +6,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import moe.ouom.wekit.config.RuntimeConfig
 import moe.ouom.wekit.config.WeConfig
-import moe.ouom.wekit.constants.Constants.PrekClickableXXX
-import moe.ouom.wekit.constants.Constants.PrekDisableVersionAdaptation
-import moe.ouom.wekit.constants.Constants.PrekXXX
+import moe.ouom.wekit.constants.Constants.DISABLE_DEX_FIND_PREF_KEY
+import moe.ouom.wekit.constants.Constants.PREF_KEY_PREFIX
 import moe.ouom.wekit.core.model.ApiHookItem
 import moe.ouom.wekit.core.model.BaseClickableFunctionHookItem
 import moe.ouom.wekit.core.model.BaseHookItem
@@ -93,13 +92,13 @@ class HookItemLoader {
             when (hookItem) {
                 is BaseSwitchFunctionHookItem -> {
                     hookItem.isEnabled = WeConfig.getDefaultConfig()
-                        .getBooleanOrFalse("$PrekXXX${hookItem.path}")
+                        .getBooleanOrFalse("$PREF_KEY_PREFIX${hookItem.path}")
                     isEnabled = hookItem.isEnabled && process == hookItem.targetProcess
                 }
 
                 is BaseClickableFunctionHookItem -> {
                     hookItem.isEnabled = WeConfig.getDefaultConfig()
-                        .getBooleanOrFalse("$PrekClickableXXX${hookItem.path}")
+                        .getBooleanOrFalse("$PREF_KEY_PREFIX${hookItem.path}")
                     isEnabled =
                         (hookItem.isEnabled && process == hookItem.targetProcess) || hookItem.alwaysRun
                 }
@@ -132,7 +131,7 @@ class HookItemLoader {
         brokenItems: List<IDexFind>
     ) {
         val disableVersionAdaptation = WeConfig.getDefaultConfig()
-            .getBooleanOrFalse(PrekDisableVersionAdaptation)
+            .getBooleanOrFalse(DISABLE_DEX_FIND_PREF_KEY)
 
         if (disableVersionAdaptation) {
             WeLogger.w(

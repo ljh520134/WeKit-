@@ -78,7 +78,7 @@ object AutoOpenRedPacket : BaseClickableFunctionHookItem(), WeDatabaseListenerAp
     private fun handleRedPacket(values: ContentValues) {
         try {
             val config = WeConfig.getDefaultConfig()
-            if (values.getAsInteger("isSend") == 1 && !config.getBoolPrek("red_packet_self")) return
+            if (values.getAsInteger("isSend") == 1 && !config.getBoolPref("red_packet_self")) return
 
             val content = values.getAsString("content") ?: return
             val talker = values.getAsString("talker") ?: ""
@@ -114,9 +114,9 @@ object AutoOpenRedPacket : BaseClickableFunctionHookItem(), WeDatabaseListenerAp
             )
 
             // 处理延时
-            val isRandomDelay = config.getBoolPrek("red_packet_delay_random")
+            val isRandomDelay = config.getBoolPref("red_packet_delay_random")
             val customDelay =
-                config.getStringPrek("red_packet_delay_custom", "0")?.toLongOrNull() ?: 0L
+                config.getStringPref("red_packet_delay_custom", "0")?.toLongOrNull() ?: 0L
 
             WeLogger.i(TAG, "config - isRandomDelay=$isRandomDelay, customDelay=$customDelay")
 

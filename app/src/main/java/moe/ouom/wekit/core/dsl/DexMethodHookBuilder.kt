@@ -61,7 +61,7 @@ class DexMethodHookBuilder(
      */
     fun execute() {
         val p = priority ?: WeConfig.dGetInt(
-            "${Constants.PrekCfgXXX}wekit_hook_priority",
+            Constants.HOOK_PRIORITY_PREF_KEY,
             50
         )
 

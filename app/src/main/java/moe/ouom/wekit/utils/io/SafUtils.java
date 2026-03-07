@@ -20,16 +20,55 @@ import moe.ouom.wekit.utils.log.WeLogger;
 
 public class SafUtils {
 
-    public interface SafSelectFileResultCallback {
-        void onResult(@NonNull Uri uri);
-    }
-
     /**
      * Request to save a file via SAF.
      */
     public static SaveFileTransaction requestSaveFile(@NonNull Context context) {
         checkProcess();
         return new SaveFileTransaction(context);
+    }
+
+    /**
+     * Request to open a file via SAF.
+     */
+    public static OpenFileTransaction requestOpenFile(@NonNull Context context) {
+        checkProcess();
+        return new OpenFileTransaction(context);
+    }
+
+    /**
+     * Request to select a directory via SAF.
+     */
+    public static DirectorySelectTransaction requestSelectDirectory(@NonNull Context context) {
+        checkProcess();
+        return new DirectorySelectTransaction(context);
+    }
+
+    @UiThread
+    private static void complainAboutNoSafActivity(@NonNull Context context, @NonNull Throwable e) {
+        var msg = WeLogger.getStackTraceString();
+        new AlertDialog.Builder(context)
+                .setTitle("ActivityNotFoundException")
+                .setMessage("找不到处理 SAF Intent 的 Activity，可能是系统问题。\n" +
+                        "Android 规范要求必须有应用能够处理这些 Intent，但是有些系统没有实现这个规范。")
+                .setCancelable(true)
+                .setPositiveButton(android.R.string.ok, null)
+                .setNeutralButton(android.R.string.copy, (dialog, which) -> {
+                    var clipboard = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
+                    var clip = ClipData.newPlainText("wekit-error", msg);
+                    clipboard.setPrimaryClip(clip);
+                })
+                .show();
+    }
+
+    private static void checkProcess() {
+        if (HostInfo.isInHostProcess() && !SyncUtils.isMainProcess()) {
+            throw new IllegalStateException("This method can only be called in the main process");
+        }
+    }
+
+    public interface SafSelectFileResultCallback {
+        void onResult(@NonNull Uri uri);
     }
 
     public static class SaveFileTransaction {
@@ -100,14 +139,6 @@ public class SafUtils {
         }
     }
 
-    /**
-     * Request to open a file via SAF.
-     */
-    public static OpenFileTransaction requestOpenFile(@NonNull Context context) {
-        checkProcess();
-        return new OpenFileTransaction(context);
-    }
-
     public static class OpenFileTransaction {
         private final Context context;
         private String mimeType;
@@ -166,14 +197,6 @@ public class SafUtils {
         }
     }
 
-    /**
-     * Request to select a directory via SAF.
-     */
-    public static DirectorySelectTransaction requestSelectDirectory(@NonNull Context context) {
-        checkProcess();
-        return new DirectorySelectTransaction(context);
-    }
-
     public static class DirectorySelectTransaction {
         private final Context context;
         private SafSelectFileResultCallback resultCallback;
@@ -222,29 +245,6 @@ public class SafUtils {
                     null,
                     internalCb
             );
-        }
-    }
-
-    @UiThread
-    private static void complainAboutNoSafActivity(@NonNull Context context, @NonNull Throwable e) {
-        var msg = WeLogger.getStackTraceString();
-        new AlertDialog.Builder(context)
-                .setTitle("ActivityNotFoundException")
-                .setMessage("找不到处理 SAF Intent 的 Activity，可能是系统问题。\n" +
-                        "Android 规范要求必须有应用能够处理这些 Intent，但是有些系统没有实现这个规范。")
-                .setCancelable(true)
-                .setPositiveButton(android.R.string.ok, null)
-                .setNeutralButton(android.R.string.copy, (dialog, which) -> {
-                    var clipboard = (ClipboardManager) context.getSystemService(Context.CLIPBOARD_SERVICE);
-                    var clip = ClipData.newPlainText("wekit-error", msg);
-                    clipboard.setPrimaryClip(clip);
-                })
-                .show();
-    }
-
-    private static void checkProcess() {
-        if (HostInfo.isInHostProcess() && !SyncUtils.isMainProcess()) {
-            throw new IllegalStateException("This method can only be called in the main process");
         }
     }
 }

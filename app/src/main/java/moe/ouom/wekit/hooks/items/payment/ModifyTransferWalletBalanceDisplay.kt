@@ -1,13 +1,27 @@
 package moe.ouom.wekit.hooks.items.payment
 
 import android.content.Context
-import android.text.InputType
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.height
+import androidx.compose.material3.Button
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TextField
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
+import dev.ujhhgtg.nameof.nameof
 import moe.ouom.wekit.config.WeConfig
+import moe.ouom.wekit.constants.Constants
 import moe.ouom.wekit.core.model.BaseClickableFunctionHookItem
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import moe.ouom.wekit.hooks.sdk.protocol.WePkgManager
 import moe.ouom.wekit.hooks.sdk.protocol.intf.IWePkgInterceptor
-import moe.ouom.wekit.ui.content.BasePrefDialog
+import moe.ouom.wekit.ui.content.AlertDialogContent
+import moe.ouom.wekit.ui.utils.showComposeDialog
 import moe.ouom.wekit.utils.WeProtoData
 import moe.ouom.wekit.utils.log.WeLogger
 import org.json.JSONArray
@@ -16,10 +30,10 @@ import org.json.JSONObject
 @HookItem(path = "红包与支付/修改转账显示余额", desc = "伪装转账时显示的余额文字")
 object ModifyTransferWalletBalanceDisplay : BaseClickableFunctionHookItem(), IWePkgInterceptor {
 
-    private const val KEY_CFT_BALANCE = "cashier_cft_balance"
-    private const val KEY_LQT_BALANCE = "cashier_lqt_balance"
-    private const val DEFAULT_CFT = "¥999,999.00"
-    private const val DEFAULT_LQT = "¥8,888,888.88"
+    private val TAG = nameof(ModifyTransferWalletBalanceDisplay)
+
+    private const val KEY_CFT_BALANCE = "fake_cft_balance"
+    private const val KEY_LQT_BALANCE = "fake_lqt_balance"
 
     override fun entry(classLoader: ClassLoader) {
         WePkgManager.addInterceptor(this)
@@ -28,7 +42,7 @@ object ModifyTransferWalletBalanceDisplay : BaseClickableFunctionHookItem(), IWe
     override fun onResponse(uri: String, cgiId: Int, respBytes: ByteArray): ByteArray? {
         if (cgiId != 2882) return null
 
-        WeLogger.i("HookQueryCashierPkg", "拦截到收银台数据包: $uri")
+        WeLogger.i(TAG, "拦截到收银台数据包: $uri")
 
         try {
             val data = WeProtoData()
@@ -37,10 +51,10 @@ object ModifyTransferWalletBalanceDisplay : BaseClickableFunctionHookItem(), IWe
             processJsonObject(json)
             data.applyViewJSON(json, true)
 
-            WeLogger.i("HookQueryCashierPkg", "篡改完成，返回新数据包")
+            WeLogger.i(TAG, "篡改完成，返回新数据包")
             return data.toPacketBytes()
         } catch (e: Exception) {
-            WeLogger.e("HookQueryCashierPkg", e)
+            WeLogger.e(TAG, e)
         }
 
         return null
@@ -54,8 +68,8 @@ object ModifyTransferWalletBalanceDisplay : BaseClickableFunctionHookItem(), IWe
         }
 
         val config = WeConfig.getDefaultConfig()
-        val customCft = config.getStringPrek(KEY_CFT_BALANCE, DEFAULT_CFT) ?: DEFAULT_CFT
-        val customLqt = config.getStringPrek(KEY_LQT_BALANCE, DEFAULT_LQT) ?: DEFAULT_LQT
+        val customCft = config.getStringPref(KEY_CFT_BALANCE, null)
+        val customLqt = config.getStringPref(KEY_LQT_BALANCE, null)
 
         for (key in keysList) {
             val value = obj.opt(key) ?: continue
@@ -75,10 +89,10 @@ object ModifyTransferWalletBalanceDisplay : BaseClickableFunctionHookItem(), IWe
                     handleField3(obj)
                 }
 
-                when (value) {
-                    "CFT" -> updateBalanceText(obj, "零钱(剩余$customCft)")
-                    "LQT" -> updateBalanceText(obj, "零钱通(剩余$customLqt)")
-                }
+                if (value == "CFT" && customCft != null)
+                    updateBalanceText(obj, "零钱(剩余$customCft)")
+                else if (value == "LQT" && customLqt != null)
+                    updateBalanceText(obj, "零钱通(剩余$customLqt)")
             }
 
             if (value is JSONObject) {
@@ -118,38 +132,55 @@ object ModifyTransferWalletBalanceDisplay : BaseClickableFunctionHookItem(), IWe
         }
     }
 
-    private class ConfigDialog(context: Context) : BasePrefDialog(context, "收银台余额配置") {
-        override fun initPreferences() {
-            addCategory("金额设置")
-
-            addEditTextPreference(
-                key = KEY_CFT_BALANCE,
-                title = "零钱余额",
-                summary = "设置支付时显示的零钱余额",
-                defaultValue = DEFAULT_CFT,
-                hint = "例如: ¥999,999.00",
-                inputType = InputType.TYPE_CLASS_TEXT,
-            )
-
-            addEditTextPreference(
-                key = KEY_LQT_BALANCE,
-                title = "零钱通余额",
-                summary = "设置支付时显示的零钱通余额",
-                defaultValue = DEFAULT_LQT,
-                hint = "例如: ¥8,888,888.88",
-                inputType = InputType.TYPE_CLASS_TEXT,
-            )
-        }
-    }
-
     override fun unload(classLoader: ClassLoader) {
         WePkgManager.removeInterceptor(this)
         super.unload(classLoader)
     }
 
+    private val config = WeConfig.getDefaultConfig()
+
     override fun onClick(context: Context) {
-        context.let {
-            ConfigDialog(it).show()
+        showComposeDialog(context, true) { onDismiss ->
+            var cftInput by remember {
+                mutableStateOf(
+                    config.getStringPref(KEY_CFT_BALANCE, null) ?: ""
+                )
+            }
+            var lqtInput by remember {
+                mutableStateOf(
+                    config.getStringPref(KEY_LQT_BALANCE, null) ?: ""
+                )
+            }
+
+            AlertDialogContent(
+                title = { Text("修改显示余额") },
+                text = {
+                    TextField(
+                        value = cftInput,
+                        onValueChange = { cftInput = it },
+                        label = { Text("零钱余额 (留空不修改)") })
+                    Spacer(Modifier.height(8.dp))
+                    TextField(
+                        value = lqtInput,
+                        onValueChange = { lqtInput = it },
+                        label = { Text("零钱通余额 (留空不修改)") })
+                },
+                confirmButton = {
+                    Button(onClick = {
+                        if (!cftInput.isBlank())
+                            config.putString(Constants.PREF_KEY_PREFIX + KEY_CFT_BALANCE, cftInput)
+                        else
+                            config.remove(Constants.PREF_KEY_PREFIX + KEY_CFT_BALANCE)
+
+                        if (!lqtInput.isBlank())
+                            config.putString(Constants.PREF_KEY_PREFIX + KEY_LQT_BALANCE, lqtInput)
+                        else
+                            config.remove(Constants.PREF_KEY_PREFIX + KEY_LQT_BALANCE)
+                        onDismiss()
+                    }) { Text("确定") }
+                },
+                dismissButton = { TextButton(onClick = onDismiss) { Text("取消") } }
+            )
         }
     }
 }

@@ -30,12 +30,28 @@ public class ShadowSafTransientActivity extends Activity {
     private static final int REQ_READ_FILE = 10001;
     private static final int REQ_WRITE_FILE = 10002;
     private static final int REQ_OPEN_DIR = 10003;
-
+    private static final ConcurrentHashMap<Integer, Request> sRequestMap = new ConcurrentHashMap<>();
+    private static final AtomicInteger sSequenceGenerator = new AtomicInteger(10000);
     private int mSequence;
     private int mTargetAction;
     private int mOriginRequest;
     private String mMimeType;
     private String mFileName;
+
+    public static void startActivityForRequest(@NonNull Context host, int targetAction,
+                                               @Nullable String mimeType, @Nullable String fileName,
+                                               @NonNull RequestResultCallback callback) {
+        var sequence = sSequenceGenerator.incrementAndGet();
+        var request = new Request(sequence, targetAction, mimeType, fileName, callback);
+        sRequestMap.put(sequence, request);
+        var start = new Intent(host, ShadowSafTransientActivity.class);
+        start.putExtra(PARAM_SEQUENCE, sequence);
+        start.putExtra(PARAM_TARGET_ACTION, targetAction);
+        start.putExtra(PARAM_FILE_NAME, fileName);
+        start.putExtra(PARAM_MINE_TYPE, mimeType);
+        start.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
+        host.startActivity(start);
+    }
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -106,33 +122,15 @@ public class ShadowSafTransientActivity extends Activity {
         }
     }
 
-    public record Request(int sequence, int targetAction, String mimeType, String fileName,
-                          RequestResultCallback callback) {
-    }
-
-    private static final ConcurrentHashMap<Integer, Request> sRequestMap = new ConcurrentHashMap<>();
-    private static final AtomicInteger sSequenceGenerator = new AtomicInteger(10000);
-
-    public static void startActivityForRequest(@NonNull Context host, int targetAction,
-                                               @Nullable String mimeType, @Nullable String fileName,
-                                               @NonNull RequestResultCallback callback) {
-        var sequence = sSequenceGenerator.incrementAndGet();
-        var request = new Request(sequence, targetAction, mimeType, fileName, callback);
-        sRequestMap.put(sequence, request);
-        var start = new Intent(host, ShadowSafTransientActivity.class);
-        start.putExtra(PARAM_SEQUENCE, sequence);
-        start.putExtra(PARAM_TARGET_ACTION, targetAction);
-        start.putExtra(PARAM_FILE_NAME, fileName);
-        start.putExtra(PARAM_MINE_TYPE, mimeType);
-        start.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
-        host.startActivity(start);
-    }
-
     public interface RequestResultCallback {
         @UiThread
         void onResult(@Nullable Uri uri);
 
         @UiThread
         void onException(@NonNull Throwable e);
+    }
+
+    public record Request(int sequence, int targetAction, String mimeType, String fileName,
+                          RequestResultCallback callback) {
     }
 }

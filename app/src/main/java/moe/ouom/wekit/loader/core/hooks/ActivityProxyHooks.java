@@ -49,20 +49,6 @@ public class ActivityProxyHooks {
 
     private static boolean __stub_hooked = false;
 
-    public static class ActProxyMgr {
-        public static final String ACTIVITY_PROXY_INTENT_TOKEN = "wekit_target_intent_token";
-
-        // 这个 Activity 必须在微信的 AndroidManifest.xml 中真实存在且 exported=false 也可以，只要同进程
-        public static final String STUB_DEFAULT_ACTIVITY = "com.tencent.mm.plugin.facedetect.ui.FaceTransparentStubUI";
-
-        /**
-         * 判断是否为模块内的 Activity
-         */
-        public static boolean isModuleProxyActivity(String className) {
-            return className != null && className.startsWith("moe.ouom.wekit");
-        }
-    }
-
     @SuppressWarnings("JavaReflectionMemberAccess")
     @SuppressLint({"PrivateApi", "DiscouragedPrivateApi"})
     public static void initForStubActivity(Context ctx) {
@@ -198,6 +184,20 @@ public class ActivityProxyHooks {
             mPmField.set(pm, pmProxy);
         } catch (Exception e) {
             WeLogger.e("ActivityProxyHooks", "Failed to hook PackageManager (Non-fatal)", e);
+        }
+    }
+
+    public static class ActProxyMgr {
+        public static final String ACTIVITY_PROXY_INTENT_TOKEN = "wekit_target_intent_token";
+
+        // 这个 Activity 必须在微信的 AndroidManifest.xml 中真实存在且 exported=false 也可以，只要同进程
+        public static final String STUB_DEFAULT_ACTIVITY = "com.tencent.mm.plugin.facedetect.ui.FaceTransparentStubUI";
+
+        /**
+         * 判断是否为模块内的 Activity
+         */
+        public static boolean isModuleProxyActivity(String className) {
+            return className != null && className.startsWith("moe.ouom.wekit");
         }
     }
 
@@ -889,16 +889,6 @@ public class ActivityProxyHooks {
     }
 
     private static class IntentTokenCache {
-        private static class Entry {
-            Intent intent;
-            long timestamp;
-
-            Entry(Intent i) {
-                intent = i;
-                timestamp = System.currentTimeMillis();
-            }
-        }
-
         private static final Map<String, Entry> sCache = new ConcurrentHashMap<>();
         private static final long EXPIRE_MS = 60 * 1000;
 
@@ -941,6 +931,16 @@ public class ActivityProxyHooks {
         private static void cleanup() {
             var now = System.currentTimeMillis();
             sCache.entrySet().removeIf(stringEntryEntry -> now - stringEntryEntry.getValue().timestamp > EXPIRE_MS);
+        }
+
+        private static class Entry {
+            Intent intent;
+            long timestamp;
+
+            Entry(Intent i) {
+                intent = i;
+                timestamp = System.currentTimeMillis();
+            }
         }
     }
 }

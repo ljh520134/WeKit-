@@ -2,7 +2,7 @@
 
 适用于微信的 Xposed 模块
 
-## 修改内容
+## 修改内容 (相比上游)
 
 - 添加 WAuxiliary 与 NewMiko 目前公开源代码中的部分功能
 - 移除全部校验, 减少模块体积, 避免不必要性能开销 (注意: 签名无论 Release/Debug 均使用默认 Debug 签名, 请勿从不安全来源安装模块)
@@ -71,6 +71,8 @@
 * 建议使用 KavaRef 来进行反射, 注意 KavaRef 不会自动缓存构造函数以外的成员方法, 所以对于频繁调用的方法请手动缓存, [KavaRef 文档](https://highcapable.github.io/KavaRef/zh-cn/library/kavaref-core.html)
 
 * 由于上游原项目架构原因, 本模块暂未接入 YukiHookAPI, 在 feat/yukihookapi 分支中有实验性移植, 但出于一些尚未解决的性能问题暂未使用
+
+* 本 Fork 是硬分支 (Hard Fork), 接受与上游不兼容的更改
 
 ## 已知问题
 

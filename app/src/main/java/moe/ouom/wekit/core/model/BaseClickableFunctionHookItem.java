@@ -12,9 +12,9 @@ import moe.ouom.wekit.utils.common.SyncUtils;
 import moe.ouom.wekit.utils.log.WeLogger;
 
 public abstract class BaseClickableFunctionHookItem extends BaseHookItem {
-    private boolean enabled;
     private final int targetProcess = targetProcess();
     private final boolean alwaysRun = alwaysRun();
+    private boolean enabled;
     private boolean isLoaded = false;
     private Runnable toggleCompletionCallback;
 
@@ -35,7 +35,7 @@ public abstract class BaseClickableFunctionHookItem extends BaseHookItem {
      */
     public void applyToggle(boolean newState) {
         // 保存配置
-        var configKey = Constants.PrekClickableXXX + this.getPath();
+        var configKey = Constants.PREF_KEY_PREFIX + this.getPath();
         WeConfig.getDefaultConfig().edit().putBoolean(configKey, newState).apply();
 
         // 更新状态

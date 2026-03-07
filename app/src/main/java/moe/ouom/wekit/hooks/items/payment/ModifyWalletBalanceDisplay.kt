@@ -34,10 +34,11 @@ object ModifyWalletBalanceDisplay : BaseClickableFunctionHookItem(), IDexFind {
         methodUpdateBalanceDisplay.toDexMethod {
             hook {
                 afterIfEnabled { param ->
+                    val text = config.getStringPref(KEY_BALANCE, null) ?: return@afterIfEnabled
                     val balanceView = param.thisObject.asResolver()
                         .firstField { type = TextView::class }
                         .get()!! as TextView
-                    balanceView.text = config.getStringPrek(KEY_BALANCE, null) ?: return@afterIfEnabled
+                    balanceView.text = text
                 }
             }
         }
@@ -45,7 +46,8 @@ object ModifyWalletBalanceDisplay : BaseClickableFunctionHookItem(), IDexFind {
         methodTickerViewSetText.toDexMethod {
             hook {
                 beforeIfEnabled { param ->
-                    param.args[0] = config.getStringPrek(KEY_BALANCE, null) ?: return@beforeIfEnabled
+                    param.args[0] =
+                        config.getStringPref(KEY_BALANCE, null) ?: return@beforeIfEnabled
                 }
             }
         }
@@ -74,8 +76,11 @@ object ModifyWalletBalanceDisplay : BaseClickableFunctionHookItem(), IDexFind {
 
     override fun onClick(context: Context) {
         showComposeDialog(context, true) { onDismiss ->
-            var input by remember { mutableStateOf(
-                config.getStringPrek(KEY_BALANCE, null) ?: "") }
+            var input by remember {
+                mutableStateOf(
+                    config.getStringPref(KEY_BALANCE, null) ?: ""
+                )
+            }
 
             AlertDialogContent(
                 title = { Text("修改显示余额") },
@@ -83,18 +88,18 @@ object ModifyWalletBalanceDisplay : BaseClickableFunctionHookItem(), IDexFind {
                     TextField(
                         value = input,
                         onValueChange = { input = it },
-                        label = { Text("余额字符串") })
+                        label = { Text("零钱余额 (留空不修改)") })
                 },
-                confirmButton = { Button(onClick = {
-                    config.putString(Constants.PrekXXX + KEY_BALANCE, input)
-                    onDismiss()
-                }) { Text("确定") } },
-                dismissButton = {
-                    TextButton(onClick = {
-                        config.remove(Constants.PrekXXX + KEY_BALANCE)
+                confirmButton = {
+                    Button(onClick = {
+                        if (!input.isBlank())
+                            config.putString(Constants.PREF_KEY_PREFIX + KEY_BALANCE, input)
+                        else
+                            config.remove(Constants.PREF_KEY_PREFIX + KEY_BALANCE)
                         onDismiss()
-                    }) { Text("清除") }
-                    TextButton(onClick = onDismiss) { Text("取消") } }
+                    }) { Text("确定") }
+                },
+                dismissButton = { TextButton(onClick = onDismiss) { Text("取消") } }
             )
         }
     }

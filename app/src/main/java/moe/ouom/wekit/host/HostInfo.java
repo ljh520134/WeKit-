@@ -13,6 +13,8 @@ public class HostInfo {
 
     public static final String PACKAGE_NAME_WECHAT = "com.tencent.mm";
     public static final String PACKAGE_NAME_SELF = BuildConfig.APPLICATION_ID;
+    public static boolean isWeChat = moe.ouom.wekit.host.impl.HostInfo.isWeChat();
+    public static boolean isGooglePlayVersion = moe.ouom.wekit.host.impl.HostInfo.isGooglePlayVersion();
 
     private HostInfo() {
         throw new AssertionError("No instance for you!");
@@ -61,10 +63,6 @@ public class HostInfo {
     public static boolean isAndroidxFileProviderAvailable() {
         return moe.ouom.wekit.host.impl.HostInfo.isAndroidxFileProviderAvailable();
     }
-
-    public static boolean isWeChat = moe.ouom.wekit.host.impl.HostInfo.isWeChat();
-
-    public static boolean isGooglePlayVersion = moe.ouom.wekit.host.impl.HostInfo.isGooglePlayVersion();
 
     public static boolean requireMinWeChatVersion(int versionCode) {
         return isWeChat && getLongVersionCode() >= versionCode;

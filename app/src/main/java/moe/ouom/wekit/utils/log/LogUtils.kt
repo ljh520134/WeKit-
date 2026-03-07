@@ -97,7 +97,7 @@ object LogUtils {
     private fun addLog(fileName: String, desc: String?, content: Any?, isError: Boolean) {
         try {
             if (NativeCoreBridge.isNativeCoreInitialized() && !WeConfig.getDefaultConfig()
-                    .getBooleanOrFalse(Constants.PrekEnableLog)
+                    .getBooleanOrFalse(Constants.ENABLE_LOG_PREF_KEY)
             ) {
                 return
             }

@@ -19,47 +19,10 @@ import moe.ouom.wekit.loader.ModuleLoader;
 
 @Keep
 public class LegacyHookEntry implements IXposedHookLoadPackage, IXposedHookZygoteInit {
+    public static String sCurrentPackageName = null;
     private static XC_LoadPackage.LoadPackageParam sLoadPackageParam = null;
     private static StartupParam sInitZygoteStartupParam = null;
     private static String sModulePath = null;
-
-    public static String sCurrentPackageName = null;
-
-    /**
-     * *** No kotlin code should be invoked here.*** May cause a crash.
-     */
-    @Keep
-    @Override
-    public void handleLoadPackage(final XC_LoadPackage.LoadPackageParam lpparam) throws ReflectiveOperationException {
-        sLoadPackageParam = lpparam;
-        // check LSPosed dex-obfuscation
-        Class<?> kXposedBridge = XposedBridge.class;
-        switch (lpparam.packageName) {
-            case PACKAGE_NAME_SELF: {
-                Xp51HookStatusInit.init(lpparam.classLoader);
-                break;
-            }
-            case PACKAGE_NAME_WECHAT:
-                if (sInitZygoteStartupParam == null) {
-                    throw new IllegalStateException("handleLoadPackage: sInitZygoteStartupParam is null");
-                }
-                sCurrentPackageName = lpparam.packageName;
-                ModuleLoader.initialize(lpparam.appInfo.dataDir, lpparam.classLoader,
-                        Xp51HookImpl.INSTANCE, Xp51HookImpl.INSTANCE, getModulePath());
-                break;
-            default:
-                break;
-        }
-    }
-
-    /**
-     * *** No kotlin code should be invoked here.*** May cause a crash.
-     */
-    @Override
-    public void initZygote(StartupParam startupParam) {
-        sInitZygoteStartupParam = startupParam;
-        sModulePath = startupParam.modulePath;
-    }
 
     /**
      * Get the {@link XC_LoadPackage.LoadPackageParam} of the current module.
@@ -95,6 +58,42 @@ public class LegacyHookEntry implements IXposedHookLoadPackage, IXposedHookZygot
             throw new IllegalStateException("InitZygoteStartupParam is null");
         }
         return sInitZygoteStartupParam;
+    }
+
+    /**
+     * *** No kotlin code should be invoked here.*** May cause a crash.
+     */
+    @Keep
+    @Override
+    public void handleLoadPackage(final XC_LoadPackage.LoadPackageParam lpparam) throws ReflectiveOperationException {
+        sLoadPackageParam = lpparam;
+        // check LSPosed dex-obfuscation
+        Class<?> kXposedBridge = XposedBridge.class;
+        switch (lpparam.packageName) {
+            case PACKAGE_NAME_SELF: {
+                Xp51HookStatusInit.init(lpparam.classLoader);
+                break;
+            }
+            case PACKAGE_NAME_WECHAT:
+                if (sInitZygoteStartupParam == null) {
+                    throw new IllegalStateException("handleLoadPackage: sInitZygoteStartupParam is null");
+                }
+                sCurrentPackageName = lpparam.packageName;
+                ModuleLoader.initialize(lpparam.appInfo.dataDir, lpparam.classLoader,
+                        Xp51HookImpl.INSTANCE, Xp51HookImpl.INSTANCE, getModulePath());
+                break;
+            default:
+                break;
+        }
+    }
+
+    /**
+     * *** No kotlin code should be invoked here.*** May cause a crash.
+     */
+    @Override
+    public void initZygote(StartupParam startupParam) {
+        sInitZygoteStartupParam = startupParam;
+        sModulePath = startupParam.modulePath;
     }
 
 }

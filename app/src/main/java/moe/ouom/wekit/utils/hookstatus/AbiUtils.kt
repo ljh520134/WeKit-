@@ -72,17 +72,18 @@ object AbiUtils {
                 )
             }
             val abiFlags = getAbiFlags(abis)
-            cachedModuleAbiFlavor = if ((abiFlags and (ABI_ARM32 or ABI_ARM64 or ABI_X86 or ABI_X86_64)) == (ABI_ARM32 or ABI_ARM64 or ABI_X86 or ABI_X86_64)) {
-                "universal"
-            } else if ((abiFlags and (ABI_ARM32 or ABI_ARM64)) == (ABI_ARM32 or ABI_ARM64)) {
-                "armAll"
-            } else if (abiFlags == ABI_ARM32) {
-                "arm32"
-            } else if (abiFlags == ABI_ARM64) {
-                "arm64"
-            } else {
-                "unknown"
-            }
+            cachedModuleAbiFlavor =
+                if ((abiFlags and (ABI_ARM32 or ABI_ARM64 or ABI_X86 or ABI_X86_64)) == (ABI_ARM32 or ABI_ARM64 or ABI_X86 or ABI_X86_64)) {
+                    "universal"
+                } else if ((abiFlags and (ABI_ARM32 or ABI_ARM64)) == (ABI_ARM32 or ABI_ARM64)) {
+                    "armAll"
+                } else if (abiFlags == ABI_ARM32) {
+                    "arm32"
+                } else if (abiFlags == ABI_ARM64) {
+                    "arm64"
+                } else {
+                    "unknown"
+                }
             return cachedModuleAbiFlavor!!
         }
 

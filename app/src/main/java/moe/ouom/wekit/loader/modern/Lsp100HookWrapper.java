@@ -20,40 +20,19 @@ import moe.ouom.wekit.utils.log.WeLogger;
 
 public class Lsp100HookWrapper {
 
-    private Lsp100HookWrapper() {
-    }
-
-    public static XposedModule self = null;
-
     private static final CallbackWrapper[] EMPTY_CALLBACKS = new CallbackWrapper[0];
-
     private static final AtomicLong sNextHookId = new AtomicLong(1);
-
     private static final Object sRegistryWriteLock = new Object();
-
     private static final Class<?> DEFAULT_PROXY = Lsp100CallbackProxy.P0000000050.class;
     private static final int DEFAULT_PRIORITY = 50;
+    // WARNING: This will only work for Android 7.0 and above.
+    // Since SDK 24, Method.equals() and Method.hashCode() can correctly compare hooked methods.
+    // Before SDK 24, equals() uses AbstractMethod which is not safe for hooked methods.
+    // If you need to support lower versions, go and read cs.android.com.
+    private static final ConcurrentHashMap<Integer, ConcurrentHashMap<Class<?>, ConcurrentHashMap<Member, CallbackListHolder>>> sCallbackRegistry = new ConcurrentHashMap<>();
+    public static XposedModule self = null;
 
-    public static class CallbackWrapper {
-
-        public final IHookBridge.IMemberHookCallback callback;
-        public final long hookId = sNextHookId.getAndIncrement();
-        public final int priority;
-        public final int tag;
-
-        public CallbackWrapper(IHookBridge.IMemberHookCallback callback, int priority, int tag) {
-            this.callback = callback;
-            this.priority = priority;
-            this.tag = tag;
-        }
-    }
-
-    public static class CallbackListHolder {
-
-        public final Object lock = new Object();
-        // sorted by priority, descending
-        public CallbackWrapper[] callbacks = EMPTY_CALLBACKS;
-
+    private Lsp100HookWrapper() {
     }
 
     public static UnhookHandle hookAndRegisterMethodCallback(
@@ -207,17 +186,49 @@ public class Lsp100HookWrapper {
         return EMPTY_CALLBACKS;
     }
 
+    @NonNull
+    private static Class<?> generateProxyClassForCallback(int priority) throws UnsupportedOperationException {
+        var maker = Lsp100ProxyClassMaker.getInstance();
+        return maker.createProxyClass(priority);
+    }
+
+    public static int getHookCounter() {
+        return (int) (sNextHookId.get() - 1);
+    }
+
+    public static class CallbackWrapper {
+
+        public final IHookBridge.IMemberHookCallback callback;
+        public final long hookId = sNextHookId.getAndIncrement();
+        public final int priority;
+        public final int tag;
+
+        public CallbackWrapper(IHookBridge.IMemberHookCallback callback, int priority, int tag) {
+            this.callback = callback;
+            this.priority = priority;
+            this.tag = tag;
+        }
+    }
+
+    public static class CallbackListHolder {
+
+        public final Object lock = new Object();
+        // sorted by priority, descending
+        public CallbackWrapper[] callbacks = EMPTY_CALLBACKS;
+
+    }
+
     public static class InvocationParamWrapper implements IHookBridge.IMemberHookParam {
 
         // the index of the active callback
         public int index = -1;
         public boolean isAfter = false;
-        XposedInterface.BeforeHookCallback before;
-        XposedInterface.AfterHookCallback after;
         // sorted by priority, descending
         public CallbackWrapper[] callbacks;
         // create on demand
         public Object[] extras;
+        XposedInterface.BeforeHookCallback before;
+        XposedInterface.AfterHookCallback after;
 
         @NonNull
         @Override
@@ -322,12 +333,6 @@ public class Lsp100HookWrapper {
 
     }
 
-    // WARNING: This will only work for Android 7.0 and above.
-    // Since SDK 24, Method.equals() and Method.hashCode() can correctly compare hooked methods.
-    // Before SDK 24, equals() uses AbstractMethod which is not safe for hooked methods.
-    // If you need to support lower versions, go and read cs.android.com.
-    private static final ConcurrentHashMap<Integer, ConcurrentHashMap<Class<?>, ConcurrentHashMap<Member, CallbackListHolder>>> sCallbackRegistry = new ConcurrentHashMap<>();
-
     public static class Lsp100HookAgent implements XposedInterface.Hooker {
 
         public static InvocationParamWrapper handleBeforeHookedMethod(
@@ -398,12 +403,6 @@ public class Lsp100HookWrapper {
         }
     }
 
-    @NonNull
-    private static Class<?> generateProxyClassForCallback(int priority) throws UnsupportedOperationException {
-        var maker = Lsp100ProxyClassMaker.getInstance();
-        return maker.createProxyClass(priority);
-    }
-
     public static class UnhookHandle implements IHookBridge.MemberUnhookHandle {
 
         private final CallbackWrapper callback;
@@ -436,10 +435,6 @@ public class Lsp100HookWrapper {
             removeMethodCallback(method, callback);
         }
 
-    }
-
-    public static int getHookCounter() {
-        return (int) (sNextHookId.get() - 1);
     }
 
 }

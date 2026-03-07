@@ -37,7 +37,7 @@ object RemoveChatMessageContextMenuItems : BaseClickableFunctionHookItem(), IDex
                 afterIfEnabled { param ->
                     val name = param.args[3] as CharSequence
                     val removedNames =
-                        config.getStringPrek(KEY_REMOVED_ITEM_NAMES, DEFAULT_REMOVED_ITEM_NAMES)
+                        config.getStringPref(KEY_REMOVED_ITEM_NAMES, DEFAULT_REMOVED_ITEM_NAMES)
                             .split(',')
 
                     if (removedNames.contains(name)) {
@@ -55,7 +55,7 @@ object RemoveChatMessageContextMenuItems : BaseClickableFunctionHookItem(), IDex
                 afterIfEnabled { param ->
                     val name = param.args[3] as CharSequence
                     val removedNames =
-                        config.getStringPrek(KEY_REMOVED_ITEM_NAMES, DEFAULT_REMOVED_ITEM_NAMES)
+                        config.getStringPref(KEY_REMOVED_ITEM_NAMES, DEFAULT_REMOVED_ITEM_NAMES)
                             .split(',')
 
                     if (removedNames.contains(name)) {
@@ -112,7 +112,7 @@ object RemoveChatMessageContextMenuItems : BaseClickableFunctionHookItem(), IDex
         showComposeDialog(context, true) { onDismiss ->
             var removedNames by remember {
                 mutableStateOf(
-                    config.getStringPrek(
+                    config.getStringPref(
                         KEY_REMOVED_ITEM_NAMES,
                         DEFAULT_REMOVED_ITEM_NAMES
                     )
@@ -129,7 +129,10 @@ object RemoveChatMessageContextMenuItems : BaseClickableFunctionHookItem(), IDex
                 dismissButton = { TextButton(onClick = onDismiss) { Text("取消") } },
                 confirmButton = {
                     TextButton(onClick = {
-                        config.putString(Constants.PrekXXX + KEY_REMOVED_ITEM_NAMES, removedNames)
+                        config.putString(
+                            Constants.PREF_KEY_PREFIX + KEY_REMOVED_ITEM_NAMES,
+                            removedNames
+                        )
                         onDismiss()
                     }) { Text("确定") }
                 })

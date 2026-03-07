@@ -26,17 +26,6 @@ public abstract class WeConfig implements SharedPreferences, SharedPreferences.E
         return sDefConfig;
     }
 
-    @Nullable
-    public abstract File getFile();
-
-    @Nullable
-    public Object getOrDefault(@NonNull String key, @Nullable Object def) {
-        if (!containsKey(key)) {
-            return def;
-        }
-        return getObject(key);
-    }
-
     public static void dPutBoolean(@NonNull String key, Boolean b) {
         getDefaultConfig().edit().putBoolean(key, b).apply();
     }
@@ -65,24 +54,35 @@ public abstract class WeConfig implements SharedPreferences, SharedPreferences.E
         return getDefaultConfig().getIntOrDefault(key, d);
     }
 
+    @Nullable
+    public abstract File getFile();
+
+    @Nullable
+    public Object getOrDefault(@NonNull String key, @Nullable Object def) {
+        if (!containsKey(key)) {
+            return def;
+        }
+        return getObject(key);
+    }
+
     public boolean getBooleanOrFalse(@NonNull String key) {
         return getBooleanOrDefault(key, false);
     }
 
-    public boolean getBoolPrek(@NonNull String key) {
-        return getBooleanOrDefault(Constants.PrekXXX + key, false);
+    public boolean getBoolPref(@NonNull String key) {
+        return getBooleanOrDefault(Constants.PREF_KEY_PREFIX + key, false);
     }
 
-    public String getStringPrek(@NonNull String key, @Nullable String def) {
-        return getString(Constants.PrekXXX + key, def);
+    public String getStringPref(@NonNull String key, @Nullable String def) {
+        return getString(Constants.PREF_KEY_PREFIX + key, def);
     }
 
     public int getIntPrek(@NonNull String key, int def) {
-        return getInt(Constants.PrekXXX + key, def);
+        return getInt(Constants.PREF_KEY_PREFIX + key, def);
     }
 
     public long getLongPrek(@NonNull String key, long def) {
-        return getLong(Constants.PrekXXX + key, def);
+        return getLong(Constants.PREF_KEY_PREFIX + key, def);
     }
 
     public boolean getBooleanOrDefault(@NonNull String key, boolean def) {

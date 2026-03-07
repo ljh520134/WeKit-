@@ -10,17 +10,14 @@ import lombok.Getter;
 
 public class RuntimeConfig {
 
-    private RuntimeConfig() {
-        throw new AssertionError("No instance for you!");
-    }
-
-    private static WeakReference<Activity> launcherUIActivityRef;
     public static ClassLoader hostClassLoader;
     public static ApplicationInfo hostApplicationInfo;
+    private static WeakReference<Activity> launcherUIActivityRef;
+    private static SharedPreferences mmPrefs;
 
     // account info //
-
-    private static SharedPreferences mmPrefs;
+    @Getter
+    private static String wechatVersionName; // "8.0.65"
 
     // login_weixin_username: wxid_apfe8lfoeoad13
     // last_login_nick_name: 帽子叔叔
@@ -30,21 +27,13 @@ public class RuntimeConfig {
     // ------- //
 
     // WeChat app info //
-
-    @Getter
-    private static String wechatVersionName; // "8.0.65"
     @Getter
     private static long wechatVersionCode;    // 2960
+    private RuntimeConfig() {
+        throw new AssertionError("No instance for you!");
+    }
 
     // ------- //
-
-    public static void setLauncherUIActivity(Activity activity) {
-        if (activity == null) {
-            launcherUIActivityRef = null;
-        } else {
-            launcherUIActivityRef = new WeakReference<>(activity);
-        }
-    }
 
     public static Activity getLauncherUIActivity() {
         if (launcherUIActivityRef == null) {
@@ -58,6 +47,14 @@ public class RuntimeConfig {
         }
 
         return activity;
+    }
+
+    public static void setLauncherUIActivity(Activity activity) {
+        if (activity == null) {
+            launcherUIActivityRef = null;
+        } else {
+            launcherUIActivityRef = new WeakReference<>(activity);
+        }
     }
 
     public static ClassLoader getHostClassLoader() {

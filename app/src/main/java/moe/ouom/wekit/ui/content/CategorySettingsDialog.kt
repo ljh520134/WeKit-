@@ -37,7 +37,7 @@ class CategorySettingsDialog(
         title: String,
         summary: String,
     ) {
-        val configKey = "${Constants.PrekXXX}${item.path}"
+        val configKey = "${Constants.PREF_KEY_PREFIX}${item.path}"
         val initialChecked = WeConfig.getDefaultConfig().getBooleanOrFalse(configKey)
 
         rows += SettingsRow.SwitchRow(
@@ -69,7 +69,7 @@ class CategorySettingsDialog(
         title: String,
         summary: String,
     ) {
-        val configKey = "${Constants.PrekClickableXXX}${item.path}"
+        val configKey = "${Constants.PREF_KEY_PREFIX}${item.path}"
         val initialChecked = WeConfig.getDefaultConfig().getBooleanOrFalse(configKey)
 
         rows += SettingsRow.ClickableRow(

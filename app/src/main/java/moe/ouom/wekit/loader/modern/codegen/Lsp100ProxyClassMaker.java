@@ -22,76 +22,6 @@ public class Lsp100ProxyClassMaker {
     private static Method sWrapperMethod = null;
 
     private static Throwable sLoadClassException = null;
-
-    public Class<?> createProxyClass(int priority) {
-        var className = getClassNameForPriority(priority);
-        // is already loaded?
-        try {
-            return Lsp100ProxyClassMaker.class.getClassLoader().loadClass(className);
-        } catch (ClassNotFoundException ignored) {
-        }
-        if (sLoadClassException != null) {
-            throw new UnsupportedOperationException("reject to try again due to previous exception", sLoadClassException);
-        }
-        if (sProxyClassLoader != null) {
-            try {
-                return sProxyClassLoader.loadClass(className);
-            } catch (ClassNotFoundException ignored) {
-            }
-        }
-        var dex = makeClassByteCodeForPriority(priority);
-        return loadProxyClassForPriority(className, dex, priority);
-    }
-
-    private Class<?> loadProxyClassForPriority(@NonNull String className, @NonNull byte[] dex, int priority) {
-        var helper = Lsp100HookImpl.INSTANCE.getClassLoaderHelper();
-        if (helper == null) {
-            throw new UnsupportedOperationException("ClassLoaderHelper not set");
-        }
-        if (sLoadClassException != null) {
-            throw new UnsupportedOperationException("reject to try again due to previous exception", sLoadClassException);
-        }
-        if (sProxyClassLoader == null) {
-            synchronized (Lsp100ProxyClassMaker.class) {
-                if (sProxyClassLoader == null) {
-                    sProxyClassLoader = helper.createEmptyInMemoryMultiDexClassLoader(Objects.requireNonNull(Lsp100HookImpl.class.getClassLoader()));
-                }
-            }
-        }
-        // already loaded?
-        try {
-            return sProxyClassLoader.loadClass(className);
-        } catch (ClassNotFoundException ignored) {
-        }
-        // load dex
-        helper.injectDexToClassLoader(sProxyClassLoader, dex, null);
-        // load class
-        Class<?> proxyClass;
-        try {
-            // force a resolution
-            proxyClass = Class.forName(className, true, sProxyClassLoader);
-        } catch (ClassNotFoundException e) {
-            sLoadClassException = e;
-            throw new UnsupportedOperationException("Failed to load proxy class", e);
-        }
-        return proxyClass;
-    }
-
-    public static void setWrapperMethod(Method method) {
-        sWrapperMethod = method;
-    }
-
-    public static Method getWrapperMethod() {
-        return sWrapperMethod;
-    }
-
-    public static Lsp100ProxyClassMaker getInstance() throws UnsupportedOperationException {
-        if (sInstance == null) {
-            sInstance = new Lsp100ProxyClassMaker();
-        }
-        return sInstance;
-    }
-
     private String mXposedHookerClassName;
     private String mBeforeInvocationClassName;
     private String mAfterInvocationClassName;
@@ -131,20 +61,19 @@ public class Lsp100ProxyClassMaker {
         }
     }
 
+    public static Method getWrapperMethod() {
+        return sWrapperMethod;
+    }
 
-    @NonNull
-    private byte[] makeClassByteCodeForPriority(int priority) {
-        var className = getClassNameForPriority(priority);
-        return impl1(
-                className,
-                priority,
-                XposedInterface.Hooker.class.getName(),
-                XposedInterface.BeforeHookCallback.class.getName(),
-                XposedInterface.AfterHookCallback.class.getName(),
-                mXposedHookerClassName,
-                mBeforeInvocationClassName,
-                mAfterInvocationClassName
-        );
+    public static void setWrapperMethod(Method method) {
+        sWrapperMethod = method;
+    }
+
+    public static Lsp100ProxyClassMaker getInstance() throws UnsupportedOperationException {
+        if (sInstance == null) {
+            sInstance = new Lsp100ProxyClassMaker();
+        }
+        return sInstance;
     }
 
     @NonNull
@@ -203,6 +132,75 @@ public class Lsp100ProxyClassMaker {
 
     private static String getClassNameForPriority(int priority) {
         return "moe.ouom.wekit.loader.modern.dyn.Lsp100CallbackProxy$" + priorityToShortName(priority);
+    }
+
+    public Class<?> createProxyClass(int priority) {
+        var className = getClassNameForPriority(priority);
+        // is already loaded?
+        try {
+            return Lsp100ProxyClassMaker.class.getClassLoader().loadClass(className);
+        } catch (ClassNotFoundException ignored) {
+        }
+        if (sLoadClassException != null) {
+            throw new UnsupportedOperationException("reject to try again due to previous exception", sLoadClassException);
+        }
+        if (sProxyClassLoader != null) {
+            try {
+                return sProxyClassLoader.loadClass(className);
+            } catch (ClassNotFoundException ignored) {
+            }
+        }
+        var dex = makeClassByteCodeForPriority(priority);
+        return loadProxyClassForPriority(className, dex, priority);
+    }
+
+    private Class<?> loadProxyClassForPriority(@NonNull String className, @NonNull byte[] dex, int priority) {
+        var helper = Lsp100HookImpl.INSTANCE.getClassLoaderHelper();
+        if (helper == null) {
+            throw new UnsupportedOperationException("ClassLoaderHelper not set");
+        }
+        if (sLoadClassException != null) {
+            throw new UnsupportedOperationException("reject to try again due to previous exception", sLoadClassException);
+        }
+        if (sProxyClassLoader == null) {
+            synchronized (Lsp100ProxyClassMaker.class) {
+                if (sProxyClassLoader == null) {
+                    sProxyClassLoader = helper.createEmptyInMemoryMultiDexClassLoader(Objects.requireNonNull(Lsp100HookImpl.class.getClassLoader()));
+                }
+            }
+        }
+        // already loaded?
+        try {
+            return sProxyClassLoader.loadClass(className);
+        } catch (ClassNotFoundException ignored) {
+        }
+        // load dex
+        helper.injectDexToClassLoader(sProxyClassLoader, dex, null);
+        // load class
+        Class<?> proxyClass;
+        try {
+            // force a resolution
+            proxyClass = Class.forName(className, true, sProxyClassLoader);
+        } catch (ClassNotFoundException e) {
+            sLoadClassException = e;
+            throw new UnsupportedOperationException("Failed to load proxy class", e);
+        }
+        return proxyClass;
+    }
+
+    @NonNull
+    private byte[] makeClassByteCodeForPriority(int priority) {
+        var className = getClassNameForPriority(priority);
+        return impl1(
+                className,
+                priority,
+                XposedInterface.Hooker.class.getName(),
+                XposedInterface.BeforeHookCallback.class.getName(),
+                XposedInterface.AfterHookCallback.class.getName(),
+                mXposedHookerClassName,
+                mBeforeInvocationClassName,
+                mAfterInvocationClassName
+        );
     }
 
 }

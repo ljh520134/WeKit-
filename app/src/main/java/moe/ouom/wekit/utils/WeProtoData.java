@@ -21,34 +21,6 @@ import moe.ouom.wekit.utils.log.WeLogger;
 
 public class WeProtoData {
 
-    private static final class Field {
-        final int fieldNumber;
-        final int wireType;
-        Object value;
-
-        Field(int fieldNumber, int wireType, Object value) {
-            this.fieldNumber = fieldNumber;
-            this.wireType = wireType;
-            this.value = value;
-        }
-    }
-
-    private enum LenView {
-        AUTO, SUB, UTF8, HEX
-    }
-
-    private static final class LenValue {
-        byte[] raw;
-        String utf8;
-        WeProtoData subMessage;
-        LenView view;
-
-        LenValue(byte[] raw) {
-            this.raw = raw != null ? raw : new byte[0];
-            this.view = LenView.AUTO;
-        }
-    }
-
     private final List<Field> fields = new ArrayList<>();
     private byte[] packetPrefix = new byte[0];
 
@@ -61,6 +33,89 @@ public class WeProtoData {
         if (b.length < 4) return b;
         if ((b[0] & 0xFF) == 0) return Arrays.copyOfRange(b, 4, b.length);
         return b;
+    }
+
+    private static void analyzeLenValue(LenValue lv) {
+        if (lv == null) return;
+
+        var sub = tryParseSubMessageStrong(lv.raw);
+        if (sub != null) {
+            lv.subMessage = sub;
+            lv.utf8 = null;
+            lv.view = LenView.SUB;
+            return;
+        }
+
+        var s = tryDecodeUtf8Roundtrip(lv.raw);
+        if (s != null) {
+            lv.utf8 = s;
+            lv.subMessage = null;
+            lv.view = LenView.UTF8;
+            return;
+        }
+
+        lv.utf8 = null;
+        lv.subMessage = null;
+        lv.view = LenView.HEX;
+    }
+
+    private static String tryDecodeUtf8Roundtrip(byte[] b) {
+        try {
+            var s = new String(b, StandardCharsets.UTF_8);
+            var re = s.getBytes(StandardCharsets.UTF_8);
+            if (Arrays.equals(b, re)) return s;
+        } catch (Exception ignored) {
+        }
+        return null;
+    }
+
+    private static WeProtoData tryParseSubMessageStrong(byte[] b) {
+        try {
+            if (b == null || b.length == 0) return null;
+            var sub = new WeProtoData();
+            sub.parseMessageBytes(b, true);
+            if (sub.fields.isEmpty()) return null;
+            var re = sub.toMessageBytes();
+            if (!Arrays.equals(b, re)) return null;
+            return sub;
+        } catch (Exception ignored) {
+            return null;
+        }
+    }
+
+    private static WeProtoData ensureSubParsedStrong(LenValue lv) {
+        if (lv == null) return null;
+        if (lv.subMessage != null) return lv.subMessage;
+        var sub = tryParseSubMessageStrong(lv.raw);
+        if (sub != null) lv.subMessage = sub;
+        return lv.subMessage;
+    }
+
+    private static String ensureUtf8Decoded(LenValue lv) {
+        if (lv == null) return null;
+        if (lv.utf8 != null) return lv.utf8;
+        var s = tryDecodeUtf8Roundtrip(lv.raw);
+        if (s != null) lv.utf8 = s;
+        return lv.utf8;
+    }
+
+    public static String bytesToHex(byte[] bytes) {
+        if (bytes == null || bytes.length == 0) return "";
+        var sb = new StringBuilder(bytes.length * 2);
+        for (var b : bytes) sb.append(String.format("%02X", b & 0xFF));
+        return sb.toString();
+    }
+
+    private static String stripNonHex(String s) {
+        if (s == null) return "";
+        var out = new StringBuilder(s.length());
+        for (var i = 0; i < s.length(); i++) {
+            var c = s.charAt(i);
+            if ((c >= '0' && c <= '9') ||
+                    (c >= 'a' && c <= 'f') ||
+                    (c >= 'A' && c <= 'F')) out.append(c);
+        }
+        return out.toString();
     }
 
     public void clear() {
@@ -144,70 +199,6 @@ public class WeProtoData {
         }
     }
 
-    private static void analyzeLenValue(LenValue lv) {
-        if (lv == null) return;
-
-        var sub = tryParseSubMessageStrong(lv.raw);
-        if (sub != null) {
-            lv.subMessage = sub;
-            lv.utf8 = null;
-            lv.view = LenView.SUB;
-            return;
-        }
-
-        var s = tryDecodeUtf8Roundtrip(lv.raw);
-        if (s != null) {
-            lv.utf8 = s;
-            lv.subMessage = null;
-            lv.view = LenView.UTF8;
-            return;
-        }
-
-        lv.utf8 = null;
-        lv.subMessage = null;
-        lv.view = LenView.HEX;
-    }
-
-    private static String tryDecodeUtf8Roundtrip(byte[] b) {
-        try {
-            var s = new String(b, StandardCharsets.UTF_8);
-            var re = s.getBytes(StandardCharsets.UTF_8);
-            if (Arrays.equals(b, re)) return s;
-        } catch (Exception ignored) {
-        }
-        return null;
-    }
-
-    private static WeProtoData tryParseSubMessageStrong(byte[] b) {
-        try {
-            if (b == null || b.length == 0) return null;
-            var sub = new WeProtoData();
-            sub.parseMessageBytes(b, true);
-            if (sub.fields.isEmpty()) return null;
-            var re = sub.toMessageBytes();
-            if (!Arrays.equals(b, re)) return null;
-            return sub;
-        } catch (Exception ignored) {
-            return null;
-        }
-    }
-
-    private static WeProtoData ensureSubParsedStrong(LenValue lv) {
-        if (lv == null) return null;
-        if (lv.subMessage != null) return lv.subMessage;
-        var sub = tryParseSubMessageStrong(lv.raw);
-        if (sub != null) lv.subMessage = sub;
-        return lv.subMessage;
-    }
-
-    private static String ensureUtf8Decoded(LenValue lv) {
-        if (lv == null) return null;
-        if (lv.utf8 != null) return lv.utf8;
-        var s = tryDecodeUtf8Roundtrip(lv.raw);
-        if (s != null) lv.utf8 = s;
-        return lv.utf8;
-    }
-
     public JSONObject toJSON() throws Exception {
         var obj = new JSONObject();
         for (var f : fields) {
@@ -270,13 +261,6 @@ public class WeProtoData {
         }
 
         return "hex->" + bytesToHex(lv.raw);
-    }
-
-    public static String bytesToHex(byte[] bytes) {
-        if (bytes == null || bytes.length == 0) return "";
-        var sb = new StringBuilder(bytes.length * 2);
-        for (var b : bytes) sb.append(String.format("%02X", b & 0xFF));
-        return sb.toString();
     }
 
     public byte[] toBytes() {
@@ -504,18 +488,6 @@ public class WeProtoData {
         return matchesTotal;
     }
 
-    private static String stripNonHex(String s) {
-        if (s == null) return "";
-        var out = new StringBuilder(s.length());
-        for (var i = 0; i < s.length(); i++) {
-            var c = s.charAt(i);
-            if ((c >= '0' && c <= '9') ||
-                    (c >= 'a' && c <= 'f') ||
-                    (c >= 'A' && c <= 'F')) out.append(c);
-        }
-        return out.toString();
-    }
-
     public void fromJSON(JSONObject json) {
         try {
             clear();
@@ -724,5 +696,33 @@ public class WeProtoData {
             }
         }
         return removed;
+    }
+
+    private enum LenView {
+        AUTO, SUB, UTF8, HEX
+    }
+
+    private static final class Field {
+        final int fieldNumber;
+        final int wireType;
+        Object value;
+
+        Field(int fieldNumber, int wireType, Object value) {
+            this.fieldNumber = fieldNumber;
+            this.wireType = wireType;
+            this.value = value;
+        }
+    }
+
+    private static final class LenValue {
+        byte[] raw;
+        String utf8;
+        WeProtoData subMessage;
+        LenView view;
+
+        LenValue(byte[] raw) {
+            this.raw = raw != null ? raw : new byte[0];
+            this.view = LenView.AUTO;
+        }
     }
 }

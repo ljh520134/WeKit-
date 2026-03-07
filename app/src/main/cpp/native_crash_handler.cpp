@@ -156,7 +156,7 @@ static void write_crash_log(int sig, siginfo_t* info, void* context) {
 
     // 写入寄存器信息
     if (context) {
-        ucontext_t* uc = static_cast<ucontext_t*>(context);
+        auto* uc = static_cast<ucontext_t*>(context);
         len = snprintf(buffer, sizeof(buffer),
                        "========================================\n"
                        "Register State\n"
@@ -328,8 +328,7 @@ jboolean install_native_crash_handler(JNIEnv* env, const char* crash_log_dir) {
     sa.sa_sigaction = signal_handler;
 
     bool success = true;
-    for (int i = 0; i < SIGNAL_COUNT; i++) {
-        int sig = SIGNALS_TO_CATCH[i];
+    for (int sig : SIGNALS_TO_CATCH) {
         if (sigaction(sig, &sa, &g_old_handlers[sig]) != 0) {
             LOGE("Failed to install handler for signal %d (%s)", sig, get_signal_name(sig));
             success = false;
@@ -352,8 +351,7 @@ void uninstall_native_crash_handler() {
         return;
     }
 
-    for (int i = 0; i < SIGNAL_COUNT; i++) {
-        int sig = SIGNALS_TO_CATCH[i];
+    for (int sig : SIGNALS_TO_CATCH) {
         sigaction(sig, &g_old_handlers[sig], nullptr);
     }
 

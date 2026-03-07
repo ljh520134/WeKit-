@@ -16,7 +16,8 @@ object ExternalSharingEvolved : BaseSwitchFunctionHookItem() {
 
         val context = HostInfo.getApplication()
 
-        val shortcutManager = context.getSystemService(ShortcutManager::class.java) as ShortcutManager
+        val shortcutManager =
+            context.getSystemService(ShortcutManager::class.java) as ShortcutManager
 
         val contact = Person.Builder()
             .setName("John Doe")

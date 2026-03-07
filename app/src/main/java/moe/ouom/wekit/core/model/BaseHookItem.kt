@@ -73,7 +73,7 @@ abstract class BaseHookItem {
      */
     fun startLoad() {
         val config = WeConfig.getDefaultConfig()
-        val verboseLog = config.getBooleanOrFalse(Constants.PrekVerboseLog)
+        val verboseLog = config.getBooleanOrFalse(Constants.VERBOSE_LOG_PREF_KEY)
 
         if (verboseLog) {
             WeLogger.d("BaseHookItem.startLoad() called for ${this::class.java.simpleName}, isLoad=$isLoad")
@@ -124,7 +124,7 @@ abstract class BaseHookItem {
      */
     open fun unload(classLoader: ClassLoader) {
         val config = WeConfig.getDefaultConfig()
-        val verboseLog = config.getBooleanOrFalse(Constants.PrekVerboseLog)
+        val verboseLog = config.getBooleanOrFalse(Constants.VERBOSE_LOG_PREF_KEY)
 
         if (verboseLog) {
             WeLogger.d("BaseHookItem.unload() called for ${this::class.java.simpleName}, isLoad=$isLoad")
@@ -142,7 +142,7 @@ abstract class BaseHookItem {
         return XposedBridge.hookMethod(
             method,
             object :
-                XC_MethodHook(WeConfig.dGetInt(Constants.PrekCfgXXX + "wekit_hook_priority", 50)) {
+                XC_MethodHook(WeConfig.dGetInt(Constants.HOOK_PRIORITY_PREF_KEY, 50)) {
                 override fun beforeHookedMethod(param: MethodHookParam) {
                     tryExecute(param, action)
                 }
@@ -203,7 +203,7 @@ abstract class BaseHookItem {
         return XposedBridge.hookMethod(
             method,
             object :
-                XC_MethodHook(WeConfig.dGetInt(Constants.PrekCfgXXX + "wekit_hook_priority", 50)) {
+                XC_MethodHook(WeConfig.dGetInt(Constants.HOOK_PRIORITY_PREF_KEY, 50)) {
                 override fun afterHookedMethod(param: MethodHookParam) {
                     tryExecute(param, action)
                 }
@@ -273,7 +273,7 @@ abstract class BaseHookItem {
         return XposedBridge.hookMethod(
             m,
             object :
-                XC_MethodHook(WeConfig.dGetInt(Constants.PrekCfgXXX + "wekit_hook_priority", 50)) {
+                XC_MethodHook(WeConfig.dGetInt(Constants.HOOK_PRIORITY_PREF_KEY, 50)) {
                 override fun beforeHookedMethod(param: MethodHookParam) {
                     tryExecute(param, action)
                 }
@@ -297,7 +297,7 @@ abstract class BaseHookItem {
         return XposedBridge.hookMethod(
             m,
             object :
-                XC_MethodHook(WeConfig.dGetInt(Constants.PrekCfgXXX + "wekit_hook_priority", 50)) {
+                XC_MethodHook(WeConfig.dGetInt(Constants.HOOK_PRIORITY_PREF_KEY, 50)) {
                 override fun afterHookedMethod(param: MethodHookParam) {
                     tryExecute(param, action)
                 }
@@ -318,7 +318,7 @@ abstract class BaseHookItem {
             clazz,
             methodName,
             object :
-                XC_MethodHook(WeConfig.dGetInt(Constants.PrekCfgXXX + "wekit_hook_priority", 50)) {
+                XC_MethodHook(WeConfig.dGetInt(Constants.HOOK_PRIORITY_PREF_KEY, 50)) {
                 override fun beforeHookedMethod(param: MethodHookParam) {
                     tryExecute(param, action)
                 }
@@ -347,7 +347,7 @@ abstract class BaseHookItem {
             clazz,
             methodName,
             object :
-                XC_MethodHook(WeConfig.dGetInt(Constants.PrekCfgXXX + "wekit_hook_priority", 50)) {
+                XC_MethodHook(WeConfig.dGetInt(Constants.HOOK_PRIORITY_PREF_KEY, 50)) {
                 override fun afterHookedMethod(param: MethodHookParam) {
                     tryExecute(param, action)
                 }

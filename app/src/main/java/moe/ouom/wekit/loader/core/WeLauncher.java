@@ -1,6 +1,6 @@
 package moe.ouom.wekit.loader.core;
 
-import static moe.ouom.wekit.constants.Constants.CLAZZ_WECHAT_LAUNCHER_UI;
+import static moe.ouom.wekit.constants.Constants.WECHAT_LAUNCHER_UI_CLASS_NAME;
 
 import android.app.Activity;
 import android.content.Context;
@@ -89,7 +89,7 @@ public class WeLauncher {
 
         // Hook LauncherUI.onResume
         try {
-            var launcherUIClass = XposedHelpers.findClass(CLAZZ_WECHAT_LAUNCHER_UI, cl);
+            var launcherUIClass = XposedHelpers.findClass(WECHAT_LAUNCHER_UI_CLASS_NAME, cl);
 
             XposedHelpers.findAndHookMethod(launcherUIClass, "onResume", new XC_MethodHook() {
                 @Override
@@ -105,7 +105,7 @@ public class WeLauncher {
 
         // Hook LauncherUI.onCreate
         try {
-            XposedHelpers.findAndHookMethod(XposedHelpers.findClass(CLAZZ_WECHAT_LAUNCHER_UI, cl), "onCreate", Bundle.class, new XC_MethodHook() {
+            XposedHelpers.findAndHookMethod(XposedHelpers.findClass(WECHAT_LAUNCHER_UI_CLASS_NAME, cl), "onCreate", Bundle.class, new XC_MethodHook() {
                 @Override
                 protected void afterHookedMethod(MethodHookParam param) {
                     var activity = (Activity) param.thisObject;

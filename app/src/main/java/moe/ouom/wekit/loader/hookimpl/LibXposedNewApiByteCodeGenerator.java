@@ -39,7 +39,7 @@ import moe.ouom.wekit.utils.io.IoUtils;
 public class LibXposedNewApiByteCodeGenerator {
 
     private static final String CMD_SET_WRAPPER = "SetLibXposedNewApiByteCodeGeneratorWrapper";
-
+    private static final int ACC_CONSTRUCTOR = 0x00010000;
 
     private LibXposedNewApiByteCodeGenerator() {
     }
@@ -72,8 +72,6 @@ public class LibXposedNewApiByteCodeGenerator {
     private static String classNameToDescriptor(String className) {
         return "L" + className.replace('.', '/') + ";";
     }
-
-    private static final int ACC_CONSTRUCTOR = 0x00010000;
 
     @NonNull
     public static byte[] impl1(

@@ -27,7 +27,10 @@ import kotlin.io.path.Path
 import kotlin.io.path.extension
 import kotlin.io.path.inputStream
 
-@HookItem(path = "聊天/语音保存到本地", desc = "在语音消息菜单添加保存按钮, 允许将语音文件保存到本地")
+@HookItem(
+    path = "聊天/语音保存到本地",
+    desc = "在语音消息菜单添加保存按钮, 允许将语音文件保存到本地"
+)
 object SaveVoicesToLocalStorage : BaseSwitchFunctionHookItem(), IDexFind,
     WeChatMessageContextMenuApi.IMenuItemsProvider {
 
@@ -91,9 +94,11 @@ object SaveVoicesToLocalStorage : BaseSwitchFunctionHookItem(), IDexFind,
 
                 var service: Any? = null
                 if (!Modifier.isStatic(methodGetAmrFullPath.method.modifiers)) {
-                    service = WeServiceApi.getServiceByClass(methodGetAmrFullPath.method.declaringClass)
+                    service =
+                        WeServiceApi.getServiceByClass(methodGetAmrFullPath.method.declaringClass)
                 }
-                val amrPath = Path(methodGetAmrFullPath.method.invoke(service, null, encPath, true) as String)
+                val amrPath =
+                    Path(methodGetAmrFullPath.method.invoke(service, null, encPath, true) as String)
                 val mp3Path = amrPath.resolveSibling(amrPath.fileName.toString() + ".mp3")
                 SilkDecoder.decodeToMp3(amrPath.toString(), mp3Path.toString())
                 saveAudio(mp3Path)

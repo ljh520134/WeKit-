@@ -16,6 +16,9 @@ import java.util.Objects;
 
 public class IoUtils {
 
+    private static final char[] HEX_LOWER_DIGITS = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
+    private static final char[] HEX_UPPER_DIGITS = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
+
     /**
      * Reads all bytes from an input stream and returns them as a byte array.
      * <p>
@@ -265,9 +268,6 @@ public class IoUtils {
         Objects.requireNonNull(file, "file == null");
         return getShortFileName(file.getPath());
     }
-
-    private static final char[] HEX_LOWER_DIGITS = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'a', 'b', 'c', 'd', 'e', 'f'};
-    private static final char[] HEX_UPPER_DIGITS = {'0', '1', '2', '3', '4', '5', '6', '7', '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'};
 
     @NonNull
     public static String calculateFileMd5HexString(@NonNull File file, boolean upperCase) throws IOException {

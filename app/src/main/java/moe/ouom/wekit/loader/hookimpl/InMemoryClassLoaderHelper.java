@@ -22,7 +22,13 @@ import moe.ouom.wekit.utils.io.IoUtils;
 public class InMemoryClassLoaderHelper implements IClassLoaderHelper {
 
     public static final InMemoryClassLoaderHelper INSTANCE = new InMemoryClassLoaderHelper();
-
+    private Class<?> kDexPathList;
+    private Class<?> kDexPathListElement;
+    private Class<?> kDexPathListElementArray;
+    private Field dexElementsField;
+    private Field pathListField;
+    private Constructor<?> elementConstructor1;
+    private Constructor<?> elementConstructor4;
     private InMemoryClassLoaderHelper() {
     }
 
@@ -32,14 +38,6 @@ public class InMemoryClassLoaderHelper implements IClassLoaderHelper {
         Objects.requireNonNull(parent, "parent");
         return new BaseDexClassLoader("", null, null, parent);
     }
-
-    private Class<?> kDexPathList;
-    private Class<?> kDexPathListElement;
-    private Class<?> kDexPathListElementArray;
-    private Field dexElementsField;
-    private Field pathListField;
-    private Constructor<?> elementConstructor1;
-    private Constructor<?> elementConstructor4;
 
     // Warning: You need to bypass the following hidden API restrictions before using this method:
     // Ldalvik/system/DexPathList$Element;-><init>(Ldalvik/system/DexFile;)V,lo-prio,max-target-o

@@ -23,7 +23,8 @@ import java.util.LinkedList
     path = "朋友圈/朋友圈伪集赞",
     desc = "自定义朋友圈点赞用户列表"
 )
-object FakeMomentsLikes : BaseSwitchFunctionHookItem(), WeMomentsContextMenuApi.IMenuItemsProvider, WeDatabaseListenerApi.IUpdateListener {
+object FakeMomentsLikes : BaseSwitchFunctionHookItem(), WeMomentsContextMenuApi.IMenuItemsProvider,
+    WeDatabaseListenerApi.IUpdateListener {
 
     private val TAG = nameof(FakeMomentsLikes)
     private const val TBL_SNS_INFO = "SnsInfo"
@@ -54,7 +55,11 @@ object FakeMomentsLikes : BaseSwitchFunctionHookItem(), WeMomentsContextMenuApi.
 
     override fun getMenuItems(): List<WeMomentsContextMenuApi.MenuItem> {
         return listOf(
-            WeMomentsContextMenuApi.MenuItem(777006, "伪点赞", lazy { ModuleRes.getDrawable("star_24px") }, { _, _ -> true }) { context ->
+            WeMomentsContextMenuApi.MenuItem(
+                777006,
+                "伪点赞",
+                lazy { ModuleRes.getDrawable("star_24px") },
+                { _, _ -> true }) { context ->
                 showFakeLikesDialog(context)
             }
         )

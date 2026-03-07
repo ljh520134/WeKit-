@@ -6,16 +6,14 @@ import moe.ouom.wekit.utils.log.WeLogger;
 
 public class HybridClassLoader extends ClassLoader {
 
-    private static final ClassLoader sBootClassLoader = Context.class.getClassLoader();
     public static final HybridClassLoader INSTANCE = new HybridClassLoader();
-
-    private HybridClassLoader() {
-        super(sBootClassLoader);
-    }
-
+    private static final ClassLoader sBootClassLoader = Context.class.getClassLoader();
     private static ClassLoader sLoaderParentClassLoader;
     // volatile 保证多线程可见性
     private static volatile ClassLoader sHostClassLoader;
+    private HybridClassLoader() {
+        super(sBootClassLoader);
+    }
 
     public static void setLoaderParentClassLoader(ClassLoader loaderClassLoader) {
         if (loaderClassLoader == HybridClassLoader.class.getClassLoader()) {
@@ -23,10 +21,6 @@ public class HybridClassLoader extends ClassLoader {
         } else {
             sLoaderParentClassLoader = loaderClassLoader;
         }
-    }
-
-    public static void setHostClassLoader(ClassLoader hostClassLoader) {
-        sHostClassLoader = hostClassLoader;
     }
 
     /**
@@ -73,33 +67,8 @@ public class HybridClassLoader extends ClassLoader {
         return sHostClassLoader;
     }
 
-    @Override
-    protected Class<?> findClass(String name) throws ClassNotFoundException {
-        try {
-            return sBootClassLoader.loadClass(name);
-        } catch (ClassNotFoundException ignored) {
-        }
-        if (sLoaderParentClassLoader != null && name.startsWith("moe.ouom.wekit.loader.")) {
-            return sLoaderParentClassLoader.loadClass(name);
-        }
-        if (isConflictingClass(name)) {
-            throw new ClassNotFoundException(name);
-        }
-        if (sLoaderParentClassLoader != null) {
-            try {
-                return sLoaderParentClassLoader.loadClass(name);
-            } catch (ClassNotFoundException ignored) {
-            }
-        }
-        // 关键点：这里使用了 getHostClassLoader() 而不是直接访问 sHostClassLoader
-        var host = getHostClassLoader();
-        if (host != null && isHostClass(name)) {
-            try {
-                return host.loadClass(name);
-            } catch (ClassNotFoundException ignored) {
-            }
-        }
-        throw new ClassNotFoundException(name);
+    public static void setHostClassLoader(ClassLoader hostClassLoader) {
+        sHostClassLoader = hostClassLoader;
     }
 
     public static boolean isHostClass(String name) {
@@ -130,5 +99,34 @@ public class HybridClassLoader extends ClassLoader {
                 || name.startsWith("org.jf.util.")
                 || name.startsWith("javax.annotation.")
                 || name.startsWith("_COROUTINE.");
+    }
+
+    @Override
+    protected Class<?> findClass(String name) throws ClassNotFoundException {
+        try {
+            return sBootClassLoader.loadClass(name);
+        } catch (ClassNotFoundException ignored) {
+        }
+        if (sLoaderParentClassLoader != null && name.startsWith("moe.ouom.wekit.loader.")) {
+            return sLoaderParentClassLoader.loadClass(name);
+        }
+        if (isConflictingClass(name)) {
+            throw new ClassNotFoundException(name);
+        }
+        if (sLoaderParentClassLoader != null) {
+            try {
+                return sLoaderParentClassLoader.loadClass(name);
+            } catch (ClassNotFoundException ignored) {
+            }
+        }
+        // 关键点：这里使用了 getHostClassLoader() 而不是直接访问 sHostClassLoader
+        var host = getHostClassLoader();
+        if (host != null && isHostClass(name)) {
+            try {
+                return host.loadClass(name);
+            } catch (ClassNotFoundException ignored) {
+            }
+        }
+        throw new ClassNotFoundException(name);
     }
 }

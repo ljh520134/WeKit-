@@ -26,30 +26,6 @@ public class HookItemFactory implements IHookFactoryDelegate {
         }
     }
 
-    @Override
-    public BaseSwitchFunctionHookItem findHookItemByPath(@NonNull String path) {
-        return findHookItemByPathStatic(path);
-    }
-
-    @NonNull
-    @Override
-    public List<BaseSwitchFunctionHookItem> getAllSwitchFunctionItemList() {
-        return getAllSwitchFunctionItemListStatic();
-    }
-
-    @NonNull
-    @Override
-    public List<BaseClickableFunctionHookItem> getAllClickableFunctionItemList() {
-        return getAllClickableFunctionItemListStatic();
-    }
-
-    @NonNull
-    @Override
-    public List<BaseHookItem> getAllItemList() {
-        return getAllItemListStatic();
-    }
-
-
     public static BaseSwitchFunctionHookItem findHookItemByPathStatic(String path) {
         for (var item : ITEM_MAP.values()) {
             if (item.getPath().equals(path)) {
@@ -81,5 +57,28 @@ public class HookItemFactory implements IHookFactoryDelegate {
 
     public static List<BaseHookItem> getAllItemListStatic() {
         return new ArrayList<>(ITEM_MAP.values());
+    }
+
+    @Override
+    public BaseSwitchFunctionHookItem findHookItemByPath(@NonNull String path) {
+        return findHookItemByPathStatic(path);
+    }
+
+    @NonNull
+    @Override
+    public List<BaseSwitchFunctionHookItem> getAllSwitchFunctionItemList() {
+        return getAllSwitchFunctionItemListStatic();
+    }
+
+    @NonNull
+    @Override
+    public List<BaseClickableFunctionHookItem> getAllClickableFunctionItemList() {
+        return getAllClickableFunctionItemListStatic();
+    }
+
+    @NonNull
+    @Override
+    public List<BaseHookItem> getAllItemList() {
+        return getAllItemListStatic();
     }
 }

@@ -77,23 +77,33 @@ object ConversationGrouping : BaseSwitchFunctionHookItem(), IDexFind {
                                         Handler(Looper.getMainLooper()).post {
                                             when (selectedIndex) {
                                                 0 -> {
-                                                    WeConversationApi.setAllConversationVisibility(true)
+                                                    WeConversationApi.setAllConversationVisibility(
+                                                        true
+                                                    )
                                                 }
+
                                                 1 -> {
                                                     WeConversationApi.onlyShowFilteredConversations(
-                                                        "WHERE unReadCount>0 OR unReadMuteCount>0")
+                                                        "WHERE unReadCount>0 OR unReadMuteCount>0"
+                                                    )
                                                 }
+
                                                 2 -> {
                                                     WeConversationApi.onlyShowFilteredConversations(
-                                                        "WHERE username LIKE '%@chatroom'")
+                                                        "WHERE username LIKE '%@chatroom'"
+                                                    )
                                                 }
+
                                                 3 -> {
                                                     WeConversationApi.onlyShowFilteredConversations(
-                                                        "WHERE username LIKE 'wxid_%'")
+                                                        "WHERE username LIKE 'wxid_%'"
+                                                    )
                                                 }
+
                                                 4 -> {
                                                     WeConversationApi.onlyShowFilteredConversations(
-                                                        "WHERE username LIKE 'gh_%'")
+                                                        "WHERE username LIKE 'gh_%'"
+                                                    )
                                                 }
                                             }
                                         }

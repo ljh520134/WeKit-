@@ -76,7 +76,8 @@ object WeDatabaseApi : ApiHookItem(), IDexFind {
             "r.username, r.nickname, r.pyInitial, r.quanPin, i.reserved2 AS avatarUrl"
 
         // 基础字段 - 公众号查询常用字段
-        const val OFFICIAL_ACCOUNT_FIELDS = "r.username, r.alias, r.nickname, i.reserved2 AS avatarUrl"
+        const val OFFICIAL_ACCOUNT_FIELDS =
+            "r.username, r.alias, r.nickname, i.reserved2 AS avatarUrl"
 
         // 基础 JOIN 语句
         const val LEFT_JOIN_IMG_FLAG = "LEFT JOIN img_flag i ON r.username = i.username"

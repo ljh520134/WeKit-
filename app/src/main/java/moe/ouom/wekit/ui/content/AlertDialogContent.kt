@@ -5,8 +5,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
@@ -38,9 +36,7 @@ fun AlertDialogContent(
             .padding(24.dp)
     ) {
         Column(
-            modifier = Modifier
-                .padding(20.dp)
-                .verticalScroll(rememberScrollState()),
+            modifier = Modifier.padding(20.dp),
             verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Row(
@@ -49,8 +45,10 @@ fun AlertDialogContent(
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 icon?.let {
-                    CompositionLocalProvider(LocalContentColor provides
-                            MaterialTheme.colorScheme.primary) {
+                    CompositionLocalProvider(
+                        LocalContentColor provides
+                                MaterialTheme.colorScheme.primary
+                    ) {
                         it()
                     }
                 }

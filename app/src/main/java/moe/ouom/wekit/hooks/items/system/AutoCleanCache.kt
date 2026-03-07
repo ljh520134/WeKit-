@@ -38,21 +38,21 @@ object AutoCleanCache : BaseClickableFunctionHookItem() {
         val dataDir = HostInfo.getApplication().filesDir.parentFile!!.toPath()
         val storageDataDir = HostInfo.getApplication().externalCacheDir!!.toPath().parent!!
 
-        paths.add(dataDir/"cache")
-        paths.add(storageDataDir/"cache")
-        paths.add(dataDir/"MicroMsg"/"crash")
-        paths.add(storageDataDir/"files"/"onelog")
-        paths.add(storageDataDir/"files"/"tbslog")
-        paths.add(storageDataDir/"files"/"Tencent"/"tbs_common_log")
-        paths.add(storageDataDir/"files"/"Tencent"/"tbs_live_log")
-        paths.add(dataDir/"appbrand")
-        paths.add(dataDir/"cache"/"appbrand")
-        paths.add(dataDir/"MicroMsg"/"appbrand")
-        paths.add(dataDir/"cache"/"liteapp")
-        paths.add(dataDir/"files"/"liteapp")
-        paths.add(dataDir/"tinker")
-        paths.add(dataDir/"tinker_server")
-        paths.add(dataDir/"tinker_temp")
+        paths.add(dataDir / "cache")
+        paths.add(storageDataDir / "cache")
+        paths.add(dataDir / "MicroMsg" / "crash")
+        paths.add(storageDataDir / "files" / "onelog")
+        paths.add(storageDataDir / "files" / "tbslog")
+        paths.add(storageDataDir / "files" / "Tencent" / "tbs_common_log")
+        paths.add(storageDataDir / "files" / "Tencent" / "tbs_live_log")
+        paths.add(dataDir / "appbrand")
+        paths.add(dataDir / "cache" / "appbrand")
+        paths.add(dataDir / "MicroMsg" / "appbrand")
+        paths.add(dataDir / "cache" / "liteapp")
+        paths.add(dataDir / "files" / "liteapp")
+        paths.add(dataDir / "tinker")
+        paths.add(dataDir / "tinker_server")
+        paths.add(dataDir / "tinker_temp")
 
         return@run paths
     }
@@ -105,11 +105,16 @@ object AutoCleanCache : BaseClickableFunctionHookItem() {
             val deletedSize = performClean()
             val sizeText = formatBytesSize(deletedSize)
 
-            val timeText = if (isEnabled) "\n下次自动清理将在 ${formatEpoch(System.currentTimeMillis() + CLEAN_INTERVAL)} 进行"
+            val timeText =
+                if (isEnabled) "\n下次自动清理将在 ${formatEpoch(System.currentTimeMillis() + CLEAN_INTERVAL)} 进行"
                 else ""
 
             withContext(Dispatchers.Main) {
-                Toast.makeText(context, "缓存清理完成, 共释放 $sizeText$timeText", Toast.LENGTH_SHORT).show()
+                Toast.makeText(
+                    context,
+                    "缓存清理完成, 共释放 $sizeText$timeText",
+                    Toast.LENGTH_SHORT
+                ).show()
             }
 
             if (isEnabled) startCleaningJob()

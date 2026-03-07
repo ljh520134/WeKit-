@@ -139,15 +139,15 @@ public class Xp51HookImpl implements IHookBridge, ILoaderService {
         XposedBridge.log(tr);
     }
 
-    @Override
-    public void setClassLoaderHelper(@Nullable IClassLoaderHelper helper) {
-        mClassLoaderHelper = helper;
-    }
-
     @Nullable
     @Override
     public IClassLoaderHelper getClassLoaderHelper() {
         return mClassLoaderHelper;
+    }
+
+    @Override
+    public void setClassLoaderHelper(@Nullable IClassLoaderHelper helper) {
+        mClassLoaderHelper = helper;
     }
 
     @Override
