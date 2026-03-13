@@ -14,29 +14,31 @@ import android.widget.Toast
 import com.afollestad.materialdialogs.MaterialDialog
 import com.highcapable.kavaref.extension.toClass
 import moe.ouom.wekit.config.RuntimeConfig
-import moe.ouom.wekit.core.model.BaseSwitchFunctionHookItem
+import moe.ouom.wekit.core.model.SwitchHookItem
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import moe.ouom.wekit.ui.utils.CommonContextWrapper
-import moe.ouom.wekit.utils.crash.CrashLogManager
+import moe.ouom.wekit.utils.crash.CrashLogsManager
 import moe.ouom.wekit.utils.crash.NativeCrashHandler
 import moe.ouom.wekit.utils.io.SafUtils
 import moe.ouom.wekit.utils.log.WeLogger
 import java.io.File
+import java.nio.file.Path
+import kotlin.io.path.name
 
 @HookItem(
     path = "调试/崩溃拦截 (Native)",
     desc = "拦截 Native 层崩溃并记录详细信息，支持查看和导出日志"
 )
-object NativeCrashInterceptor : BaseSwitchFunctionHookItem() {
+object NativeCrashInterceptor : SwitchHookItem() {
 
     private var nativeCrashHandler: NativeCrashHandler? = null
-    private var crashLogManager: CrashLogManager? = null
+    private var crashLogsManager: CrashLogsManager? = null
     private var appContext: Context? = null
     private var hasPendingCrashToShow = false
     @SuppressLint("StaticFieldLeak")
     private var pendingDialog: MaterialDialog? = null
 
-    override fun entry(classLoader: ClassLoader) {
+    override fun onLoad(classLoader: ClassLoader) {
         try {
             // 获取Application Context
             val activityThreadClass = "android.app.ActivityThread".toClass()
@@ -49,7 +51,7 @@ object NativeCrashInterceptor : BaseSwitchFunctionHookItem() {
             }
 
             // 初始化崩溃日志管理器
-            crashLogManager = CrashLogManager(appContext!!)
+            crashLogsManager = CrashLogsManager()
 
             // 安装 Native 崩溃拦截器
             nativeCrashHandler = NativeCrashHandler(appContext!!)
@@ -77,7 +79,7 @@ object NativeCrashInterceptor : BaseSwitchFunctionHookItem() {
      */
     private fun checkPendingCrash() {
         try {
-            val manager = crashLogManager ?: return
+            val manager = crashLogsManager ?: return
 
             // 只在主进程中检查待处理的崩溃
             if (!isMainProcess()) {
@@ -110,7 +112,7 @@ object NativeCrashInterceptor : BaseSwitchFunctionHookItem() {
     /**
      * 将 Native 崩溃信息输出到 WeLogger
      */
-    private fun logNativeCrashToWeLogger(manager: CrashLogManager) {
+    private fun logNativeCrashToWeLogger(manager: CrashLogsManager) {
         try {
             val crashLogFile = manager.pendingNativeCrashLogFile ?: return
             val crashInfo = manager.readCrashLog(crashLogFile) ?: return
@@ -167,7 +169,7 @@ object NativeCrashInterceptor : BaseSwitchFunctionHookItem() {
                         return
                     }
 
-                    val activity = RuntimeConfig.getLauncherUIActivity()
+                    val activity = RuntimeConfig.getLauncherUiActivity()
                     if (activity != null && !activity.isFinishing && !activity.isDestroyed) {
                         WeLogger.i(
                             "NativeCrashInterceptor",
@@ -222,8 +224,8 @@ object NativeCrashInterceptor : BaseSwitchFunctionHookItem() {
         return try {
             val file = File("/proc/${Process.myPid()}/cmdline")
             file.readText().trim('\u0000')
-        } catch (e: Throwable) {
-            ""
+        } catch (_: Throwable) {
+            "UNKNOWN"
         }
     }
 
@@ -244,8 +246,8 @@ object NativeCrashInterceptor : BaseSwitchFunctionHookItem() {
      */
     private fun showPendingCrashDialog() {
         try {
-            val manager = crashLogManager ?: return
-            val activity = RuntimeConfig.getLauncherUIActivity()
+            val manager = crashLogsManager ?: return
+            val activity = RuntimeConfig.getLauncherUiActivity()
 
             // 如果 Activity 不可用, 重新设置标记等待下次
             if (activity == null || activity.isFinishing || activity.isDestroyed) {
@@ -320,10 +322,10 @@ object NativeCrashInterceptor : BaseSwitchFunctionHookItem() {
     /**
      * 显示崩溃详情对话框
      */
-    private fun showCrashDetailDialog(crashInfo: String, crashLogFile: File) {
+    private fun showCrashDetailDialog(crashInfo: String, crashLogFile: Path) {
         try {
-            val activity = RuntimeConfig.getLauncherUIActivity()
-            val manager = crashLogManager ?: return
+            val activity = RuntimeConfig.getLauncherUiActivity()
+            val manager = crashLogsManager ?: return
 
             // 如果 Activity 不可用,使用 Toast 提示
             if (activity == null || activity.isFinishing || activity.isDestroyed) {
@@ -379,8 +381,6 @@ object NativeCrashInterceptor : BaseSwitchFunctionHookItem() {
         val lines = crashInfo.lines()
         val summary = StringBuilder()
 
-        var foundCrashTime = false
-        var foundSignal = false
         var foundStackTrace = false
         var stackTraceLineCount = 0
 
@@ -388,7 +388,6 @@ object NativeCrashInterceptor : BaseSwitchFunctionHookItem() {
             when {
                 line.startsWith("Crash Time:") -> {
                     summary.append(line).append("\n")
-                    foundCrashTime = true
                 }
 
                 line.startsWith("Crash Type:") -> {
@@ -397,7 +396,6 @@ object NativeCrashInterceptor : BaseSwitchFunctionHookItem() {
 
                 line.startsWith("Signal:") -> {
                     summary.append(line).append("\n")
-                    foundSignal = true
                 }
 
                 line.startsWith("Description:") -> {
@@ -452,14 +450,14 @@ object NativeCrashInterceptor : BaseSwitchFunctionHookItem() {
     /**
      * 分享日志
      */
-    private fun shareLog(context: Context, logFile: File) {
+    private fun shareLog(context: Context, logFile: Path) {
         try {
             val intent = Intent(Intent.ACTION_SEND)
             intent.type = "text/plain"
             intent.putExtra(Intent.EXTRA_SUBJECT, "WeKit Native Crash Log")
             intent.putExtra(
                 Intent.EXTRA_TEXT,
-                crashLogManager?.readCrashLog(logFile) ?: ""
+                crashLogsManager?.readCrashLog(logFile) ?: ""
             )
             intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
 
@@ -477,7 +475,7 @@ object NativeCrashInterceptor : BaseSwitchFunctionHookItem() {
     /**
      * 使用 SAF 导出日志
      */
-    private fun exportLog(activity: Activity, logFile: File) {
+    private fun exportLog(activity: Activity, logFile: Path) {
         try {
             val wrappedContext = CommonContextWrapper.createAppCompatContext(activity)
             val fileName = "native_crash_${logFile.name}"
@@ -502,10 +500,10 @@ object NativeCrashInterceptor : BaseSwitchFunctionHookItem() {
     /**
      * 将日志写入 Uri
      */
-    private fun writeLogToUri(context: Context, sourceFile: File, targetUri: Uri) {
+    private fun writeLogToUri(context: Context, sourceFile: Path, targetUri: Uri) {
         Thread {
             try {
-                val manager = crashLogManager ?: return@Thread
+                val manager = crashLogsManager ?: return@Thread
                 val crashInfo = manager.readCrashLog(sourceFile) ?: run {
                     Handler(Looper.getMainLooper()).post { showToast("读取源文件失败") }
                     return@Thread
@@ -544,8 +542,8 @@ object NativeCrashInterceptor : BaseSwitchFunctionHookItem() {
         }
     }
 
-    override fun unload(classLoader: ClassLoader) {
+    override fun onUnload(classLoader: ClassLoader) {
         nativeCrashHandler?.uninstall()
-        super.unload(classLoader)
+        super.onUnload(classLoader)
     }
 }

@@ -3,7 +3,7 @@ package moe.ouom.wekit.hooks.items.profile
 import android.content.Context
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import moe.ouom.wekit.core.model.BaseClickableFunctionHookItem
+import moe.ouom.wekit.core.model.ClickableHookItem
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import moe.ouom.wekit.hooks.sdk.protocol.WePkgHelper
 import moe.ouom.wekit.ui.content.AlertDialogContent
@@ -11,10 +11,10 @@ import moe.ouom.wekit.ui.utils.showComposeDialog
 import moe.ouom.wekit.utils.log.WeLogger
 
 @HookItem(path = "个人资料/清空资料信息", desc = "清空当前用户的地区与性别等资料信息")
-object ClearProfileDetails : BaseClickableFunctionHookItem() {
+object ClearProfileDetails : ClickableHookItem() {
 
     override fun onClick(context: Context) {
-        showComposeDialog(context) { onDismiss ->
+        showComposeDialog(context) {
             AlertDialogContent(
                 title = { Text("清空资料信息") },
                 text = { Text("确定清空吗？清空后你仍然可以重新选择资料信息") },
@@ -31,7 +31,7 @@ object ClearProfileDetails : BaseClickableFunctionHookItem() {
                         ) {
                             onSuccess { json, _ ->
                                 WeLogger.i("WeProfileCleaner", "成功，回包: $json")
-                                showComposeDialog(context) { onDismiss ->
+                                showComposeDialog(context) {
                                     AlertDialogContent(
                                         title = { Text("发送成功, 响应结果:") },
                                         text = { Text(json) },
@@ -43,7 +43,7 @@ object ClearProfileDetails : BaseClickableFunctionHookItem() {
                             }
 
                             onFail { type, code, msg ->
-                                showComposeDialog(context) { onDismiss ->
+                                showComposeDialog(context) {
                                     AlertDialogContent(
                                         title = { Text("发送失败, 响应结果:") },
                                         text = { Text("type: $type, code: $code, msg: $msg") },

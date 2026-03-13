@@ -1,6 +1,5 @@
 package moe.ouom.wekit.loader.startup
 
-import android.annotation.SuppressLint
 import android.app.Application
 import android.content.Context
 import com.highcapable.kavaref.extension.ClassLoaderProvider
@@ -8,7 +7,6 @@ import com.highcapable.kavaref.extension.toClass
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XposedHelpers
 import dev.ujhhgtg.nameof.nameof
-import moe.ouom.wekit.loader.hookapi.IHookBridge
 import moe.ouom.wekit.loader.hookapi.ILoaderService
 import moe.ouom.wekit.utils.log.WeLogger
 
@@ -18,20 +16,15 @@ object UnifiedEntryPoint {
 
     private var initialized = false
 
+    @JvmStatic
     fun entry(
         modulePath: String,
         loaderService: ILoaderService,
-        hostClassLoader: ClassLoader,
-        hookBridge: IHookBridge?
+        hostClassLoader: ClassLoader
     ) {
-        check(!initialized) { "UnifiedEntryPoint already initialized" }
+        check(!initialized) { "$TAG already initialized" }
         initialized = true
-        // fix up the class loader
-        val loader = HybridClassLoader.INSTANCE
-        val self = checkNotNull(UnifiedEntryPoint::class.java.classLoader)
-        val parent = self.parent
-        HybridClassLoader.setLoaderParentClassLoader(parent)
-        injectClassLoader(self, loader)
+        ClassLoaderProvider.classLoader = hostClassLoader
 
         try {
             XposedHelpers.findAndHookMethod(
@@ -41,16 +34,11 @@ object UnifiedEntryPoint {
                 Context::class.java,
                 object : XC_MethodHook() {
                     override fun afterHookedMethod(param: MethodHookParam) {
-                        val context = param.thisObject as Context
-                        val currentClassLoader = context.classLoader
-
                         // Hook Instrumentation.callApplicationOnCreate 以处理 Tinker 热更新场景
                         try {
                             hookInstrumentationForTinker(
-                                currentClassLoader,
                                 modulePath,
-                                loaderService,
-                                hookBridge
+                                loaderService
                             )
                         } catch (t: Throwable) {
                             WeLogger.e(
@@ -72,31 +60,24 @@ object UnifiedEntryPoint {
      * 这可以解决某些模块在热更新环境下找不到入口的问题
      */
     private fun hookInstrumentationForTinker(
-        hostClassLoader: ClassLoader,
         modulePath: String,
-        loaderService: ILoaderService,
-        hookBridge: IHookBridge?
+        loaderService: ILoaderService
     ) {
         try {
-            val instrumentationClass = "android.app.Instrumentation".toClass(hostClassLoader)
+            val instrumentationClass = "android.app.Instrumentation".toClass()
             XposedHelpers.findAndHookMethod(
                 instrumentationClass,
                 "callApplicationOnCreate",
                 Application::class.java,
                 object : XC_MethodHook() {
                     override fun afterHookedMethod(param: MethodHookParam) {
-                        val application = param.args[0] as Application
                         val hostApp = param.args[0] as Application?
                         StartupInfo.setHostApp(hostApp)
-
-                        val hostClassLoader = application.baseContext.classLoader
-                        ClassLoaderProvider.classLoader = hostClassLoader
 
                         try {
                             StartupAgent.startup(
                                 modulePath,
-                                loaderService,
-                                hookBridge
+                                loaderService
                             )
                         } catch (e: Throwable) {
                             WeLogger.e(TAG, "StartupAgent failed", e)
@@ -106,17 +87,6 @@ object UnifiedEntryPoint {
             )
         } catch (e: Throwable) {
             WeLogger.e(TAG, "Failed to hook Instrumentation.callApplicationOnCreate", e)
-        }
-    }
-
-    @SuppressLint("DiscouragedPrivateApi")
-    private fun injectClassLoader(self: ClassLoader, newParent: ClassLoader?) {
-        try {
-            val fParent = ClassLoader::class.java.getDeclaredField("parent")
-            fParent.isAccessible = true
-            fParent.set(self, newParent)
-        } catch (e: Exception) {
-            WeLogger.e("injectClassLoader failed", e)
         }
     }
 }

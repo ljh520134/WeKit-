@@ -3,7 +3,6 @@ package moe.ouom.wekit.utils.hookstatus
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.os.Bundle
 import androidx.core.net.toUri
 import io.github.libxposed.service.XposedService
@@ -11,17 +10,15 @@ import io.github.libxposed.service.XposedServiceHelper
 import io.github.libxposed.service.XposedServiceHelper.OnServiceListener
 import kotlinx.coroutines.flow.MutableStateFlow
 import moe.ouom.wekit.BuildConfig
-import moe.ouom.wekit.R
-import moe.ouom.wekit.host.HostInfo
 import moe.ouom.wekit.loader.LoaderExtensionHelper
 import moe.ouom.wekit.utils.common.SyncUtils
-import moe.ouom.wekit.utils.hookstatus.AbiUtils.getApplicationActiveAbi
 import java.io.File
 
 /**
  * This class is only intended to be used in module process, not in host process.
  */
 object HookStatus {
+
     private var expCpCalled = false
     private var expCpResult = false
     val xposedService: MutableStateFlow<XposedService?> = MutableStateFlow(null)
@@ -115,7 +112,6 @@ object HookStatus {
             return if (expCpResult) HookType.APP_PATCH else HookType.NONE
         }
 
-    @Throws(LinkageError::class)
     private fun initHookStatusImplInHostProcess() {
         val xposedClass = LoaderExtensionHelper.getXposedBridgeClass()
         var dexObfsEnabled = false
@@ -170,34 +166,8 @@ object HookStatus {
             return "None"
         }
 
-    fun isTaiChiInstalled(context: Context): Boolean {
-        try {
-            val pm = context.packageManager
-            pm.getPackageInfo("me.weishu.exp", 0)
-            return true
-        } catch (e: PackageManager.NameNotFoundException) {
-            return false
-        }
-    }
-
     val isModuleEnabled: Boolean
         get() = hookType != HookType.NONE
-
-    val hostABI: HashMap<String?, String?>
-        get() {
-            val scope =
-                HostInfo.getApplication().resources
-                    .getTextArray(R.array.xposed_scope)
-            val result =
-                java.util.HashMap<String?, String?>(4)
-            for (s in scope) {
-                val abi = getApplicationActiveAbi(s.toString())
-                if (abi != null) {
-                    result[s.toString()] = abi
-                }
-            }
-            return result
-        }
 
     enum class HookType {
         /**

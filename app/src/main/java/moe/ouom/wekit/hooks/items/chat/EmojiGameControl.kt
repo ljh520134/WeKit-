@@ -34,7 +34,7 @@ import de.robv.android.xposed.XposedHelpers
 import dev.ujhhgtg.nameof.nameof
 import moe.ouom.wekit.config.RuntimeConfig
 import moe.ouom.wekit.core.dsl.dexMethod
-import moe.ouom.wekit.core.model.BaseSwitchFunctionHookItem
+import moe.ouom.wekit.core.model.SwitchHookItem
 import moe.ouom.wekit.dexkit.intf.IDexFind
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import moe.ouom.wekit.ui.content.AlertDialogContent
@@ -46,7 +46,7 @@ import org.luckypray.dexkit.query.enums.MatchType
 import kotlin.random.Random
 
 @HookItem(path = "聊天/表情游戏控制", desc = "自定义猜拳和骰子的结果")
-object EmojiGameControl : BaseSwitchFunctionHookItem(), IDexFind {
+object EmojiGameControl : SwitchHookItem(), IDexFind {
 
     private const val MD5_MORRA = "9bd1281af3a31710a45b84d736363691"
     private const val MD5_DICE = "08f223fa83f1ca34e143d1e580252c7c"
@@ -92,7 +92,7 @@ object EmojiGameControl : BaseSwitchFunctionHookItem(), IDexFind {
         return descriptors
     }
 
-    override fun entry(classLoader: ClassLoader) {
+    override fun onLoad(classLoader: ClassLoader) {
         methodRandom.toDexMethod {
             hook {
                 afterIfEnabled { param ->
@@ -160,9 +160,9 @@ object EmojiGameControl : BaseSwitchFunctionHookItem(), IDexFind {
     private fun showSelectDialog(param: XC_MethodHook.MethodHookParam, isDice: Boolean) {
         param.result = null
 
-        val activity = RuntimeConfig.getLauncherUIActivity()
+        val activity = RuntimeConfig.getLauncherUiActivity()!!
 
-        showComposeDialog(activity) { onDismiss ->
+        showComposeDialog(activity) {
             EmojiGameDialogContent(
                 isDice = isDice,
                 onSend = { isSingle, inputText ->

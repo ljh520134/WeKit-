@@ -3,7 +3,6 @@ package moe.ouom.wekit.dexkit;
 import androidx.annotation.NonNull;
 
 import java.io.Serializable;
-import java.lang.reflect.Constructor;
 import java.lang.reflect.Method;
 import java.lang.reflect.Modifier;
 import java.util.ArrayList;
@@ -23,24 +22,6 @@ public class DexMethodDescriptor implements Serializable {
      * ()Ljava/lang/String;
      */
     public final String signature;
-
-    public DexMethodDescriptor(Method method) {
-        if (method == null) {
-            throw new NullPointerException();
-        }
-        declaringClass = getTypeSig(method.getDeclaringClass());
-        name = method.getName();
-        signature = getMethodTypeSig(method);
-    }
-
-    public DexMethodDescriptor(Constructor<?> ctor) {
-        if (ctor == null) {
-            throw new NullPointerException();
-        }
-        declaringClass = getTypeSig(ctor.getDeclaringClass());
-        name = "<init>";
-        signature = getConstructorTypeSig(ctor);
-    }
 
     public DexMethodDescriptor(String desc) {
         if (desc == null) {
@@ -94,18 +75,6 @@ public class DexMethodDescriptor implements Serializable {
         }
         buf.append(")");
         buf.append(getTypeSig(method.getReturnType()));
-        return buf.toString();
-    }
-
-    public static String getConstructorTypeSig(final Constructor<?> ctor) {
-        final var buf = new StringBuilder();
-        buf.append("(");
-        final var types = ctor.getParameterTypes();
-        for (var type : types) {
-            buf.append(getTypeSig(type));
-        }
-        buf.append(")");
-        buf.append("V");
         return buf.toString();
     }
 
@@ -173,10 +142,6 @@ public class DexMethodDescriptor implements Serializable {
         return list;
     }
 
-    public String getDeclaringClassName() {
-        return declaringClass.substring(1, declaringClass.length() - 1).replace('/', '.');
-    }
-
     @NonNull
     @Override
     public String toString() {
@@ -240,5 +205,4 @@ public class DexMethodDescriptor implements Serializable {
         var index = signature.indexOf(')');
         return signature.substring(index + 1);
     }
-
 }

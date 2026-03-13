@@ -2,16 +2,13 @@ package moe.ouom.wekit.core.dsl
 
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XposedBridge
-import moe.ouom.wekit.config.WeConfig
+import moe.ouom.wekit.config.WePrefs
 import moe.ouom.wekit.constants.Constants
 import moe.ouom.wekit.core.model.ApiHookItem
-import moe.ouom.wekit.hooks.core.factory.ExceptionFactory
+import moe.ouom.wekit.hooks.core.ExceptionFactory
 import moe.ouom.wekit.utils.log.WeLogger
 import java.lang.reflect.Method
 
-/**
- * Dex 方法 Hook 构建器
- */
 class DexMethodHookBuilder(
     private val method: Method,
     private val priority: Int?,
@@ -22,9 +19,6 @@ class DexMethodHookBuilder(
     private var replaceAction: ((XC_MethodHook.MethodHookParam) -> Any?)? = null
     private var checkEnabled: Boolean = false  // 标记是否需要检查启用状态
 
-    /**
-     * DSL: 配置 Hook 行为
-     */
     fun hook(block: HookConfigBuilder.() -> Unit) {
         val builder = HookConfigBuilder()
         builder.block()
@@ -35,10 +29,7 @@ class DexMethodHookBuilder(
         this.checkEnabled = builder.checkEnabled
     }
 
-    /**
-     * 检查功能是否启用
-     */
-    private fun isEnabled(): Boolean {
+    private fun getIsEnabled(): Boolean {
         if (!checkEnabled) return true  // 如果不需要检查，默认启用
 
         if (hookItem is ApiHookItem) {
@@ -51,7 +42,7 @@ class DexMethodHookBuilder(
             val isEnabledMethod = hookItemClass?.getMethod("isEnabled")
             isEnabledMethod?.invoke(hookItem) as? Boolean ?: true
         } catch (e: Exception) {
-            WeLogger.w("Failed to check enabled status, defaulting to true", e)
+            WeLogger.w("failed to check enabled status, defaulting to true", e)
             true
         }
     }
@@ -60,7 +51,7 @@ class DexMethodHookBuilder(
      * 执行 Hook
      */
     fun execute() {
-        val p = priority ?: WeConfig.dGetInt(
+        val p = priority ?: WePrefs.getIntOrDef(
             Constants.HOOK_PRIORITY_PREF_KEY,
             50
         )
@@ -70,7 +61,7 @@ class DexMethodHookBuilder(
             override fun beforeHookedMethod(param: MethodHookParam) {
                 try {
                     // 检查功能是否启用
-                    if (!isEnabled()) {
+                    if (!getIsEnabled()) {
                         return
                     }
 
@@ -90,7 +81,7 @@ class DexMethodHookBuilder(
             override fun afterHookedMethod(param: MethodHookParam) {
                 try {
                     // 检查功能是否启用
-                    if (!isEnabled()) {
+                    if (!getIsEnabled()) {
                         return
                     }
 
@@ -135,18 +126,4 @@ class DexMethodHookBuilder(
             replaceAction = action
         }
     }
-}
-
-/**
- * 扩展函数：将结果设置为 null
- */
-fun XC_MethodHook.MethodHookParam.resultNull() {
-    this.result = null
-}
-
-/**
- * 扩展函数：将结果设置为指定值
- */
-fun XC_MethodHook.MethodHookParam.resultValue(value: Any?) {
-    this.result = value
 }

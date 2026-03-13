@@ -47,7 +47,7 @@ object WeChatMessageViewApi : ApiHookItem(), IDexFind {
 
     private val methodChatItemOnBindView by dexMethod()
 
-    override fun entry(classLoader: ClassLoader) {
+    override fun onLoad(classLoader: ClassLoader) {
         methodChatItemOnBindView.toDexMethod {
             hook {
                 afterIfEnabled { param ->

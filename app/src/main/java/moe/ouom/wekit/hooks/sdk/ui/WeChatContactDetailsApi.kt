@@ -68,7 +68,7 @@ object WeChatContactDetailsApi : ApiHookItem() {
         val position: Int = -1
     )
 
-    override fun entry(classLoader: ClassLoader) {
+    override fun onLoad(classLoader: ClassLoader) {
         initReflection()
         hook(classLoader)
         hookItemClick()

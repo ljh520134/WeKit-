@@ -1,24 +1,18 @@
 package moe.ouom.wekit.core.model
 
-import androidx.annotation.Keep
+import com.highcapable.kavaref.extension.ClassLoaderProvider
 import com.highcapable.kavaref.extension.toClass
 import com.highcapable.kavaref.resolver.MethodResolver
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XposedBridge
 import de.robv.android.xposed.XposedHelpers
-import moe.ouom.wekit.config.WeConfig
+import moe.ouom.wekit.config.WePrefs
 import moe.ouom.wekit.constants.Constants
-import moe.ouom.wekit.hooks.core.factory.ExceptionFactory
-import moe.ouom.wekit.loader.startup.HybridClassLoader
+import moe.ouom.wekit.hooks.core.ExceptionFactory
 import moe.ouom.wekit.utils.log.WeLogger
 import java.lang.reflect.Member
 import kotlin.reflect.KClass
 
-/**
- * 所有 hook 功能的基础类, 都应该要继承这个类
- * 2026.1.22：重构为 Kotlin 以支持 DSL 语法
- */
-@Keep
 abstract class BaseHookItem {
 
     /**
@@ -65,38 +59,18 @@ abstract class BaseHookItem {
     /**
      * 开始加载 Hook
      */
-    fun startLoad() {
-        val config = WeConfig.defaultConfig
-        val verboseLog = config.getBooleanOrFalse(Constants.VERBOSE_LOG_PREF_KEY)
-
-        if (verboseLog) {
-            WeLogger.d("BaseHookItem.startLoad() called for ${this::class.java.simpleName}, isLoad=$isLoad")
-        }
-
+    fun loadItem() {
         if (isLoad) {
-            if (verboseLog) {
-                WeLogger.w("BaseHookItem.startLoad() skipped - already loaded for ${this::class.java.simpleName}. \nCall Stack: ${Exception().stackTraceToString()}")
-            }
             return
         }
         try {
             isLoad = true
-            if (verboseLog) {
-                WeLogger.d("BaseHookItem.startLoad() calling initOnce() for ${this::class.java.simpleName}")
-            }
 
             if (initOnce()) {
-                if (verboseLog) {
-                    WeLogger.d("BaseHookItem.startLoad() calling entry() for ${this::class.java.simpleName}")
-                }
-                entry(HybridClassLoader.getHostClassLoader())
-            } else {
-                if (verboseLog) {
-                    WeLogger.w("BaseHookItem.startLoad() initOnce() returned false for ${this::class.java.simpleName}")
-                }
+                onLoad(ClassLoaderProvider.classLoader!!)
             }
         } catch (e: Throwable) {
-            WeLogger.e("BaseHookItem Load Failed", e)
+            WeLogger.e("failed to load item", e)
             ExceptionFactory.add(this, e)
         }
     }
@@ -111,22 +85,13 @@ abstract class BaseHookItem {
     /**
      * Hook 入口方法
      */
-    open fun entry(classLoader: ClassLoader) {}
+    open fun onLoad(classLoader: ClassLoader) {}
 
     /**
      * 卸载 Hook
      */
-    open fun unload(classLoader: ClassLoader) {
-        val config = WeConfig.defaultConfig
-        val verboseLog = config.getBooleanOrFalse(Constants.VERBOSE_LOG_PREF_KEY)
-
-        if (verboseLog) {
-            WeLogger.d("BaseHookItem.unload() called for ${this::class.java.simpleName}, isLoad=$isLoad")
-        }
+    open fun onUnload(classLoader: ClassLoader) {
         isLoad = false
-        if (verboseLog) {
-            WeLogger.d("BaseHookItem.unload() completed for ${this::class.java.simpleName}, isLoad=$isLoad")
-        }
     }
 
     /**
@@ -136,7 +101,7 @@ abstract class BaseHookItem {
         return XposedBridge.hookMethod(
             method,
             object :
-                XC_MethodHook(WeConfig.dGetInt(Constants.HOOK_PRIORITY_PREF_KEY, 50)) {
+                XC_MethodHook(WePrefs.getIntOrDef(Constants.HOOK_PRIORITY_PREF_KEY, 50)) {
                 override fun beforeHookedMethod(param: MethodHookParam) {
                     tryExecute(param, action)
                 }
@@ -197,7 +162,7 @@ abstract class BaseHookItem {
         return XposedBridge.hookMethod(
             method,
             object :
-                XC_MethodHook(WeConfig.dGetInt(Constants.HOOK_PRIORITY_PREF_KEY, 50)) {
+                XC_MethodHook(WePrefs.getIntOrDef(Constants.HOOK_PRIORITY_PREF_KEY, 50)) {
                 override fun afterHookedMethod(param: MethodHookParam) {
                     tryExecute(param, action)
                 }
@@ -267,7 +232,7 @@ abstract class BaseHookItem {
         return XposedBridge.hookMethod(
             m,
             object :
-                XC_MethodHook(WeConfig.dGetInt(Constants.HOOK_PRIORITY_PREF_KEY, 50)) {
+                XC_MethodHook(WePrefs.getIntOrDef(Constants.HOOK_PRIORITY_PREF_KEY, 50)) {
                 override fun beforeHookedMethod(param: MethodHookParam) {
                     tryExecute(param, action)
                 }
@@ -291,7 +256,7 @@ abstract class BaseHookItem {
         return XposedBridge.hookMethod(
             m,
             object :
-                XC_MethodHook(WeConfig.dGetInt(Constants.HOOK_PRIORITY_PREF_KEY, 50)) {
+                XC_MethodHook(WePrefs.getIntOrDef(Constants.HOOK_PRIORITY_PREF_KEY, 50)) {
                 override fun afterHookedMethod(param: MethodHookParam) {
                     tryExecute(param, action)
                 }
@@ -312,7 +277,7 @@ abstract class BaseHookItem {
             clazz,
             methodName,
             object :
-                XC_MethodHook(WeConfig.dGetInt(Constants.HOOK_PRIORITY_PREF_KEY, 50)) {
+                XC_MethodHook(WePrefs.getIntOrDef(Constants.HOOK_PRIORITY_PREF_KEY, 50)) {
                 override fun beforeHookedMethod(param: MethodHookParam) {
                     tryExecute(param, action)
                 }
@@ -341,7 +306,7 @@ abstract class BaseHookItem {
             clazz,
             methodName,
             object :
-                XC_MethodHook(WeConfig.dGetInt(Constants.HOOK_PRIORITY_PREF_KEY, 50)) {
+                XC_MethodHook(WePrefs.getIntOrDef(Constants.HOOK_PRIORITY_PREF_KEY, 50)) {
                 override fun afterHookedMethod(param: MethodHookParam) {
                     tryExecute(param, action)
                 }

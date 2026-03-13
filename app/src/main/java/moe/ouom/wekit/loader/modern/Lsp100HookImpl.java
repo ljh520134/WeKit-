@@ -10,7 +10,6 @@ import java.lang.reflect.Method;
 
 import io.github.libxposed.api.XposedInterface;
 import io.github.libxposed.api.XposedModule;
-import moe.ouom.wekit.BuildConfig;
 import moe.ouom.wekit.loader.hookapi.IClassLoaderHelper;
 import moe.ouom.wekit.loader.hookapi.IHookBridge;
 import moe.ouom.wekit.loader.hookapi.ILoaderService;
@@ -106,29 +105,6 @@ public class Lsp100HookImpl implements IHookBridge, ILoaderService {
     @Override
     public Object queryExtension(@NonNull String key, @Nullable Object... args) {
         return Lsp100ExtCmd.handleQueryExtension(key, args);
-    }
-
-    @NonNull
-    @Override
-    public String getEntryPointName() {
-        return this.getClass().getName();
-    }
-
-    @NonNull
-    @Override
-    public String getLoaderVersionName() {
-        return BuildConfig.VERSION_NAME;
-    }
-
-    @Override
-    public int getLoaderVersionCode() {
-        return BuildConfig.VERSION_CODE;
-    }
-
-    @NonNull
-    @Override
-    public String getMainModulePath() {
-        return self.getApplicationInfo().sourceDir;
     }
 
     @Override

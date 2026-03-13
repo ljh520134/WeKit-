@@ -25,8 +25,6 @@ import java.lang.reflect.Constructor
  * UPDATE LOG:
  * 2025.1.19 - 移除了 Theme.setTo(baseTheme)，防止宿主资源 ID 污染模块 Theme
  * - 代理 getAssets() 以确保资源加载链路完整
- *
- * NOTE: showComposeDialog 会自动使用本类
  */
 class CommonContextWrapper(base: Context?, themeResId: Int) : ContextWrapper(base) {
 
@@ -163,7 +161,7 @@ class CommonContextWrapper(base: Context?, themeResId: Int) : ContextWrapper(bas
                     sConstructorCache[name] = constructor
                 }
                 return constructor.newInstance(context, attrs)
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 return null
             }
         }

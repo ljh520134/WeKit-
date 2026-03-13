@@ -3,13 +3,13 @@ package moe.ouom.wekit.hooks.items.chat
 import com.highcapable.kavaref.KavaRef.Companion.asResolver
 import moe.ouom.wekit.core.dsl.dexClass
 import moe.ouom.wekit.core.dsl.dexMethod
-import moe.ouom.wekit.core.model.BaseSwitchFunctionHookItem
+import moe.ouom.wekit.core.model.SwitchHookItem
 import moe.ouom.wekit.dexkit.intf.IDexFind
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import org.luckypray.dexkit.DexKitBridge
 
 @HookItem(path = "聊天/引用消息直达", desc = "点击被引用消息时直接跳转至对应消息")
-object QuotedMessageDirectJump : BaseSwitchFunctionHookItem(), IDexFind {
+object QuotedMessageDirectJump : SwitchHookItem(), IDexFind {
 
     private val methodClickEvent by dexMethod()
     private val methodClickToPositionEvent by dexMethod()
@@ -18,7 +18,7 @@ object QuotedMessageDirectJump : BaseSwitchFunctionHookItem(), IDexFind {
     private val classEnumQuoteJumpToPositionSource by dexClass()
     private val classChattingContext by dexClass()
 
-    override fun entry(classLoader: ClassLoader) {
+    override fun onLoad(classLoader: ClassLoader) {
         methodClickEvent.toDexMethod {
             hook {
                 beforeIfEnabled { param ->

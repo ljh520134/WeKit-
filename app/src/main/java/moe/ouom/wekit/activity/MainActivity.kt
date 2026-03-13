@@ -66,9 +66,9 @@ import moe.ouom.wekit.host.HostInfo
 import moe.ouom.wekit.ui.utils.AppTheme
 import moe.ouom.wekit.utils.common.Utils
 import moe.ouom.wekit.utils.formatEpoch
-import moe.ouom.wekit.utils.getEnable
+import moe.ouom.wekit.utils.getEnabled
 import moe.ouom.wekit.utils.hookstatus.HookStatus
-import moe.ouom.wekit.utils.setEnable
+import moe.ouom.wekit.utils.setEnabled
 
 class MainActivity : ComponentActivity() {
 
@@ -112,7 +112,7 @@ fun AppContent(onUrlClick: (String) -> Unit) {
             ComponentName(
                 context,
                 "moe.ouom.wekit.activity.MainActivityAlias"
-            ).getEnable(context)
+            ).getEnabled(context)
         )
     }
 
@@ -126,7 +126,7 @@ fun AppContent(onUrlClick: (String) -> Unit) {
 
     fun getActivationState(): ActivationState {
         val hostAppPackages = setOf(PackageConstants.PACKAGE_NAME_WECHAT)
-        val isHookEnabledByLegacyApi = HookStatus.isModuleEnabled || HostInfo.isInHostProcess()
+        val isHookEnabledByLegacyApi = HookStatus.isModuleEnabled || HostInfo.isHost
         val xposedService: XposedService? = HookStatus.xposedService.value
         val isHookEnabledByLibXposedApi = if (xposedService != null) {
             hostAppPackages.intersect(xposedService.scope.toSet()).isNotEmpty()
@@ -136,7 +136,7 @@ fun AppContent(onUrlClick: (String) -> Unit) {
         return ActivationState(
             isActivated = isHookEnabled,
             title = if (isHookEnabled) "已激活" else "未激活",
-            desc = if (HostInfo.isInHostProcess()) HostInfo.getPackageName() else (if (isHookEnabledByLibXposedApi) "${xposedService?.frameworkName} ${xposedService?.frameworkVersion} (${xposedService?.frameworkVersionCode}), API ${xposedService?.apiVersion}" else HookStatus.hookProviderNameForLegacyApi),
+            desc = if (HostInfo.isHost) HostInfo.packageName else (if (isHookEnabledByLibXposedApi) "${xposedService?.frameworkName} ${xposedService?.frameworkVersion} (${xposedService?.frameworkVersionCode}), API ${xposedService?.apiVersion}" else HookStatus.hookProviderNameForLegacyApi),
             color = if (isHookEnabled) Color(0xFF4CAF50) else Color(0xFFF44336)
         )
     }
@@ -189,7 +189,7 @@ fun AppContent(onUrlClick: (String) -> Unit) {
                                     "moe.ouom.wekit.activity.MainActivityAlias"
                                 )
                                 val newState = !isLauncherIconEnabled
-                                componentName.setEnable(context, newState)
+                                componentName.setEnabled(context, newState)
                                 isLauncherIconEnabled = newState
                             }
                         )
@@ -355,7 +355,7 @@ fun AppContent(onUrlClick: (String) -> Unit) {
                     title = { Text(text = "关于 WeKit") },
                     text = {
                         Column {
-                            Text("WeKit 是一款基于 Xposed 框架的免费开源微信模块")
+                            Text("WeKit 是一款基于 Xposed 框架的开源免费微信模块")
                             Spacer(modifier = Modifier.height(8.dp))
                             Text("版本: ${BuildConfig.VERSION_NAME}")
                             Text("构建版本: ${BuildConfig.VERSION_CODE}")

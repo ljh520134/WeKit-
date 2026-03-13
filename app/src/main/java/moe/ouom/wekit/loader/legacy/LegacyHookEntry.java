@@ -1,7 +1,7 @@
 package moe.ouom.wekit.loader.legacy;
 
-import static moe.ouom.wekit.host.HostInfo.PACKAGE_NAME_SELF;
-import static moe.ouom.wekit.host.HostInfo.PACKAGE_NAME_WECHAT;
+import static moe.ouom.wekit.constants.PackageConstants.PACKAGE_NAME_SELF;
+import static moe.ouom.wekit.constants.PackageConstants.PACKAGE_NAME_WECHAT;
 
 import androidx.annotation.Keep;
 
@@ -78,7 +78,7 @@ public class LegacyHookEntry implements IXposedHookLoadPackage, IXposedHookZygot
                 }
                 sCurrentPackageName = lpparam.packageName;
                 ModuleLoader.initialize(lpparam.classLoader,
-                        Xp51HookImpl.INSTANCE, Xp51HookImpl.INSTANCE, getModulePath());
+                        Xp51HookImpl.INSTANCE, getModulePath());
                 break;
             default:
                 break;

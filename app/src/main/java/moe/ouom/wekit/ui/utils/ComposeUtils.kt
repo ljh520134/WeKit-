@@ -19,6 +19,8 @@ import androidx.lifecycle.setViewTreeLifecycleOwner
 import androidx.lifecycle.setViewTreeViewModelStoreOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import dev.ujhhgtg.nameof.nameof
+import moe.ouom.wekit.config.WePrefs
+import moe.ouom.wekit.hooks.items.beautify.ApplyDialogBackgroundBlur
 import moe.ouom.wekit.host.HostInfo
 import moe.ouom.wekit.utils.log.WeLogger
 
@@ -33,31 +35,41 @@ private val TAG = nameof(::showComposeDialog)
 fun showComposeDialog(
     context: Context? = null,
     dismissable: Boolean = true,
-    content: @Composable (onDismiss: () -> Unit) -> Unit
+    content: @Composable ShowComposeDialogScope.() -> Unit
 ) {
-    var ctx = context
+    val ctx = if (context == null)
+            HostInfo.application
+        else
+            CommonContextWrapper.createAppCompatContext(context)
 
-    ctx = if (ctx == null)
-        HostInfo.getApplication()
-    else
-        CommonContextWrapper.createAppCompatContext(ctx)
-
-    val dialog = Dialog(ctx, android.R.style.Theme_DeviceDefault_Light_Dialog_NoActionBar_MinWidth)
+    val dialog = Dialog(ctx,
+        android.R.style.Theme_DeviceDefault_Light_Dialog_NoActionBar_MinWidth)
     val lifecycleOwner = XposedLifecycleOwner().apply { onCreate(); onResume() }
 
     dialog.apply {
-        window?.apply {
+        window!!.apply {
             setBackgroundDrawableResource(android.R.color.transparent)
+
+            if (!ApplyDialogBackgroundBlur.isEnabled) {
+                return@apply
+            }
+
             requestFeature(Window.FEATURE_NO_TITLE)
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
                 addFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND)
-                attributes.blurBehindRadius = 20
+                attributes.blurBehindRadius = WePrefs.getIntOrDef(
+                    ApplyDialogBackgroundBlur.KEY_BLUR_RADIUS,
+                    ApplyDialogBackgroundBlur.DEFAULT_BLUR_RADIUS)
             } else {
                 WeLogger.w(TAG, "sdk < 31, not applying blur behind dialog")
             }
         }
-        setCanceledOnTouchOutside(dismissable)
+
+        // doesn't work
+        // setCanceledOnTouchOutside(dismissable)
         setCancelable(dismissable)
+
+        val scope = ShowComposeDialogScope(this, window!!, ::dismiss)
 
         setContentView(
             ComposeView(ctx).apply {
@@ -69,7 +81,7 @@ fun showComposeDialog(
                             modifier = Modifier.fillMaxSize(),
                             contentAlignment = Alignment.Center
                         ) {
-                            content(::dismiss)
+                            scope.content()
                         }
                     }
                 }
@@ -81,6 +93,12 @@ fun showComposeDialog(
         show()
     }
 }
+
+class ShowComposeDialogScope(
+    val dialog: Dialog,
+    val window: Window,
+    val onDismiss: () -> Unit
+)
 
 fun View.setLifecycleOwner(lifecycleOwner: XposedLifecycleOwner) {
     this.apply {

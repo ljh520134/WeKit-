@@ -1,13 +1,13 @@
 package moe.ouom.wekit.hooks.items.chat
 
 import moe.ouom.wekit.core.dsl.dexMethod
-import moe.ouom.wekit.core.model.BaseSwitchFunctionHookItem
+import moe.ouom.wekit.core.model.SwitchHookItem
 import moe.ouom.wekit.dexkit.intf.IDexFind
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import org.luckypray.dexkit.DexKitBridge
 
 @HookItem(path = "聊天/禁用消息折叠", desc = "阻止聊天消息被折叠")
-object DisableMessageCollapsing : BaseSwitchFunctionHookItem(), IDexFind {
+object DisableMessageCollapsing : SwitchHookItem(), IDexFind {
 
     private val methodFoldMsg by dexMethod()
 
@@ -31,7 +31,7 @@ object DisableMessageCollapsing : BaseSwitchFunctionHookItem(), IDexFind {
         return descriptors
     }
 
-    override fun entry(classLoader: ClassLoader) {
+    override fun onLoad(classLoader: ClassLoader) {
         methodFoldMsg.toDexMethod {
             hook {
                 beforeIfEnabled { param ->

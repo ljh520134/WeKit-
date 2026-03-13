@@ -10,10 +10,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.highcapable.kavaref.KavaRef.Companion.asResolver
-import moe.ouom.wekit.config.WeConfig
-import moe.ouom.wekit.constants.Constants
+import moe.ouom.wekit.config.WePrefs
 import moe.ouom.wekit.core.dsl.dexMethod
-import moe.ouom.wekit.core.model.BaseClickableFunctionHookItem
+import moe.ouom.wekit.core.model.ClickableHookItem
 import moe.ouom.wekit.dexkit.intf.IDexFind
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import moe.ouom.wekit.ui.content.AlertDialogContent
@@ -21,23 +20,23 @@ import moe.ouom.wekit.ui.utils.showComposeDialog
 import org.luckypray.dexkit.DexKitBridge
 
 @HookItem(path = "聊天/移除消息菜单项", desc = "从消息的长按菜单中移除指定名称的菜单项")
-object RemoveChatMessageContextMenuItems : BaseClickableFunctionHookItem(), IDexFind {
+object RemoveChatMessageContextMenuItems : ClickableHookItem(), IDexFind {
 
     // although there are multiple addMenuItem() methods, i only found the usage of those two in the context menu of chat messages
     private val methodAddMenuItem1 by dexMethod()
     private val methodAddMenuItem2 by dexMethod()
-    private val config = WeConfig.defaultConfig
     private const val KEY_REMOVED_ITEM_NAMES = "removed_menu_item_names"
     private const val DEFAULT_REMOVED_ITEM_NAMES =
         "收藏,提醒,翻译,搜一搜,编辑,打开,相关表情,合拍,查看专辑,静音播放,听筒播放,背景播放"
 
-    override fun entry(classLoader: ClassLoader) {
+    override fun onLoad(classLoader: ClassLoader) {
         methodAddMenuItem1.toDexMethod {
             hook {
                 afterIfEnabled { param ->
                     val name = param.args[3] as CharSequence
                     val removedNames =
-                        config.getStringPref(KEY_REMOVED_ITEM_NAMES, DEFAULT_REMOVED_ITEM_NAMES)!!.split(',')
+                        WePrefs.getStringOrDef(KEY_REMOVED_ITEM_NAMES, DEFAULT_REMOVED_ITEM_NAMES)
+                            .split(',')
 
                     if (removedNames.contains(name)) {
                         val list = param.thisObject.asResolver()
@@ -54,7 +53,8 @@ object RemoveChatMessageContextMenuItems : BaseClickableFunctionHookItem(), IDex
                 afterIfEnabled { param ->
                     val name = param.args[3] as CharSequence
                     val removedNames =
-                        config.getStringPref(KEY_REMOVED_ITEM_NAMES, DEFAULT_REMOVED_ITEM_NAMES)!!.split(',')
+                        WePrefs.getStringOrDef(KEY_REMOVED_ITEM_NAMES, DEFAULT_REMOVED_ITEM_NAMES)
+                            .split(',')
 
                     if (removedNames.contains(name)) {
                         val list = param.thisObject.asResolver()
@@ -107,13 +107,13 @@ object RemoveChatMessageContextMenuItems : BaseClickableFunctionHookItem(), IDex
     }
 
     override fun onClick(context: Context) {
-        showComposeDialog(context) { onDismiss ->
+        showComposeDialog(context) {
             var removedNames by remember {
                 mutableStateOf(
-                    config.getStringPref(
+                    WePrefs.getStringOrDef(
                         KEY_REMOVED_ITEM_NAMES,
                         DEFAULT_REMOVED_ITEM_NAMES
-                    )!!
+                    )
                 )
             }
             AlertDialogContent(
@@ -127,8 +127,8 @@ object RemoveChatMessageContextMenuItems : BaseClickableFunctionHookItem(), IDex
                 dismissButton = { TextButton(onClick = onDismiss) { Text("取消") } },
                 confirmButton = {
                     TextButton(onClick = {
-                        config.putString(
-                            Constants.PREF_KEY_PREFIX + KEY_REMOVED_ITEM_NAMES,
+                        WePrefs.putString(
+                            KEY_REMOVED_ITEM_NAMES,
                             removedNames
                         )
                         onDismiss()

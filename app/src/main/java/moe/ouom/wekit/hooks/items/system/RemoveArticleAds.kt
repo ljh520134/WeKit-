@@ -1,7 +1,7 @@
 package moe.ouom.wekit.hooks.items.system
 
 import dev.ujhhgtg.nameof.nameof
-import moe.ouom.wekit.core.model.BaseSwitchFunctionHookItem
+import moe.ouom.wekit.core.model.SwitchHookItem
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import moe.ouom.wekit.hooks.sdk.protocol.WePkgManager
 import moe.ouom.wekit.hooks.sdk.protocol.intf.IWePkgInterceptor
@@ -11,11 +11,11 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 @HookItem(path = "系统与隐私/去除文章广告", desc = "清除文章中的广告数据")
-object RemoveArticleAds : BaseSwitchFunctionHookItem(), IWePkgInterceptor {
+object RemoveArticleAds : SwitchHookItem(), IWePkgInterceptor {
 
     private val TAG = nameof(RemoveArticleAds)
 
-    override fun entry(classLoader: ClassLoader) {
+    override fun onLoad(classLoader: ClassLoader) {
         WePkgManager.addInterceptor(this)
     }
 
@@ -86,8 +86,8 @@ object RemoveArticleAds : BaseSwitchFunctionHookItem(), IWePkgInterceptor {
         return null
     }
 
-    override fun unload(classLoader: ClassLoader) {
+    override fun onUnload(classLoader: ClassLoader) {
         WePkgManager.removeInterceptor(this)
-        super.unload(classLoader)
+        super.onUnload(classLoader)
     }
 }

@@ -11,13 +11,13 @@ import android.widget.TextView
 import com.highcapable.kavaref.KavaRef.Companion.asResolver
 import de.robv.android.xposed.XC_MethodHook
 import moe.ouom.wekit.core.dsl.dexMethod
-import moe.ouom.wekit.core.model.BaseSwitchFunctionHookItem
+import moe.ouom.wekit.core.model.SwitchHookItem
 import moe.ouom.wekit.dexkit.intf.IDexFind
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import moe.ouom.wekit.hooks.sdk.base.WeConversationApi
 import moe.ouom.wekit.hooks.sdk.base.model.MessageInfo
 import moe.ouom.wekit.hooks.sdk.ui.WeChatMessageViewApi
-import moe.ouom.wekit.utils.common.SimpleLruCache
+import moe.ouom.wekit.utils.LruCache
 import org.luckypray.dexkit.DexKitBridge
 import kotlin.math.roundToInt
 
@@ -25,21 +25,21 @@ import kotlin.math.roundToInt
     path = "联系人与群组/显示群成员身份",
     desc = "在群聊中显示群成员的身份: 群主, 管理员, 成员"
 )
-object DisplayGroupMemberRoles : BaseSwitchFunctionHookItem(), IDexFind,
+object DisplayGroupMemberRoles : SwitchHookItem(), IDexFind,
     WeChatMessageViewApi.ICreateViewListener {
 
     private val methodGetChatroomData by dexMethod()
 
     // Pair<groupId: String, sender: String>, type: Int (1=owner, 2=admin, 3=member)
-    private val cache = SimpleLruCache<Pair<String, String>, Int>()
+    private val cache = LruCache<Pair<String, String>, Int>()
 
-    override fun entry(classLoader: ClassLoader) {
+    override fun onLoad(classLoader: ClassLoader) {
         WeChatMessageViewApi.addListener(this)
     }
 
-    override fun unload(classLoader: ClassLoader) {
+    override fun onUnload(classLoader: ClassLoader) {
         WeChatMessageViewApi.removeListener(this)
-        super.unload(classLoader)
+        super.onUnload(classLoader)
     }
 
     private const val OWNER_COLOR = 0xFFFFC107

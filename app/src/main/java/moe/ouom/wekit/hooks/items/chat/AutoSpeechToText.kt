@@ -3,29 +3,29 @@ package moe.ouom.wekit.hooks.items.chat
 import android.view.View
 import com.highcapable.kavaref.KavaRef.Companion.asResolver
 import de.robv.android.xposed.XC_MethodHook
-import moe.ouom.wekit.core.model.BaseSwitchFunctionHookItem
+import moe.ouom.wekit.core.model.SwitchHookItem
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import moe.ouom.wekit.hooks.sdk.base.WeMessageApi
 import moe.ouom.wekit.hooks.sdk.base.WeServiceApi
 import moe.ouom.wekit.hooks.sdk.base.model.MessageInfo
 import moe.ouom.wekit.hooks.sdk.base.model.MessageType
 import moe.ouom.wekit.hooks.sdk.ui.WeChatMessageViewApi
-import moe.ouom.wekit.utils.common.SimpleLruCache
+import moe.ouom.wekit.utils.LruCache
 import java.lang.reflect.InvocationTargetException
 
 @HookItem(path = "聊天/自动语音转文字", desc = "自动将语音消息转为文字")
-object AutoSpeechToText : BaseSwitchFunctionHookItem(),
+object AutoSpeechToText : SwitchHookItem(),
     WeChatMessageViewApi.ICreateViewListener {
 
-    private val cache = SimpleLruCache<Long, Boolean>(100)
+    private val cache = LruCache<Long, Boolean>(100)
 
-    override fun entry(classLoader: ClassLoader) {
+    override fun onLoad(classLoader: ClassLoader) {
         WeChatMessageViewApi.addListener(this)
     }
 
-    override fun unload(classLoader: ClassLoader) {
+    override fun onUnload(classLoader: ClassLoader) {
         WeChatMessageViewApi.removeListener(this)
-        super.unload(classLoader)
+        super.onUnload(classLoader)
     }
 
     override fun onCreateView(

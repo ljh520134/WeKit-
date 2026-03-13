@@ -7,7 +7,7 @@ import android.os.Looper
 import com.afollestad.materialdialogs.MaterialDialog
 import com.afollestad.materialdialogs.list.listItems
 import com.highcapable.kavaref.extension.toClass
-import moe.ouom.wekit.core.model.BaseClickableFunctionHookItem
+import moe.ouom.wekit.core.model.ClickableHookItem
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import moe.ouom.wekit.ui.utils.CommonContextWrapper
 import moe.ouom.wekit.utils.common.ToastUtils.showToast
@@ -18,13 +18,13 @@ import moe.ouom.wekit.utils.log.WeLogger
     path = "调试/测试崩溃",
     desc = "没事别点"
 )
-object TestCrash : BaseClickableFunctionHookItem() {
+object TestCrash : ClickableHookItem() {
 
     private var appContext: Context? = null
     @SuppressLint("StaticFieldLeak")
     private var nativeCrashHandler: NativeCrashHandler? = null
 
-    override fun entry(classLoader: ClassLoader) {
+    override fun onLoad(classLoader: ClassLoader) {
         WeLogger.i("TestCrash", "=== TestCrash entry() called ===")
         try {
             // 获取 Application Context

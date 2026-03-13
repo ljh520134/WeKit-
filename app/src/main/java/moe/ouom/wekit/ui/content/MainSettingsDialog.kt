@@ -73,32 +73,28 @@ class MainSettingsDialog(context: Context) : BasePrefDialog(context, "WeKit") {
             key = Constants.ENABLE_LOG_PREF_KEY,
             title = "日志记录",
             summary = "反馈问题前必须开启日志记录",
-            iconName = "list_alt_24px",
-            useFullKey = true
+            iconName = "list_alt_24px"
         )
 
         addSwitchPreference(
             key = Constants.VERBOSE_LOG_PREF_KEY,
             title = "详细日志",
             summary = "输出高频日志 (这可能会暴露你的隐私信息）",
-            iconName = "frame_bug_24px",
-            useFullKey = true
+            iconName = "frame_bug_24px"
         )
 
         val dependentKey = addSwitchPreference(
             key = Constants.DB_VERBOSE_LOG_PREF_KEY,
             title = "数据库详细日志",
             summary = "输出完整的数据库插入事件详情（ContentValues）",
-            iconName = "database_upload_24px",
-            useFullKey = true
+            iconName = "database_upload_24px"
         )
 
         // 数据库详细日志依赖于详细日志
         setDependency(
             dependentKey = dependentKey,
             dependencyKey = Constants.VERBOSE_LOG_PREF_KEY,
-            enableWhen = true,
-            useFullKey = true
+            enableWhen = true
         )
 
         // ==========================================
@@ -113,16 +109,15 @@ class MainSettingsDialog(context: Context) : BasePrefDialog(context, "WeKit") {
             summary = "当前设定", // 当配置的值不在 map 中时，会显示 "当前设定: [值]"
             options = priorityMap,
             defaultValue = 50,
-            iconName = "low_priority_24px",
-            useFullKey = true // 因为 key 已经包含了前缀 PrekCfgXXX，所以必须设为 true
+            iconName = "low_priority_24px"
+            // 因为 key 已经包含了前缀 PrekCfgXXX，所以必须设为 true
         )
 
         addSwitchPreference(
-            key = Constants.DISABLE_DEX_FIND_PREF_KEY,
+            key = Constants.DISABLE_DEX_LOCATE_PREF_KEY,
             title = "禁用版本适配",
             summary = "开启后不会弹出 DEX 查找对话框，未适配功能将不会被加载",
-            iconName = "block_24px",
-            useFullKey = true
+            iconName = "block_24px"
         )
 
         // ==========================================

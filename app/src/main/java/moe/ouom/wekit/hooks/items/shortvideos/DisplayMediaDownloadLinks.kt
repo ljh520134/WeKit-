@@ -5,7 +5,7 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import de.robv.android.xposed.XC_MethodHook
-import moe.ouom.wekit.core.model.BaseSwitchFunctionHookItem
+import moe.ouom.wekit.core.model.SwitchHookItem
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import moe.ouom.wekit.hooks.sdk.ui.WeShortVideosShareMenuApi
 import moe.ouom.wekit.host.HostInfo
@@ -19,16 +19,16 @@ import java.util.Locale
     path = "视频号/查看媒体下载链接",
     desc = "向视频分享菜单中添加 '复制链接' 菜单项 (下载还没写, 目前先自己手动下载)"
 )
-object DisplayMediaDownloadLinks : BaseSwitchFunctionHookItem(),
+object DisplayMediaDownloadLinks : SwitchHookItem(),
     WeShortVideosShareMenuApi.IMenuItemsProvider {
 
-    override fun entry(classLoader: ClassLoader) {
+    override fun onLoad(classLoader: ClassLoader) {
         WeShortVideosShareMenuApi.addProvider(this)
     }
 
-    override fun unload(classLoader: ClassLoader) {
+    override fun onUnload(classLoader: ClassLoader) {
         WeShortVideosShareMenuApi.removeProvider(this)
-        super.unload(classLoader)
+        super.onUnload(classLoader)
     }
 
     override fun getMenuItems(
@@ -46,7 +46,7 @@ object DisplayMediaDownloadLinks : BaseSwitchFunctionHookItem(),
                         json.getString("url") + json.getString("url_token")
                     }
 
-                    val clipboard = HostInfo.getApplication()
+                    val clipboard = HostInfo.application
                         .getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                     val clip = ClipData.newPlainText("Url", imageUrls.joinToString("\n"))
                     clipboard.setPrimaryClip(clip)
@@ -80,12 +80,12 @@ object DisplayMediaDownloadLinks : BaseSwitchFunctionHookItem(),
                         clipItems += "链接" to json.getString("pcdn_url")
                     }
 
-                    val clipboard = HostInfo.getApplication()
+                    val cm = HostInfo.application
                         .getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                     val clip = ClipData.newPlainText(
                         "Content",
                         clipItems.joinToString("\n") { pair -> "${pair.first}: ${pair.second}" })
-                    clipboard.setPrimaryClip(clip)
+                    cm.setPrimaryClip(clip)
                     ToastUtils.showToast("已复制")
 
                     return@MenuItem

@@ -1,105 +1,31 @@
-package moe.ouom.wekit.config;
+package moe.ouom.wekit.config
 
-import android.app.Activity;
-import android.content.SharedPreferences;
-import android.content.pm.ApplicationInfo;
+import android.app.Activity
+import android.content.SharedPreferences
+import java.lang.ref.WeakReference
 
-import java.lang.ref.WeakReference;
+object RuntimeConfig {
 
-import lombok.Getter;
+    private var launcherUiActivityRef: WeakReference<Activity>? = null
+    private var mmPrefs: SharedPreferences? = null
 
-public class RuntimeConfig {
-
-    public static ClassLoader hostClassLoader;
-    public static ApplicationInfo hostApplicationInfo;
-    private static WeakReference<Activity> launcherUIActivityRef;
-    private static SharedPreferences mmPrefs;
-
-    // account info //
-    @Getter
-    private static String wechatVersionName; // "8.0.65"
-
-    // login_weixin_username: wxid_apfe8lfoeoad13
-    // last_login_nick_name: 帽子叔叔
-    // login_user_name: 15068586147
-    // last_login_uin: 1293948946
-
-    // ------- //
-
-    // WeChat app info //
-    @Getter
-    private static long wechatVersionCode;    // 2960
-    private RuntimeConfig() {
-        throw new AssertionError("No instance for you!");
-    }
-
-    // ------- //
-
-    public static Activity getLauncherUIActivity() {
-        if (launcherUIActivityRef == null) {
-            return null;
+    fun getLauncherUiActivity(): Activity? {
+        val activity = launcherUiActivityRef?.get()
+        if (activity != null && (activity.isFinishing || activity.isDestroyed)) {
+            launcherUiActivityRef = null
+            return null
         }
-        var activity = launcherUIActivityRef.get();
-
-        if (activity != null && (activity.isFinishing() || activity.isDestroyed())) {
-            launcherUIActivityRef = null;
-            return null;
-        }
-
-        return activity;
+        return activity
     }
 
-    public static void setLauncherUIActivity(Activity activity) {
-        if (activity == null) {
-            launcherUIActivityRef = null;
-        } else {
-            launcherUIActivityRef = new WeakReference<>(activity);
-        }
+    fun setLauncherUiActivity(activity: Activity?) {
+        launcherUiActivityRef = activity?.let { WeakReference(it) }
     }
 
-    public static ClassLoader getHostClassLoader() {
-        return hostClassLoader;
+    fun setMmPrefs(sharedPreferences: SharedPreferences) {
+        mmPrefs = sharedPreferences
     }
 
-    public static void setHostClassLoader(ClassLoader classLoader) {
-        assert classLoader != null;
-        hostClassLoader = classLoader;
-    }
-
-    public static ApplicationInfo getHostApplicationInfo() {
-        return hostApplicationInfo;
-    }
-
-    public static void setHostApplicationInfo(ApplicationInfo appInfo) {
-        assert appInfo != null;
-        hostApplicationInfo = appInfo;
-    }
-
-    public static void setWechatVersionName(String wechatVersionName) {
-        RuntimeConfig.wechatVersionName = wechatVersionName;
-    }
-
-    public static void setWechatVersionCode(long wechatVersionCode) {
-        RuntimeConfig.wechatVersionCode = wechatVersionCode;
-    }
-
-    public static void setmmPrefs(SharedPreferences sharedPreferences) {
-        RuntimeConfig.mmPrefs = sharedPreferences;
-    }
-
-    public static String getLogin_weixin_username() {
-        return mmPrefs.getString("login_weixin_username", "");
-    }
-
-    public static String getLast_login_nick_name() {
-        return mmPrefs.getString("last_login_nick_name", "");
-    }
-
-    public static String getLogin_user_name() {
-        return mmPrefs.getString("login_user_name", "");
-    }
-
-    public static String getLast_login_uin() {
-        return mmPrefs.getString("last_login_uin", "0");
-    }
+    fun getLoggedInWxId(): String =
+        mmPrefs?.getString("login_weixin_username", "") ?: ""
 }

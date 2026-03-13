@@ -36,7 +36,7 @@ import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.highcapable.kavaref.KavaRef.Companion.asResolver
 import moe.ouom.wekit.core.dsl.dexMethod
-import moe.ouom.wekit.core.model.BaseSwitchFunctionHookItem
+import moe.ouom.wekit.core.model.SwitchHookItem
 import moe.ouom.wekit.dexkit.intf.IDexFind
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import moe.ouom.wekit.hooks.sdk.base.WeConversationApi
@@ -46,9 +46,9 @@ import moe.ouom.wekit.ui.utils.setLifecycleOwner
 import org.luckypray.dexkit.DexKitBridge
 
 @HookItem(path = "聊天/对话分组", desc = "向主页顶部添加 Tab 栏, 将对话分组")
-object ConversationGrouping : BaseSwitchFunctionHookItem(), IDexFind {
+object ConversationGrouping : SwitchHookItem(), IDexFind {
 
-    override fun entry(classLoader: ClassLoader) {
+    override fun onLoad(classLoader: ClassLoader) {
         methodOnTabCreate.toDexMethod {
             hook {
                 afterIfEnabled { param ->

@@ -3,11 +3,9 @@ package moe.ouom.wekit.loader.startup;
 import android.app.Application;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import java.util.Objects;
 
-import moe.ouom.wekit.loader.hookapi.IHookBridge;
 import moe.ouom.wekit.loader.hookapi.ILoaderService;
 
 
@@ -15,15 +13,7 @@ public class StartupInfo {
 
     public static Application hostApp;
     private static String modulePath;
-
-    private static Boolean isInitMethod;
     private static ILoaderService loaderService;
-    private static IHookBridge hookBridge;
-    private static Boolean inHostProcess = null;
-
-    private StartupInfo() {
-        throw new AssertionError("No instance for you!");
-    }
 
     public static String getModulePath() {
         if (modulePath == null) {
@@ -37,26 +27,9 @@ public class StartupInfo {
         StartupInfo.modulePath = modulePath;
     }
 
-    public static Application getHostApp() {
-        return hostApp;
-    }
-
     public static void setHostApp(Application hostApp) {
         Objects.requireNonNull(hostApp);
         StartupInfo.hostApp = hostApp;
-    }
-
-    public static Boolean isInitMethod() {
-        if (isInitMethod == null) {
-            return false;
-        }
-        return isInitMethod;
-    }
-
-
-    public static void setIsInitMethod(Boolean b) {
-        Objects.requireNonNull(b);
-        StartupInfo.isInitMethod = b;
     }
 
     @NonNull
@@ -68,29 +41,4 @@ public class StartupInfo {
         Objects.requireNonNull(loaderService);
         StartupInfo.loaderService = loaderService;
     }
-
-    public static boolean isInHostProcess() {
-        if (inHostProcess == null) {
-            throw new IllegalStateException("Host process status is not initialized");
-        }
-        return inHostProcess;
-    }
-
-    public static void setInHostProcess(boolean inHostProcess) {
-        if (StartupInfo.inHostProcess != null) {
-            throw new IllegalStateException("Host process status is already initialized");
-        }
-        StartupInfo.inHostProcess = inHostProcess;
-    }
-
-    @Nullable
-    public static IHookBridge getHookBridge() {
-        return hookBridge;
-    }
-
-    public static void setHookBridge(@Nullable IHookBridge hookBridge) {
-        StartupInfo.hookBridge = hookBridge;
-    }
-
-
 }

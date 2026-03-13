@@ -6,7 +6,7 @@ import com.highcapable.kavaref.KavaRef.Companion.asResolver
 import com.highcapable.kavaref.extension.toClass
 import de.robv.android.xposed.XposedHelpers
 import dev.ujhhgtg.nameof.nameof
-import moe.ouom.wekit.config.WeConfig
+import moe.ouom.wekit.config.WePrefs
 import moe.ouom.wekit.constants.Constants
 import moe.ouom.wekit.constants.WeChatVersion
 import moe.ouom.wekit.core.model.ApiHookItem
@@ -82,13 +82,13 @@ object WeDatabaseListenerApi : ApiHookItem() {
         }
     }
 
-    override fun entry(classLoader: ClassLoader) {
+    override fun onLoad(classLoader: ClassLoader) {
         hookDatabaseInsert()
         hookDatabaseUpdate()
         hookDatabaseQuery()
     }
 
-    override fun unload(classLoader: ClassLoader) {
+    override fun onUnload(classLoader: ClassLoader) {
         insertListeners.clear()
         updateListeners.clear()
         queryListeners.clear()
@@ -97,9 +97,8 @@ object WeDatabaseListenerApi : ApiHookItem() {
     // ==================== 私有辅助方法 ====================
 
     private fun shouldLogDatabase(): Boolean {
-        val config = WeConfig.defaultConfig
-        return config.getBooleanOrFalse(Constants.VERBOSE_LOG_PREF_KEY) &&
-                config.getBooleanOrFalse(Constants.DB_VERBOSE_LOG_PREF_KEY)
+        return WePrefs.getBoolOrFalse(Constants.VERBOSE_LOG_PREF_KEY) &&
+                WePrefs.getBoolOrFalse(Constants.DB_VERBOSE_LOG_PREF_KEY)
     }
 
     private fun formatArgs(args: Array<out Any?>): String {
@@ -156,8 +155,8 @@ object WeDatabaseListenerApi : ApiHookItem() {
 
     private fun hookDatabaseUpdate() {
         try {
-            val isPlay = HostInfo.isGooglePlayVersion
-            val version = HostInfo.getVersionCode()
+            val isPlay = HostInfo.isHostGooglePlay
+            val version = HostInfo.versionCode
             val isNewVersion = (!isPlay && version >= WeChatVersion.MM_8_0_43) ||
                     (isPlay && version >= WeChatVersion.MM_8_0_48_PLAY)
 
@@ -212,8 +211,8 @@ object WeDatabaseListenerApi : ApiHookItem() {
 
     private fun hookDatabaseQuery() {
         try {
-            val isPlay = HostInfo.isGooglePlayVersion
-            val version = HostInfo.getVersionCode()
+            val isPlay = HostInfo.isHostGooglePlay
+            val version = HostInfo.versionCode
             val isNewVersion = (!isPlay && version >= WeChatVersion.MM_8_0_43) ||
                     (isPlay && version >= WeChatVersion.MM_8_0_48_PLAY)
 

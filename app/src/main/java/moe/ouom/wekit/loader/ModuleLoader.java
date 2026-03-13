@@ -1,12 +1,10 @@
 package moe.ouom.wekit.loader;
 
 import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import moe.ouom.wekit.loader.hookapi.IHookBridge;
 import moe.ouom.wekit.loader.hookapi.ILoaderService;
 import moe.ouom.wekit.loader.startup.UnifiedEntryPoint;
 
@@ -18,14 +16,13 @@ public class ModuleLoader {
     public static void initialize(
             @NonNull ClassLoader hostClassLoader,
             @NonNull ILoaderService loaderService,
-            @Nullable IHookBridge hookBridge,
             @NonNull String modulePath
     ) throws ReflectiveOperationException {
         if (sLoaded) {
             return;
         }
         sLoaded = true;
-        UnifiedEntryPoint.INSTANCE.entry(modulePath, loaderService, hostClassLoader, hookBridge);
+        UnifiedEntryPoint.entry(modulePath, loaderService, hostClassLoader);
     }
 
     public static List<Throwable> getInitErrors() {

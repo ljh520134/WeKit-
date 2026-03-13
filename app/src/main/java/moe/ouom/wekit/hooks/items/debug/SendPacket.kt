@@ -14,7 +14,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import dev.ujhhgtg.nameof.nameof
-import moe.ouom.wekit.core.model.BaseClickableFunctionHookItem
+import moe.ouom.wekit.core.model.ClickableHookItem
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import moe.ouom.wekit.hooks.sdk.protocol.WePkgHelper
 import moe.ouom.wekit.ui.content.AlertDialogContent
@@ -23,11 +23,11 @@ import moe.ouom.wekit.utils.common.ToastUtils
 import moe.ouom.wekit.utils.log.WeLogger
 
 @HookItem(path = "调试/发包调试", desc = "发送自定义数据包到微信服务器")
-object SendPacket : BaseClickableFunctionHookItem() {
+object SendPacket : ClickableHookItem() {
     private val TAG = nameof(SendPacket)
 
     override fun onClick(context: Context) {
-        showComposeDialog(context) { onDismiss ->
+        showComposeDialog(context) {
             var uri by remember { mutableStateOf("/cgi-bin/micromsg-bin/oplog") }
             var cmdIdStr by remember { mutableStateOf("681") }
             var funcIdStr by remember { mutableStateOf("0") }
@@ -90,7 +90,7 @@ object SendPacket : BaseClickableFunctionHookItem() {
                         ) {
                             onSuccess { json, byteArray ->
                                 WeLogger.i(TAG, "success: $json")
-                                showComposeDialog(context) { onDismiss ->
+                                showComposeDialog(context) {
                                     AlertDialogContent(
                                         title = { Text("发送成功, 响应结果:") },
                                         text = { Text("json: $json\n\nbyteArray: ${byteArray?.size ?: 0} 字节") },
@@ -102,7 +102,7 @@ object SendPacket : BaseClickableFunctionHookItem() {
                             }
                             onFail { type, code, msg ->
                                 WeLogger.e(TAG, "失败: $type, $code, $msg")
-                                showComposeDialog(context) { onDismiss ->
+                                showComposeDialog(context) {
                                     AlertDialogContent(
                                         title = { Text("发送失败, 响应结果:") },
                                         text = { Text("type: $type, code: $code, msg: $msg") },

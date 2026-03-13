@@ -62,7 +62,7 @@ public class SafUtils {
     }
 
     private static void checkProcess() {
-        if (HostInfo.isInHostProcess() && !SyncUtils.isMainProcess()) {
+        if (HostInfo.isHost() && !SyncUtils.isMainProcess()) {
             throw new IllegalStateException("This method can only be called in the main process");
         }
     }

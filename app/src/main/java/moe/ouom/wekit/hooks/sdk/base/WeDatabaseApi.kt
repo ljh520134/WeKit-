@@ -213,7 +213,7 @@ object WeDatabaseApi : ApiHookItem(), IDexFind {
         return descriptors
     }
 
-    override fun entry(classLoader: ClassLoader) {
+    override fun onLoad(classLoader: ClassLoader) {
         try {
             getStorageMethod = methodGetStorage.method
 

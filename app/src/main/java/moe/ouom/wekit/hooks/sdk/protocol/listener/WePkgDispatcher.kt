@@ -1,5 +1,8 @@
 package moe.ouom.wekit.hooks.sdk.protocol.listener
 
+import android.os.Handler
+import android.os.Looper
+import androidx.core.os.postDelayed
 import com.highcapable.kavaref.KavaRef.Companion.asResolver
 import de.robv.android.xposed.XposedHelpers
 import dev.ujhhgtg.nameof.nameof
@@ -9,7 +12,6 @@ import moe.ouom.wekit.dexkit.intf.IDexFind
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import moe.ouom.wekit.hooks.sdk.protocol.WePkgHelper
 import moe.ouom.wekit.hooks.sdk.protocol.WePkgManager
-import moe.ouom.wekit.utils.common.SyncUtils
 import moe.ouom.wekit.utils.log.WeLogger
 import org.luckypray.dexkit.DexKitBridge
 import java.lang.reflect.Proxy
@@ -24,8 +26,8 @@ object WePkgDispatcher : ApiHookItem(), IDexFind {
     // 缓存最近 10 条记录，避免因脚本引起的无限递归
     private val recentRequests = ConcurrentHashMap<String, Long>()
 
-    override fun entry(classLoader: ClassLoader) {
-        SyncUtils.postDelayed(3000) {
+    override fun onLoad(classLoader: ClassLoader) {
+        Handler(Looper.getMainLooper()).postDelayed(3000) {
             try {
                 val netSceneBaseClass = WePkgHelper.classNetSceneBase.clazz
                 val callbackInterface = classOnGYNetEnd.clazz
@@ -173,53 +175,6 @@ object WePkgDispatcher : ApiHookItem(), IDexFind {
         }
     }
 
-    private fun hookBuilder() {
-        val builderClass = WePkgHelper.classConfigBuilder.clazz
-
-        try {
-            WeLogger.i("WePkgListener-gen", "start Hook ${builderClass.name}.a() 方法")
-            hookAfter(builderClass, "a") { param ->
-                val builder = param.thisObject
-
-                val cgiId = try {
-                    XposedHelpers.getIntField(builder, "d")
-                } catch (_: Throwable) {
-                    0
-                }
-                val funcId = try {
-                    XposedHelpers.getIntField(builder, "e")
-                } catch (_: Throwable) {
-                    0
-                }
-                val routeId = try {
-                    XposedHelpers.getIntField(builder, "f")
-                } catch (_: Throwable) {
-                    0
-                }
-                val uri = try {
-                    XposedHelpers.getObjectField(builder, "c") as? String ?: ""
-                } catch (_: Throwable) {
-                    ""
-                }
-
-                // 获取 Request 对象的类名
-                var reqClassName = "Unknown"
-                try {
-                    val reqObj = XposedHelpers.getObjectField(builder, "a")
-                    if (reqObj != null) {
-                        reqClassName = reqObj.javaClass.name
-                    }
-                } catch (_: Throwable) {
-                }
-
-                val configLog = "$cgiId to Triple(\"$reqClassName\", $funcId, $routeId), // $uri"
-                WeLogger.w("WePkgListener-gen", configLog)
-            }
-        } catch (e: Throwable) {
-            WeLogger.e("WePkgListener-gen", "Builder Hook 失败: ${e.message}")
-        }
-    }
-
     override fun dexFind(dexKit: DexKitBridge): Map<String, String> {
         val descriptors = mutableMapOf<String, String>()
 
@@ -235,7 +190,6 @@ object WePkgDispatcher : ApiHookItem(), IDexFind {
                 }
             }
         }
-
         return descriptors
     }
 }

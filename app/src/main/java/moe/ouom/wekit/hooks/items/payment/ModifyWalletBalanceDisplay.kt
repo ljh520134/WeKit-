@@ -11,10 +11,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.highcapable.kavaref.KavaRef.Companion.asResolver
-import moe.ouom.wekit.config.WeConfig
-import moe.ouom.wekit.constants.Constants
+import moe.ouom.wekit.config.WePrefs
 import moe.ouom.wekit.core.dsl.dexMethod
-import moe.ouom.wekit.core.model.BaseClickableFunctionHookItem
+import moe.ouom.wekit.core.model.ClickableHookItem
 import moe.ouom.wekit.dexkit.intf.IDexFind
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import moe.ouom.wekit.ui.content.AlertDialogContent
@@ -22,19 +21,18 @@ import moe.ouom.wekit.ui.utils.showComposeDialog
 import org.luckypray.dexkit.DexKitBridge
 
 @HookItem(path = "红包与支付/修改显示余额", desc = "伪装钱包余额文字")
-object ModifyWalletBalanceDisplay : BaseClickableFunctionHookItem(), IDexFind {
+object ModifyWalletBalanceDisplay : ClickableHookItem(), IDexFind {
 
-    private val config = WeConfig.defaultConfig
     private const val KEY_BALANCE = "fake_wallet_balance"
 
     private val methodUpdateBalanceDisplay by dexMethod()
     private val methodTickerViewSetText by dexMethod()
 
-    override fun entry(classLoader: ClassLoader) {
+    override fun onLoad(classLoader: ClassLoader) {
         methodUpdateBalanceDisplay.toDexMethod {
             hook {
                 afterIfEnabled { param ->
-                    val text = config.getStringPref(KEY_BALANCE, null) ?: return@afterIfEnabled
+                    val text = WePrefs.getStringOrDef(KEY_BALANCE, null) ?: return@afterIfEnabled
                     val balanceView = param.thisObject.asResolver()
                         .firstField { type = TextView::class }
                         .get()!! as TextView
@@ -47,7 +45,7 @@ object ModifyWalletBalanceDisplay : BaseClickableFunctionHookItem(), IDexFind {
             hook {
                 beforeIfEnabled { param ->
                     param.args[0] =
-                        config.getStringPref(KEY_BALANCE, null) ?: return@beforeIfEnabled
+                        WePrefs.getStringOrDef(KEY_BALANCE, null) ?: return@beforeIfEnabled
                 }
             }
         }
@@ -75,10 +73,10 @@ object ModifyWalletBalanceDisplay : BaseClickableFunctionHookItem(), IDexFind {
     }
 
     override fun onClick(context: Context) {
-        showComposeDialog(context) { onDismiss ->
+        showComposeDialog(context) {
             var input by remember {
                 mutableStateOf(
-                    config.getStringPref(KEY_BALANCE, null) ?: ""
+                    WePrefs.getStringOrDef(KEY_BALANCE, null) ?: ""
                 )
             }
 
@@ -93,9 +91,9 @@ object ModifyWalletBalanceDisplay : BaseClickableFunctionHookItem(), IDexFind {
                 confirmButton = {
                     Button(onClick = {
                         if (!input.isBlank())
-                            config.putString(Constants.PREF_KEY_PREFIX + KEY_BALANCE, input)
+                            WePrefs.putString(KEY_BALANCE, input)
                         else
-                            config.remove(Constants.PREF_KEY_PREFIX + KEY_BALANCE)
+                            WePrefs.remove(KEY_BALANCE)
                         onDismiss()
                     }) { Text("确定") }
                 },

@@ -6,7 +6,7 @@ import android.content.ClipboardManager
 import android.content.Context
 import android.widget.Toast
 import dev.ujhhgtg.nameof.nameof
-import moe.ouom.wekit.core.model.BaseSwitchFunctionHookItem
+import moe.ouom.wekit.core.model.SwitchHookItem
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import moe.ouom.wekit.hooks.sdk.ui.WeChatContactDetailsApi
 import moe.ouom.wekit.hooks.sdk.ui.WeChatContactDetailsApi.ContactInfoItem
@@ -16,7 +16,7 @@ import moe.ouom.wekit.utils.log.WeLogger
     path = "联系人与群组/显示微信 ID",
     desc = "在联系人详情页面显示微信 ID"
 )
-object ShowWxIdInContactDetails : BaseSwitchFunctionHookItem() {
+object ShowWxIdInContactDetails : SwitchHookItem() {
 
     private val TAG = nameof(ShowWxIdInContactDetails)
     private const val PREF_KEY = "wechat_id_display"
@@ -47,7 +47,7 @@ object ShowWxIdInContactDetails : BaseSwitchFunctionHookItem() {
             }
         }
 
-    override fun entry(classLoader: ClassLoader) {
+    override fun onLoad(classLoader: ClassLoader) {
         try {
             WeChatContactDetailsApi.addInitCallback(initCallback)
             WeChatContactDetailsApi.addClickListener(clickListener)
@@ -71,7 +71,7 @@ object ShowWxIdInContactDetails : BaseSwitchFunctionHookItem() {
     }
 
 
-    override fun unload(classLoader: ClassLoader) {
+    override fun onUnload(classLoader: ClassLoader) {
         WeChatContactDetailsApi.removeInitCallback(initCallback)
         WeChatContactDetailsApi.removeClickListener(clickListener)
         WeLogger.i(TAG, "已移除显示微信ID Hook")

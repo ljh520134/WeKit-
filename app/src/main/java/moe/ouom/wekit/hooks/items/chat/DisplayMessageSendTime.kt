@@ -9,7 +9,7 @@ import android.widget.RelativeLayout
 import android.widget.TextView
 import com.highcapable.kavaref.KavaRef.Companion.asResolver
 import de.robv.android.xposed.XC_MethodHook
-import moe.ouom.wekit.core.model.BaseSwitchFunctionHookItem
+import moe.ouom.wekit.core.model.SwitchHookItem
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import moe.ouom.wekit.hooks.sdk.base.model.MessageInfo
 import moe.ouom.wekit.hooks.sdk.ui.WeChatMessageViewApi
@@ -17,16 +17,16 @@ import moe.ouom.wekit.utils.formatEpoch
 
 
 @HookItem(path = "聊天/显示消息时间", desc = "显示精确消息发送时间")
-object DisplayMessageSendTime : BaseSwitchFunctionHookItem(),
+object DisplayMessageSendTime : SwitchHookItem(),
     WeChatMessageViewApi.ICreateViewListener {
 
-    override fun entry(classLoader: ClassLoader) {
+    override fun onLoad(classLoader: ClassLoader) {
         WeChatMessageViewApi.addListener(this)
     }
 
-    override fun unload(classLoader: ClassLoader) {
+    override fun onUnload(classLoader: ClassLoader) {
         WeChatMessageViewApi.removeListener(this)
-        super.unload(classLoader)
+        super.onUnload(classLoader)
     }
 
     private const val VIEW_TAG = "wekit_message_send_time"

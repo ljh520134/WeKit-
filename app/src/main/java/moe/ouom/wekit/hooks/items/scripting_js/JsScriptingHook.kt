@@ -26,7 +26,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import dev.ujhhgtg.nameof.nameof
-import moe.ouom.wekit.core.model.BaseClickableFunctionHookItem
+import moe.ouom.wekit.core.model.ClickableHookItem
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import moe.ouom.wekit.hooks.item.scripting_js.EmbeddedBuiltinJs
 import moe.ouom.wekit.hooks.sdk.base.WeDatabaseListenerApi
@@ -38,7 +38,7 @@ import moe.ouom.wekit.utils.log.WeLogger
 import java.util.concurrent.CopyOnWriteArrayList
 
 @HookItem(path = "脚本/脚本引擎", desc = "点击管理脚本")
-object JsScriptingHook : BaseClickableFunctionHookItem(),
+object JsScriptingHook : ClickableHookItem(),
     WeDatabaseListenerApi.IInsertListener,
     IWePkgInterceptor {
 
@@ -145,7 +145,7 @@ object JsScriptingHook : BaseClickableFunctionHookItem(),
         }
     }
 
-    override fun entry(classLoader: ClassLoader) {
+    override fun onLoad(classLoader: ClassLoader) {
         WeLogger.i(TAG, "registering automation DB listener")
         WeDatabaseListenerApi.addListener(this)
     }
@@ -175,10 +175,10 @@ object JsScriptingHook : BaseClickableFunctionHookItem(),
         JsEngine.executeAllOnMessage(rules, talker, content, type, isSend)
     }
 
-    override fun unload(classLoader: ClassLoader) {
+    override fun onUnload(classLoader: ClassLoader) {
         WeLogger.i(TAG, "removing automation DB listener")
         WeDatabaseListenerApi.removeListener(this)
-        super.unload(classLoader)
+        super.onUnload(classLoader)
     }
 
     // --- onRequest ---

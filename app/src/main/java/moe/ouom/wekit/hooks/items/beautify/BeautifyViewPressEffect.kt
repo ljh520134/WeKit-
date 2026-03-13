@@ -5,12 +5,12 @@ import android.graphics.drawable.Drawable
 import android.graphics.drawable.RippleDrawable
 import android.view.View
 import com.highcapable.kavaref.KavaRef.Companion.asResolver
-import moe.ouom.wekit.core.model.BaseSwitchFunctionHookItem
+import moe.ouom.wekit.core.model.SwitchHookItem
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 
 @HookItem(path = "界面美化/美化组件按下效果", desc = "将 View 的背景替换为 RippleDrawable")
-object BeautifyViewPressEffect : BaseSwitchFunctionHookItem() {
-    override fun entry(classLoader: ClassLoader) {
+object BeautifyViewPressEffect : SwitchHookItem() {
+    override fun onLoad(classLoader: ClassLoader) {
         View::class.asResolver()
             .firstMethod {
                 name = "setBackgroundDrawable"

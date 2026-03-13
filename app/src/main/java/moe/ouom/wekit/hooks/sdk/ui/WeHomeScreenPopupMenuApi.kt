@@ -55,7 +55,7 @@ object WeHomeScreenPopupMenuApi : ApiHookItem(), IDexFind {
     private val classMenuItemData by dexClass()
     private val classMenuItemWrapper by dexClass()
 
-    override fun entry(classLoader: ClassLoader) {
+    override fun onLoad(classLoader: ClassLoader) {
         methodAddItem.toDexMethod {
             hook {
                 afterIfEnabled { param ->

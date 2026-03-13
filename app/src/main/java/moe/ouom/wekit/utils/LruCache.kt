@@ -1,7 +1,7 @@
-package moe.ouom.wekit.utils.common
+package moe.ouom.wekit.utils
 
-// not using android's own LruCache since kotlin.collections provide several useful methods
-class SimpleLruCache<K, V>(
+// prefer this over android's own LruCache since kotlin.collections provide several useful methods
+class LruCache<K, V>(
     initialCapacity: Int = 16,
     loadFactor: Float = 0.75f,
     private val maxLimit: Int = 100

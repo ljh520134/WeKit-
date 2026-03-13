@@ -31,7 +31,6 @@ object CrashInfoCollector {
      * @param crashType 崩溃类型 (JAVA/NATIVE)
      * @return 格式化的崩溃信息
      */
-    @JvmStatic
     fun collectCrashInfo(context: Context, throwable: Throwable, crashType: String): String {
         // 崩溃头部信息
 

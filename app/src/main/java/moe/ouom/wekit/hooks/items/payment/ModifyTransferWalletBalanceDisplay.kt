@@ -14,9 +14,8 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import dev.ujhhgtg.nameof.nameof
-import moe.ouom.wekit.config.WeConfig
-import moe.ouom.wekit.constants.Constants
-import moe.ouom.wekit.core.model.BaseClickableFunctionHookItem
+import moe.ouom.wekit.config.WePrefs
+import moe.ouom.wekit.core.model.ClickableHookItem
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import moe.ouom.wekit.hooks.sdk.protocol.WePkgManager
 import moe.ouom.wekit.hooks.sdk.protocol.intf.IWePkgInterceptor
@@ -28,14 +27,14 @@ import org.json.JSONArray
 import org.json.JSONObject
 
 @HookItem(path = "红包与支付/修改转账显示余额", desc = "伪装转账时显示的余额文字")
-object ModifyTransferWalletBalanceDisplay : BaseClickableFunctionHookItem(), IWePkgInterceptor {
+object ModifyTransferWalletBalanceDisplay : ClickableHookItem(), IWePkgInterceptor {
 
     private val TAG = nameof(ModifyTransferWalletBalanceDisplay)
 
     private const val KEY_CFT_BALANCE = "fake_cft_balance"
     private const val KEY_LQT_BALANCE = "fake_lqt_balance"
 
-    override fun entry(classLoader: ClassLoader) {
+    override fun onLoad(classLoader: ClassLoader) {
         WePkgManager.addInterceptor(this)
     }
 
@@ -67,9 +66,8 @@ object ModifyTransferWalletBalanceDisplay : BaseClickableFunctionHookItem(), IWe
             keysList.add(keysIterator.next())
         }
 
-        val config = WeConfig.defaultConfig
-        val customCft = config.getStringPref(KEY_CFT_BALANCE, null)
-        val customLqt = config.getStringPref(KEY_LQT_BALANCE, null)
+        val customCft = WePrefs.getStringOrDef(KEY_CFT_BALANCE, null)
+        val customLqt = WePrefs.getStringOrDef(KEY_LQT_BALANCE, null)
 
         for (key in keysList) {
             val value = obj.opt(key) ?: continue
@@ -132,23 +130,21 @@ object ModifyTransferWalletBalanceDisplay : BaseClickableFunctionHookItem(), IWe
         }
     }
 
-    override fun unload(classLoader: ClassLoader) {
+    override fun onUnload(classLoader: ClassLoader) {
         WePkgManager.removeInterceptor(this)
-        super.unload(classLoader)
+        super.onUnload(classLoader)
     }
 
-    private val config = WeConfig.defaultConfig
-
     override fun onClick(context: Context) {
-        showComposeDialog(context) { onDismiss ->
+        showComposeDialog(context) {
             var cftInput by remember {
                 mutableStateOf(
-                    config.getStringPref(KEY_CFT_BALANCE, null) ?: ""
+                    WePrefs.getStringOrDef(KEY_CFT_BALANCE, null) ?: ""
                 )
             }
             var lqtInput by remember {
                 mutableStateOf(
-                    config.getStringPref(KEY_LQT_BALANCE, null) ?: ""
+                    WePrefs.getStringOrDef(KEY_LQT_BALANCE, null) ?: ""
                 )
             }
 
@@ -168,14 +164,14 @@ object ModifyTransferWalletBalanceDisplay : BaseClickableFunctionHookItem(), IWe
                 confirmButton = {
                     Button(onClick = {
                         if (!cftInput.isBlank())
-                            config.putString(Constants.PREF_KEY_PREFIX + KEY_CFT_BALANCE, cftInput)
+                            WePrefs.putString(KEY_CFT_BALANCE, cftInput)
                         else
-                            config.remove(Constants.PREF_KEY_PREFIX + KEY_CFT_BALANCE)
+                            WePrefs.remove(KEY_CFT_BALANCE)
 
                         if (!lqtInput.isBlank())
-                            config.putString(Constants.PREF_KEY_PREFIX + KEY_LQT_BALANCE, lqtInput)
+                            WePrefs.putString(KEY_LQT_BALANCE, lqtInput)
                         else
-                            config.remove(Constants.PREF_KEY_PREFIX + KEY_LQT_BALANCE)
+                            WePrefs.remove(KEY_LQT_BALANCE)
                         onDismiss()
                     }) { Text("确定") }
                 },

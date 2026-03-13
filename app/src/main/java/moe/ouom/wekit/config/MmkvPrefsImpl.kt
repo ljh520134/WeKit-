@@ -8,9 +8,9 @@ import java.io.ObjectInputStream
 import java.io.ObjectOutputStream
 import java.io.Serializable
 
-class MmkvConfigManagerImpl(name: String) : WeConfig() {
+class MmkvPrefsImpl(name: String) : WePrefs() {
 
-    val mmkv: MMKV = MMKV.mmkvWithID(name, MMKV.MULTI_PROCESS_MODE)
+    private val mmkvInstance = MMKV.mmkvWithID(name, MMKV.MULTI_PROCESS_MODE)
 
     val mCacheMap = HashMap<String, MutableMap.MutableEntry<String, Any?>>()
 
@@ -75,7 +75,7 @@ class MmkvConfigManagerImpl(name: String) : WeConfig() {
     val mShadowMap: MutableMap<String, Any?> = object : AbstractMutableMap<String, Any?>() {
         override val size: Int get() = entries.size
         override fun isEmpty(): Boolean = size == 0
-        override fun containsKey(key: String): Boolean = this@MmkvConfigManagerImpl.containsKey(key)
+        override fun containsKey(key: String): Boolean = this@MmkvPrefsImpl.containsKey(key)
 
         override fun containsValue(value: Any?): Boolean = entries.any { it == value }
 
@@ -89,7 +89,7 @@ class MmkvConfigManagerImpl(name: String) : WeConfig() {
 
         override fun remove(key: String): Any? {
             val obj = getObject(key)
-            if (obj != null) mmkv.remove(key)
+            if (obj != null) mmkvInstance.remove(key)
             return obj
         }
 
@@ -97,10 +97,10 @@ class MmkvConfigManagerImpl(name: String) : WeConfig() {
             for ((key, value) in from) putObject(key, value!!)
         }
 
-        override fun clear() { mmkv.clear() }
+        override fun clear() { mmkvInstance.clear() }
 
         override val keys: MutableSet<String>
-            get() = (mmkv.allKeys()
+            get() = (mmkvInstance.allKeys()
                 ?.filterNot { it.endsWith(TYPE_SUFFIX) }
                 ?.toHashSet()
                 ?: hashSetOf()) as MutableSet<String>
@@ -111,35 +111,35 @@ class MmkvConfigManagerImpl(name: String) : WeConfig() {
 
     override fun getAll(): Map<String, *> = mShadowMap
 
-    override fun getString(key: String): String? = mmkv.getString(key, null)
+    override fun getString(key: String): String? = mmkvInstance.getString(key, null)
 
-    override fun getString(key: String, defValue: String?): String? = mmkv.getString(key, defValue)
+    override fun getString(key: String, defValue: String?): String? = mmkvInstance.getString(key, defValue)
 
     override fun getStringSet(key: String, defValues: Set<String>?): Set<String>? =
-        mmkv.getStringSet(key, defValues)
+        mmkvInstance.getStringSet(key, defValues)
 
-    override fun getInt(key: String, defValue: Int): Int = mmkv.getInt(key, defValue)
+    override fun getInt(key: String, defValue: Int): Int = mmkvInstance.getInt(key, defValue)
 
-    override fun getLong(key: String, defValue: Long): Long = mmkv.getLong(key, defValue)
+    override fun getLong(key: String, defValue: Long): Long = mmkvInstance.getLong(key, defValue)
 
-    override fun getFloat(key: String, defValue: Float): Float = mmkv.getFloat(key, defValue)
+    override fun getFloat(key: String, defValue: Float): Float = mmkvInstance.getFloat(key, defValue)
 
-    override fun getBoolean(key: String, defValue: Boolean): Boolean = mmkv.getBoolean(key, defValue)
+    override fun getBoolean(key: String, defValue: Boolean): Boolean = mmkvInstance.getBoolean(key, defValue)
 
-    override fun contains(key: String): Boolean = mmkv.contains(key)
+    override fun contains(key: String): Boolean = mmkvInstance.contains(key)
 
     override fun getObject(key: String): Any? {
-        if (!mmkv.contains(key)) return null
-        return when (mmkv.getInt(key + TYPE_SUFFIX, 0)) {
-            TYPE_BOOL -> mmkv.getBoolean(key, false)
-            TYPE_FLOAT -> mmkv.getFloat(key, 0f)
-            TYPE_INT -> mmkv.getInt(key, 0)
-            TYPE_LONG -> mmkv.getLong(key, 0L)
-            TYPE_STRING -> mmkv.getString(key, null)
-            TYPE_STRING_SET -> mmkv.getStringSet(key, null)
-            TYPE_BYTES -> mmkv.getBytes(key, null)
+        if (!mmkvInstance.contains(key)) return null
+        return when (mmkvInstance.getInt(key + TYPE_SUFFIX, 0)) {
+            TYPE_BOOL -> mmkvInstance.getBoolean(key, false)
+            TYPE_FLOAT -> mmkvInstance.getFloat(key, 0f)
+            TYPE_INT -> mmkvInstance.getInt(key, 0)
+            TYPE_LONG -> mmkvInstance.getLong(key, 0L)
+            TYPE_STRING -> mmkvInstance.getString(key, null)
+            TYPE_STRING_SET -> mmkvInstance.getStringSet(key, null)
+            TYPE_BYTES -> mmkvInstance.getBytes(key, null)
             TYPE_SERIALIZABLE -> {
-                val bytes = mmkv.getBytes(key, null) ?: return null
+                val bytes = mmkvInstance.getBytes(key, null) ?: return null
                 runCatching {
                     ObjectInputStream(ByteArrayInputStream(bytes)).readObject()
                 }.onFailure { WeLogger.e(it) }.getOrNull()
@@ -148,85 +148,87 @@ class MmkvConfigManagerImpl(name: String) : WeConfig() {
         }
     }
 
-    override fun putObject(key: String, v: Any): WeConfig {
-        when {
-            v is Float || v is Double -> putFloat(key, (v as Number).toFloat())
-            v is Long -> putLong(key, v)
-            v is Int -> putInt(key, v)
-            v is Boolean -> putBoolean(key, v)
-            v is String -> putString(key, v)
-            v is Set<*> -> @Suppress("UNCHECKED_CAST") putStringSet(key, v as Set<String>)
-            v is ByteArray -> putBytes(key, v)
-            v is Array<*> && v.isArrayOf<String>() -> {
+    override fun putObject(key: String, obj: Any): WePrefs {
+        when (obj) {
+            is Float, is Double -> putFloat(key, (obj as Number).toFloat())
+            is Long -> putLong(key, obj)
+            is Int -> putInt(key, obj)
+            is Boolean -> putBoolean(key, obj)
+            is String -> putString(key, obj)
+            is Set<*> -> @Suppress("UNCHECKED_CAST") putStringSet(key, obj as Set<String>)
+            is ByteArray -> putBytes(key, obj)
+            is Array<*> if obj.isArrayOf<String>() -> {
                 @Suppress("UNCHECKED_CAST")
-                putStringSet(key, (v as Array<String>).toHashSet())
+                putStringSet(key, (obj as Array<String>).toHashSet())
             }
-            v is Serializable -> runCatching {
+
+            is Serializable -> runCatching {
                 val outputStream = ByteArrayOutputStream()
-                ObjectOutputStream(outputStream).writeObject(v)
-                mmkv.putBytes(key, outputStream.toByteArray())
-                mmkv.putInt(key + TYPE_SUFFIX, TYPE_SERIALIZABLE)
+                ObjectOutputStream(outputStream).writeObject(obj)
+                mmkvInstance.putBytes(key, outputStream.toByteArray())
+                mmkvInstance.putInt(key + TYPE_SUFFIX, TYPE_SERIALIZABLE)
             }.onFailure { throw RuntimeException(it) }
-            else -> throw IllegalArgumentException("unsupported type ${v::class}")
+
+            else -> throw IllegalArgumentException("unsupported type ${obj::class}")
         }
         return this
     }
 
-    override fun putString(key: String, value: String?): WeConfig {
-        mmkv.putString(key, value)
-        mmkv.putInt(key + TYPE_SUFFIX, TYPE_STRING)
+    override fun putString(key: String, value: String?): WePrefs {
+        mmkvInstance.putString(key, value)
+        mmkvInstance.putInt(key + TYPE_SUFFIX, TYPE_STRING)
         return this
     }
 
-    override fun putStringSet(key: String, values: Set<String>?): WeConfig {
-        mmkv.putStringSet(key, values)
-        mmkv.putInt(key + TYPE_SUFFIX, TYPE_STRING_SET)
+    override fun putStringSet(key: String, values: Set<String>?): WePrefs {
+        mmkvInstance.putStringSet(key, values)
+        mmkvInstance.putInt(key + TYPE_SUFFIX, TYPE_STRING_SET)
         return this
     }
 
-    override fun putInt(key: String, value: Int): WeConfig {
-        mmkv.putInt(key, value)
-        mmkv.putInt(key + TYPE_SUFFIX, TYPE_INT)
+    override fun putInt(key: String, value: Int): WePrefs {
+        mmkvInstance.putInt(key, value)
+        mmkvInstance.putInt(key + TYPE_SUFFIX, TYPE_INT)
         return this
     }
 
-    override fun putLong(key: String, value: Long): WeConfig {
-        mmkv.putLong(key, value)
-        mmkv.putInt(key + TYPE_SUFFIX, TYPE_LONG)
+    override fun putLong(key: String, value: Long): WePrefs {
+        mmkvInstance.putLong(key, value)
+        mmkvInstance.putInt(key + TYPE_SUFFIX, TYPE_LONG)
         return this
     }
 
-    override fun putFloat(key: String, value: Float): WeConfig {
-        mmkv.putFloat(key, value)
-        mmkv.putInt(key + TYPE_SUFFIX, TYPE_FLOAT)
+    override fun putFloat(key: String, value: Float): WePrefs {
+        mmkvInstance.putFloat(key, value)
+        mmkvInstance.putInt(key + TYPE_SUFFIX, TYPE_FLOAT)
         return this
     }
 
-    override fun putBoolean(key: String, value: Boolean): WeConfig {
-        mmkv.putBoolean(key, value)
-        mmkv.putInt(key + TYPE_SUFFIX, TYPE_BOOL)
+    override fun putBoolean(key: String, value: Boolean): WePrefs {
+        mmkvInstance.putBoolean(key, value)
+        mmkvInstance.putInt(key + TYPE_SUFFIX, TYPE_BOOL)
         return this
     }
 
     override fun getBytesOrDefault(key: String, defValue: ByteArray): ByteArray =
-        mmkv.getBytes(key, defValue)!!
+        mmkvInstance.getBytes(key, defValue)!!
 
     override fun getBytes(key: String, defValue: ByteArray?): ByteArray? =
-        mmkv.getBytes(key, defValue)
+        mmkvInstance.getBytes(key, defValue)
 
     override fun putBytes(key: String, value: ByteArray) {
-        mmkv.putBytes(key, value)
-        mmkv.putInt(key + TYPE_SUFFIX, TYPE_BYTES)
+        mmkvInstance.putBytes(key, value)
+        mmkvInstance.putInt(key + TYPE_SUFFIX, TYPE_BYTES)
     }
 
-    override fun remove(key: String): WeConfig {
-        mmkv.remove(key)
-        mmkv.remove(key + TYPE_SUFFIX)
+    override fun remove(key: String): WePrefs {
+        mmkvInstance.remove(key)
+        mmkvInstance.remove(key + TYPE_SUFFIX)
         return this
     }
 
-    override fun clear(): WeConfig {
-        mmkv.clear()
+    override fun clear(): WePrefs {
+        mmkvInstance.clear()
         return this
     }
 

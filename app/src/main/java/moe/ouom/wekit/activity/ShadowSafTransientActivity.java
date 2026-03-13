@@ -33,10 +33,7 @@ public class ShadowSafTransientActivity extends Activity {
     private static final ConcurrentHashMap<Integer, Request> sRequestMap = new ConcurrentHashMap<>();
     private static final AtomicInteger sSequenceGenerator = new AtomicInteger(10000);
     private int mSequence;
-    private int mTargetAction;
     private int mOriginRequest;
-    private String mMimeType;
-    private String mFileName;
 
     public static void startActivityForRequest(@NonNull Context host, int targetAction,
                                                @Nullable String mimeType, @Nullable String fileName,
@@ -62,10 +59,8 @@ public class ShadowSafTransientActivity extends Activity {
             finish();
             return;
         }
-        mTargetAction = extras.getInt(PARAM_TARGET_ACTION, -1);
+        var mTargetAction = extras.getInt(PARAM_TARGET_ACTION, -1);
         mSequence = extras.getInt(PARAM_SEQUENCE, -1);
-        mFileName = extras.getString(PARAM_FILE_NAME);
-        mMimeType = extras.getString(PARAM_MINE_TYPE);
         if (mTargetAction < 0 || mSequence < 0) {
             finish();
             return;

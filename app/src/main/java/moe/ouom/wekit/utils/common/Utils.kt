@@ -1,14 +1,11 @@
 package moe.ouom.wekit.utils.common
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.content.Intent
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.net.toUri
 import androidx.core.view.size
-import java.text.SimpleDateFormat
-import java.util.Date
 import java.util.regex.Pattern
 
 object Utils {
@@ -29,12 +26,6 @@ object Utils {
         val intent = Intent(Intent.ACTION_VIEW)
         intent.data = webUrl?.toUri()
         context.startActivity(intent)
-    }
-
-    fun convertTimestampToDate(timestamp: Long): String {
-        val date = Date(timestamp)
-        @SuppressLint("SimpleDateFormat") val sdf = SimpleDateFormat("yyyy-MM-dd HH:mm:ss")
-        return sdf.format(date)
     }
 
     /**

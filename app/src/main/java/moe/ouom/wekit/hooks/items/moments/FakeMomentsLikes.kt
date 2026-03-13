@@ -6,7 +6,7 @@ import com.afollestad.materialdialogs.MaterialDialog
 import com.afollestad.materialdialogs.list.listItemsMultiChoice
 import com.highcapable.kavaref.extension.toClass
 import dev.ujhhgtg.nameof.nameof
-import moe.ouom.wekit.core.model.BaseSwitchFunctionHookItem
+import moe.ouom.wekit.core.model.SwitchHookItem
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import moe.ouom.wekit.hooks.sdk.base.WeDatabaseApi
 import moe.ouom.wekit.hooks.sdk.base.WeDatabaseListenerApi
@@ -22,7 +22,7 @@ import java.util.LinkedList
     path = "朋友圈/朋友圈伪集赞",
     desc = "自定义朋友圈点赞用户列表"
 )
-object FakeMomentsLikes : BaseSwitchFunctionHookItem(), WeMomentsContextMenuApi.IMenuItemsProvider,
+object FakeMomentsLikes : SwitchHookItem(), WeMomentsContextMenuApi.IMenuItemsProvider,
     WeDatabaseListenerApi.IUpdateListener {
 
     private val TAG = nameof(FakeMomentsLikes)
@@ -40,16 +40,16 @@ object FakeMomentsLikes : BaseSwitchFunctionHookItem(), WeMomentsContextMenuApi.
     private var likeFlagField: Field? = null
     private var snsUserProtobufClass: Class<*>? = null
 
-    override fun entry(classLoader: ClassLoader) {
+    override fun onLoad(classLoader: ClassLoader) {
         initReflection(classLoader)
         WeMomentsContextMenuApi.addProvider(this)
         WeDatabaseListenerApi.addListener(this)
     }
 
-    override fun unload(classLoader: ClassLoader) {
+    override fun onUnload(classLoader: ClassLoader) {
         WeMomentsContextMenuApi.removeProvider(this)
         WeDatabaseListenerApi.removeListener(this)
-        super.unload(classLoader)
+        super.onUnload(classLoader)
     }
 
     override fun getMenuItems(): List<WeMomentsContextMenuApi.MenuItem> {

@@ -8,7 +8,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.highcapable.kavaref.KavaRef.Companion.asResolver
-import moe.ouom.wekit.core.model.BaseSwitchFunctionHookItem
+import moe.ouom.wekit.core.model.SwitchHookItem
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import moe.ouom.wekit.hooks.sdk.ui.WeChatMessageContextMenuApi
 import moe.ouom.wekit.ui.content.AlertDialogContent
@@ -19,16 +19,16 @@ import moe.ouom.wekit.utils.common.ModuleRes
     path = "聊天/修改文本消息显示",
     desc = "向消息长按菜单添加菜单项, 可修改本地消息显示内容"
 )
-object ModifyTextMessageDisplay : BaseSwitchFunctionHookItem(),
+object ModifyTextMessageDisplay : SwitchHookItem(),
     WeChatMessageContextMenuApi.IMenuItemsProvider {
 
-    override fun entry(classLoader: ClassLoader) {
+    override fun onLoad(classLoader: ClassLoader) {
         WeChatMessageContextMenuApi.addProvider(this)
     }
 
-    override fun unload(classLoader: ClassLoader) {
+    override fun onUnload(classLoader: ClassLoader) {
         WeChatMessageContextMenuApi.removeProvider(this)
-        super.unload(classLoader)
+        super.onUnload(classLoader)
     }
 
     override fun getMenuItems(): List<WeChatMessageContextMenuApi.MenuItem> {
@@ -39,7 +39,7 @@ object ModifyTextMessageDisplay : BaseSwitchFunctionHookItem(),
                 lazy { ModuleRes.getDrawable("edit_24px") },
                 { msgInfo -> msgInfo.isText }
             ) { view, _, _ ->
-                showComposeDialog(view.context) { onDismiss ->
+                showComposeDialog(view.context) {
                     var input by remember { mutableStateOf("") } // TODO: figure out how to find initial value
 
                     AlertDialogContent(

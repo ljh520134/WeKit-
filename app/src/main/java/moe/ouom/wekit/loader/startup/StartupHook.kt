@@ -1,112 +1,71 @@
-package moe.ouom.wekit.loader.startup;
+package moe.ouom.wekit.loader.startup
 
-import android.app.Application;
-import android.content.Context;
-import android.util.Log;
+import android.app.Application
+import android.content.Context
+import android.util.Log
+import moe.ouom.wekit.BuildConfig
+import moe.ouom.wekit.host.HostInfo
+import moe.ouom.wekit.loader.core.NativeLoader
+import moe.ouom.wekit.loader.core.WeLauncher
+import moe.ouom.wekit.loader.hookimpl.InMemoryClassLoaderHelper
+import moe.ouom.wekit.loader.hookimpl.LibXposedApiByteCodeGenerator
+import moe.ouom.wekit.utils.common.SyncUtils
+import moe.ouom.wekit.utils.log.WeLogger
+import java.nio.file.Files
+import java.nio.file.Path
+import kotlin.io.path.exists
+import kotlin.io.path.isDirectory
+import kotlin.io.path.listDirectoryEntries
 
-import androidx.annotation.NonNull;
+object StartupHook {
 
-import java.io.File;
+    private var secondStageInit = false
 
-import moe.ouom.wekit.BuildConfig;
-import moe.ouom.wekit.host.impl.HostInfo;
-import moe.ouom.wekit.loader.core.NativeCoreBridge;
-import moe.ouom.wekit.loader.core.WeLauncher;
-import moe.ouom.wekit.loader.hookimpl.InMemoryClassLoaderHelper;
-import moe.ouom.wekit.loader.hookimpl.LibXposedApiByteCodeGenerator;
-import moe.ouom.wekit.utils.common.SyncUtils;
-import moe.ouom.wekit.utils.log.WeLogger;
-
-/**
- * Startup hook for QQ They should act differently according to the process they belong to.
- * <p>
- * I don't want to cope with them anymore, enjoy it as long as possible.
- * <p>
- * DO NOT MODIFY ANY CODE HERE UNLESS NECESSARY.
- *
- * @author cinit
- */
-public class StartupHook {
-
-    private static boolean sSecondStageInit = false;
-
-    /**
-     * Entry point for static or dynamic initialization. NOTICE: Do NOT change the method name or signature.
-     *
-     * @param ctx Application context for host
-     */
-    public static void execStartupInit(@NonNull Context ctx) {
-        if (sSecondStageInit) {
-            throw new IllegalStateException("Second stage init already executed");
-        }
-        HybridClassLoader.setHostClassLoader(ctx.getClassLoader());
-        execPostStartupInit(ctx);
-        sSecondStageInit = true;
-        deleteDirIfNecessaryNoThrow(ctx);
+    fun execStartupInit(ctx: Context) {
+        check(!secondStageInit) { "Second stage init already executed" }
+        execPostStartupInit(ctx)
+        secondStageInit = true
+        deleteDirIfNecessary(ctx)
     }
 
-    /**
-     * From now on, kotlin, androidx or third party libraries may be accessed without crashing the ART.
-     * <p>
-     * Kotlin and androidx are dangerous, and should be invoked only after the class loader is ready.
-     *
-     * @param ctx Application context for host
-     */
-    public static void execPostStartupInit(@NonNull Context ctx) {
-        // init all kotlin utils here
-        HostInfo.init((Application) ctx);
-        // perform full initialization for native core -- including primary and secondary native libraries
-        StartupInfo.getLoaderService().setClassLoaderHelper(InMemoryClassLoaderHelper.INSTANCE);
-        LibXposedApiByteCodeGenerator.init();
-        NativeCoreBridge.initNativeCore();
-        WeLogger.d("execPostStartupInit -> processName: " + SyncUtils.getProcessName());
-        var launcher = new WeLauncher();
-        launcher.init(ctx.getClassLoader(), ctx.getApplicationInfo(), ctx.getApplicationInfo().sourceDir, ctx);
+    fun execPostStartupInit(ctx: Context) {
+        HostInfo.init(ctx as Application)
+        StartupInfo.getLoaderService().setClassLoaderHelper(InMemoryClassLoaderHelper.INSTANCE)
+        LibXposedApiByteCodeGenerator.init()
+        NativeLoader.initNative()
+        WeLogger.d("execPostStartupInit -> processName: ${SyncUtils.getProcessName()}")
+        WeLauncher.init(ctx.classLoader, ctx)
     }
 
-    static void deleteDirIfNecessaryNoThrow(Context ctx) {
-        try {
-            deleteFile(new File(ctx.getDataDir(), "app_qqprotect"));
-        } catch (Throwable e) {
-            log_e(e);
-        }
+    fun initializeAfterAppCreate(ctx: Context) {
+        execStartupInit(ctx)
+        deleteDirIfNecessary(ctx)
     }
 
-    @SuppressWarnings("ResultOfMethodCallIgnored")
-    private static void deleteFile(File file) {
-        if (!file.exists()) {
-            return;
-        }
-        if (file.isFile()) {
-            file.delete();
-        } else if (file.isDirectory()) {
-            var listFiles = file.listFiles();
-            if (listFiles != null) {
-                for (var deleteFile : listFiles) {
-                    deleteFile(deleteFile);
-                }
-            }
-            file.delete();
-        }
-        file.exists();
+    internal fun deleteDirIfNecessary(ctx: Context) {
+        runCatching {
+            ctx.dataDir.toPath().resolve("app_qqprotect").deleteRecursively()
+        }.onFailure(::logError)
     }
 
-    static void log_e(Throwable th) {
-        if (th == null) {
-            return;
+    private fun Path.deleteRecursively() {
+        if (!exists()) return
+        if (isDirectory()) {
+            listDirectoryEntries().forEach { it.deleteRecursively() }
         }
-        var msg = Log.getStackTraceString(th);
-        Log.e(BuildConfig.TAG, msg);
-        try {
-            StartupInfo.getLoaderService().log(th);
-        } catch (NoClassDefFoundError | NullPointerException e) {
-            Log.e("Xposed", msg);
-            Log.e("EdXposed-Bridge", msg);
-        }
+        Files.delete(this)
     }
 
-    public static void initializeAfterAppCreate(@NonNull Context ctx) {
-        execStartupInit(ctx);
-        deleteDirIfNecessaryNoThrow(ctx);
+    internal fun logError(th: Throwable) {
+        val msg = Log.getStackTraceString(th)
+        Log.e(BuildConfig.TAG, msg)
+        runCatching {
+            StartupInfo.getLoaderService().log(th)
+        }.onFailure {
+            if (it is NoClassDefFoundError || it is NullPointerException) {
+                Log.e("Xposed", msg)
+                Log.e("EdXposed-Bridge", msg)
+            } else throw it
+        }
     }
 }

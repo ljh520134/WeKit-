@@ -7,7 +7,6 @@ import android.util.Log
 import com.highcapable.kavaref.extension.toClass
 import dev.ujhhgtg.nameof.nameof
 import moe.ouom.wekit.BuildConfig
-import moe.ouom.wekit.loader.hookapi.IHookBridge
 import moe.ouom.wekit.loader.hookapi.ILoaderService
 import moe.ouom.wekit.utils.log.WeLogger
 import org.lsposed.hiddenapibypass.HiddenApiBypass
@@ -22,8 +21,7 @@ object StartupAgent {
 
     fun startup(
         modulePath: String,
-        loaderService: ILoaderService,
-        hookBridge: IHookBridge?
+        loaderService: ILoaderService
     ) {
         if (sInitialized) {
             WeLogger.w(TAG, "already initialized")
@@ -39,8 +37,6 @@ object StartupAgent {
         System.setProperty(TAG, "true")
         StartupInfo.setModulePath(modulePath)
         StartupInfo.setLoaderService(loaderService)
-        StartupInfo.setHookBridge(hookBridge)
-        StartupInfo.setInHostProcess(true)
 
         ensureHiddenApiAccess()
         checkWriteXorExecuteForModulePath(modulePath)

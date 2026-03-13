@@ -17,7 +17,6 @@ import moe.ouom.wekit.dexkit.DexMethodDescriptor
 import moe.ouom.wekit.dexkit.intf.IDexFind
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import moe.ouom.wekit.ui.content.MainSettingsDialog
-import moe.ouom.wekit.ui.utils.CommonContextWrapper
 import moe.ouom.wekit.utils.log.WeLogger
 import org.luckypray.dexkit.DexKitBridge
 import java.lang.reflect.Modifier
@@ -32,6 +31,7 @@ object WeSettingsInjector : ApiHookItem(), IDexFind {
     private val methodAddPref by dexMethod()
 
     private val TAG = nameof(WeSettingsInjector)
+
     private const val KEY_WEKIT_ENTRY = "wekit_settings_entry"
     private const val TITLE_WEKIT_ENTRY = "WeKit 设置"
     private const val PREFERENCE_CLASS_NAME = "com.tencent.mm.ui.base.preference.Preference"
@@ -90,7 +90,7 @@ object WeSettingsInjector : ApiHookItem(), IDexFind {
         }
         WeLogger.d(
             "WeSettingInjector",
-            "Found ${getKeyCandidates.size} String methods with 0 params: ${getKeyCandidates.map { it.name }}"
+            "found ${getKeyCandidates.size} String methods with 0 params: ${getKeyCandidates.map { it.name }}"
         )
 
         val targetGetKey = getKeyCandidates.firstOrNull { it.name != "toString" }
@@ -145,7 +145,7 @@ object WeSettingsInjector : ApiHookItem(), IDexFind {
         return descriptors
     }
 
-    override fun entry(classLoader: ClassLoader) {
+    override fun onLoad(classLoader: ClassLoader) {
         // 尝试 Hook 旧版 UI
         tryHookLegacySettings(classLoader)
 
@@ -203,14 +203,11 @@ object WeSettingsInjector : ApiHookItem(), IDexFind {
                 val preference = param.args[1] ?: return@hookBefore
 
                 val key = getKeyMethod.invoke(preference) as? String
-                WeLogger.d("WeKit Debug: Click key = $key")
 
                 if (KEY_WEKIT_ENTRY == key) {
                     val activity = param.thisObject as Activity
 
-                    val ctx = CommonContextWrapper.createAppCompatContext(activity)
-                    val dialog = MainSettingsDialog(ctx)
-                    dialog.show()
+                    openSettingsDialog(activity)
 
                     param.result = true
                 }
@@ -259,16 +256,12 @@ object WeSettingsInjector : ApiHookItem(), IDexFind {
         }
     }
 
-    override fun unload(classLoader: ClassLoader) {}
+    override fun onUnload(classLoader: ClassLoader) {}
 
     private class SettingsMenuItemClickListener(val activity: Activity) :
         MenuItem.OnMenuItemClickListener {
         override fun onMenuItemClick(p0: MenuItem): Boolean {
-            try {
-                MainSettingsDialog(activity).show()
-            } catch (e: Throwable) {
-                WeLogger.e(TAG, "failed to open settings dialog", e)
-            }
+            openSettingsDialog(activity)
             return true
         }
     }

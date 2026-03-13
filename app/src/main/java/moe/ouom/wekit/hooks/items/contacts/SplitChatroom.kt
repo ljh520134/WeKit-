@@ -33,7 +33,7 @@ import androidx.compose.ui.unit.dp
 import com.highcapable.kavaref.extension.toClass
 import dev.ujhhgtg.nameof.nameof
 import moe.ouom.wekit.config.RuntimeConfig
-import moe.ouom.wekit.core.model.BaseClickableFunctionHookItem
+import moe.ouom.wekit.core.model.ClickableHookItem
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import moe.ouom.wekit.hooks.sdk.base.WeDatabaseApi
 import moe.ouom.wekit.hooks.sdk.base.model.WeGroup
@@ -43,7 +43,7 @@ import moe.ouom.wekit.utils.common.ToastUtils
 import moe.ouom.wekit.utils.log.WeLogger
 
 @HookItem(path = "联系人与群组/分裂群组", desc = "让群聊一分为二")
-object SplitChatroom : BaseClickableFunctionHookItem() {
+object SplitChatroom : ClickableHookItem() {
 
     private val TAG = nameof(SplitChatroom)
 
@@ -61,7 +61,7 @@ object SplitChatroom : BaseClickableFunctionHookItem() {
             return
         }
 
-        showComposeDialog(context) { onDismiss ->
+        showComposeDialog(context) {
             SplitChatroomDialog(
                 allGroups = groups,
                 onDismiss = onDismiss,
@@ -75,7 +75,7 @@ object SplitChatroom : BaseClickableFunctionHookItem() {
 
     private fun jumpToSplitChatroom(chatroomId: String) {
         try {
-            val activity = RuntimeConfig.getLauncherUIActivity()
+            val activity = RuntimeConfig.getLauncherUiActivity()
             if (activity == null) {
                 WeLogger.e(TAG, "LauncherUI Activity is null")
                 return

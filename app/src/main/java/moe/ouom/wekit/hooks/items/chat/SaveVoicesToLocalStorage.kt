@@ -8,7 +8,7 @@ import com.highcapable.kavaref.extension.toClass
 import dev.ujhhgtg.nameof.nameof
 import moe.ouom.wekit.core.dsl.dexClass
 import moe.ouom.wekit.core.dsl.dexMethod
-import moe.ouom.wekit.core.model.BaseSwitchFunctionHookItem
+import moe.ouom.wekit.core.model.SwitchHookItem
 import moe.ouom.wekit.dexkit.intf.IDexFind
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import moe.ouom.wekit.hooks.sdk.base.WeServiceApi
@@ -31,7 +31,7 @@ import kotlin.io.path.inputStream
     path = "聊天/语音保存到本地",
     desc = "在语音消息菜单添加保存按钮, 允许将语音文件保存到本地"
 )
-object SaveVoicesToLocalStorage : BaseSwitchFunctionHookItem(), IDexFind,
+object SaveVoicesToLocalStorage : SwitchHookItem(), IDexFind,
     WeChatMessageContextMenuApi.IMenuItemsProvider {
 
     private val TAG = nameof(SaveVoicesToLocalStorage)
@@ -43,7 +43,7 @@ object SaveVoicesToLocalStorage : BaseSwitchFunctionHookItem(), IDexFind,
     private lateinit var methodStreamSilkDecUnInit: Method
     private lateinit var methodStreamSilkDoDec: Method
 
-    override fun entry(classLoader: ClassLoader) {
+    override fun onLoad(classLoader: ClassLoader) {
         val clazz = "com.tencent.mm.modelvoice.MediaRecorder".toClass(classLoader)
         methodStreamSilkDecInit = clazz.asResolver()
             .firstMethod { name = "StreamSilkDecInit" }
@@ -58,9 +58,9 @@ object SaveVoicesToLocalStorage : BaseSwitchFunctionHookItem(), IDexFind,
         WeChatMessageContextMenuApi.addProvider(this)
     }
 
-    override fun unload(classLoader: ClassLoader) {
+    override fun onUnload(classLoader: ClassLoader) {
         WeChatMessageContextMenuApi.removeProvider(this)
-        super.unload(classLoader)
+        super.onUnload(classLoader)
     }
 
     override fun dexFind(dexKit: DexKitBridge): Map<String, String> {
@@ -109,7 +109,7 @@ object SaveVoicesToLocalStorage : BaseSwitchFunctionHookItem(), IDexFind,
 
     private fun saveAudio(sourceFile: Path) {
         val extension = sourceFile.extension
-        val resolver = HostInfo.getApplication().contentResolver
+        val resolver = HostInfo.application.contentResolver
         val fileName = "voice_${System.currentTimeMillis()}.$extension"
         val contentValues = ContentValues().apply {
             put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)

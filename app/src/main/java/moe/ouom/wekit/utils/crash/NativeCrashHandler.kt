@@ -12,7 +12,7 @@ class NativeCrashHandler(context: Context) {
      * 
      * @return 崩溃日志管理器
      */
-    val crashLogManager: CrashLogManager = CrashLogManager(this.context)
+    val crashLogsManager: CrashLogsManager = CrashLogsManager()
 
     /**
      * -- GETTER --
@@ -40,7 +40,7 @@ class NativeCrashHandler(context: Context) {
         }
 
         try {
-            val crashLogDir = crashLogManager.crashLogDirPath
+            val crashLogDir = crashLogsManager.crashLogDirPath
             val result = installNative(crashLogDir)
 
             if (result) {

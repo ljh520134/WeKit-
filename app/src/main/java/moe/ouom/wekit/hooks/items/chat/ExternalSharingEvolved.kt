@@ -5,26 +5,26 @@ import android.content.ComponentName
 import android.content.Intent
 import android.content.pm.ShortcutInfo
 import android.content.pm.ShortcutManager
-import moe.ouom.wekit.core.model.BaseSwitchFunctionHookItem
+import moe.ouom.wekit.core.model.SwitchHookItem
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import moe.ouom.wekit.host.HostInfo
 
 @HookItem(path = "聊天/分享进化", desc = "让应用的系统分享菜单更易用 (没写完)")
-object ExternalSharingEvolved : BaseSwitchFunctionHookItem() {
+object ExternalSharingEvolved : SwitchHookItem() {
 
-    override fun entry(classLoader: ClassLoader) {
+    override fun onLoad(classLoader: ClassLoader) {
 
-        val context = HostInfo.getApplication()
+        val ctx = HostInfo.application
 
-        val shortcutManager =
-            context.getSystemService(ShortcutManager::class.java) as ShortcutManager
+        val sm =
+            ctx.getSystemService(ShortcutManager::class.java) as ShortcutManager
 
         val contact = Person.Builder()
             .setName("John Doe")
             .setImportant(true)
             .build()
 
-        val shortcut = ShortcutInfo.Builder(context, "contact_id_123")
+        val shortcut = ShortcutInfo.Builder(ctx, "contact_id_123")
             .setShortLabel("John Doe")
             .setPerson(contact)
             .setCategories(setOf("android.intent.category.DEFAULT"))
@@ -43,7 +43,7 @@ object ExternalSharingEvolved : BaseSwitchFunctionHookItem() {
             .setLongLived(true)
             .build()
 
-        shortcutManager.addDynamicShortcuts(listOf(shortcut))
+        sm.addDynamicShortcuts(listOf(shortcut))
     }
 
     private fun Intent.setTextData(text: String): Intent {

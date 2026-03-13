@@ -1,16 +1,16 @@
 package moe.ouom.wekit.hooks.items.system
 
 import moe.ouom.wekit.core.dsl.dexMethod
-import moe.ouom.wekit.core.model.BaseSwitchFunctionHookItem
+import moe.ouom.wekit.core.model.SwitchHookItem
 import moe.ouom.wekit.dexkit.intf.IDexFind
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import org.luckypray.dexkit.DexKitBridge
 
 @HookItem(path = "系统与隐私/强制平板模式", desc = "让应用将当前设备识别为平板")
-object ForceTabletMode : BaseSwitchFunctionHookItem(), IDexFind {
+object ForceTabletMode : SwitchHookItem(), IDexFind {
     private val methodIsTablet by dexMethod()
 
-    override fun entry(classLoader: ClassLoader) {
+    override fun onLoad(classLoader: ClassLoader) {
         methodIsTablet.toDexMethod {
             hook {
                 beforeIfEnabled { param ->

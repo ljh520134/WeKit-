@@ -75,7 +75,6 @@ class HookItemScanner(
         // 创建方法构建器
         val methodBuilder = FunSpec.builder("getAllHookItems")
             .returns(returnType.parameterizedBy(genericsType)) // 泛型返回
-            .addAnnotation(JvmStatic::class) // 添加静态方法注解
 
         // 构建方法体
         methodBuilder.addCode(
@@ -90,8 +89,9 @@ class HookItemScanner(
                     val desc = hookItem.desc
                     val valName = symbol.toClassName().simpleName
 
-                    val isObject = symbol.classKind == com.google.devtools.ksp.symbol.ClassKind.OBJECT
-                    if (!isObject) {
+                    val isKtObject =
+                        symbol.classKind == com.google.devtools.ksp.symbol.ClassKind.OBJECT
+                    if (!isKtObject) {
                         addStatement("val %N = %T()", valName, typeName)
                     }
                     else {

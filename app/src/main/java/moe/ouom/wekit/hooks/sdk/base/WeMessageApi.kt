@@ -71,7 +71,7 @@ object WeMessageApi : ApiHookItem(), IDexFind {
     private val methodMmKernelGetStorage by dexMethod() // Kernel.getStorage
 
     // 查找 Service 接口 (sc0.e)
-    private val dexClassVoiceServiceInterface by dexClass()
+    private val classVoiceServiceInterface by dexClass()
 
     // Service 实现类
     private val classVoiceServiceImpl by dexClass()
@@ -459,7 +459,7 @@ object WeMessageApi : ApiHookItem(), IDexFind {
                     }
                     if (targetInterface != null) {
                         // 将找到的接口名填入 map，防止 HookItemLoader 认为缓存缺失
-                        descriptors[dexClassVoiceServiceInterface.key] = targetInterface.descriptor
+                        descriptors[classVoiceServiceInterface.key] = targetInterface.descriptor
                         WeLogger.i(TAG, "从实现类反推接口成功: $targetInterface")
                     } else {
                         WeLogger.e(TAG, "反推接口失败：未找到合适的接口")
@@ -485,7 +485,7 @@ object WeMessageApi : ApiHookItem(), IDexFind {
         return msgInfo
     }
 
-    override fun entry(classLoader: ClassLoader) {
+    override fun onLoad(classLoader: ClassLoader) {
         try {
             WeLogger.i(TAG, "WeMessageApi initializing...")
 
@@ -604,7 +604,7 @@ object WeMessageApi : ApiHookItem(), IDexFind {
 
                 // Voice Service
                 // 从 dexFind 结果中恢复接口类
-                voiceServiceInterfaceClass = dexClassVoiceServiceInterface.clazz
+                voiceServiceInterfaceClass = classVoiceServiceInterface.clazz
 
                 // 从 dexFind 结果中恢复方法
                 voiceSendMethod = methodSendVoice.method

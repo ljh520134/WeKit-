@@ -4,18 +4,18 @@ import android.view.KeyEvent
 import android.widget.FrameLayout
 import com.highcapable.kavaref.KavaRef.Companion.asResolver
 import moe.ouom.wekit.core.dsl.dexMethod
-import moe.ouom.wekit.core.model.BaseSwitchFunctionHookItem
+import moe.ouom.wekit.core.model.SwitchHookItem
 import moe.ouom.wekit.dexkit.intf.IDexFind
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import org.luckypray.dexkit.DexKitBridge
 
 @HookItem(path = "聊天/快捷清除引用", desc = "在输入退格时若输入框无文字自动清除引用")
-object QuickRemoveQuote : BaseSwitchFunctionHookItem(), IDexFind {
+object QuickRemoveQuote : SwitchHookItem(), IDexFind {
 
     private val methodSupportAutoCompleteOnKey by dexMethod()
     private val methodShowMsgQuoteContainer by dexMethod()
 
-    override fun entry(classLoader: ClassLoader) {
+    override fun onLoad(classLoader: ClassLoader) {
         methodSupportAutoCompleteOnKey.toDexMethod {
             hook {
                 beforeIfEnabled { param ->

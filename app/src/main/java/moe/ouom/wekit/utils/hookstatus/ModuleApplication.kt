@@ -1,85 +1,34 @@
-package moe.ouom.wekit.utils.hookstatus;
+package moe.ouom.wekit.utils.hookstatus
 
-import android.app.Application;
+import android.app.Application
+import moe.ouom.wekit.BuildConfig
+import moe.ouom.wekit.host.HostInfo
+import moe.ouom.wekit.loader.hookapi.IClassLoaderHelper
+import moe.ouom.wekit.loader.hookapi.ILoaderService
+import moe.ouom.wekit.loader.startup.StartupInfo
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+class ModuleApplication : Application() {
 
-import moe.ouom.wekit.BuildConfig;
-import moe.ouom.wekit.host.impl.HostInfo;
-import moe.ouom.wekit.loader.hookapi.IClassLoaderHelper;
-import moe.ouom.wekit.loader.hookapi.ILoaderService;
-import moe.ouom.wekit.loader.startup.StartupInfo;
-
-public class ModuleApplication extends Application {
-
-    @Override
-    public void onCreate() {
-        super.onCreate();
-        StartupInfo.setInHostProcess(false);
-        // init host info, this is required for nearly all operations
-        HostInfo.init(this);
-        initStartupInfo();
+    override fun onCreate() {
+        super.onCreate()
+        HostInfo.init(this)
+        initStartupInfo()
     }
 
-    private void initStartupInfo() {
-        final var apkPath = getApplicationInfo().sourceDir;
-        var loaderService = new ILoaderService() {
+    private fun initStartupInfo() {
+        val apkPath = applicationInfo.sourceDir
 
-            // not used, just for compatibility
-            private IClassLoaderHelper mClassLoaderHelper;
+        val loaderService = object : ILoaderService {
+            private var classLoaderHelper: IClassLoaderHelper? = null
 
-            @NonNull
-            @Override
-            public String getEntryPointName() {
-                return "ActivityThread";
-            }
+            override fun log(msg: String) = android.util.Log.i(BuildConfig.TAG, msg).let {}
+            override fun log(tr: Throwable) = android.util.Log.e("ovom", tr.toString(), tr).let {}
+            override fun queryExtension(key: String, vararg args: Any?) = null
+            override fun getClassLoaderHelper() = classLoaderHelper
+            override fun setClassLoaderHelper(helper: IClassLoaderHelper?) { classLoaderHelper = helper }
+        }
 
-            @NonNull
-            @Override
-            public String getLoaderVersionName() {
-                return BuildConfig.VERSION_NAME;
-            }
-
-            @Override
-            public int getLoaderVersionCode() {
-                return BuildConfig.VERSION_CODE;
-            }
-
-            @NonNull
-            @Override
-            public String getMainModulePath() {
-                return apkPath;
-            }
-
-            @Override
-            public void log(@NonNull String msg) {
-                android.util.Log.i(BuildConfig.TAG, msg);
-            }
-
-            @Override
-            public void log(@NonNull Throwable tr) {
-                android.util.Log.e("ovom", tr.toString(), tr);
-            }
-
-            @Nullable
-            @Override
-            public Object queryExtension(@NonNull String key, @Nullable Object... args) {
-                return null;
-            }
-
-            @Nullable
-            @Override
-            public IClassLoaderHelper getClassLoaderHelper() {
-                return mClassLoaderHelper;
-            }
-
-            @Override
-            public void setClassLoaderHelper(@Nullable IClassLoaderHelper helper) {
-                mClassLoaderHelper = helper;
-            }
-        };
-        StartupInfo.setModulePath(apkPath);
-        StartupInfo.setLoaderService(loaderService);
+        StartupInfo.setModulePath(apkPath)
+        StartupInfo.setLoaderService(loaderService)
     }
 }

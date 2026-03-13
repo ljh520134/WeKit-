@@ -11,7 +11,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import moe.ouom.wekit.core.model.BaseClickableFunctionHookItem
+import moe.ouom.wekit.core.model.ClickableHookItem
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import moe.ouom.wekit.host.HostInfo
 import moe.ouom.wekit.utils.formatBytesSize
@@ -24,7 +24,7 @@ import kotlin.io.path.div
 import kotlin.io.path.exists
 
 @HookItem(path = "系统与隐私/清理缓存垃圾", desc = "自动或手动清理应用的缓存")
-object AutoCleanCache : BaseClickableFunctionHookItem() {
+object AutoCleanCache : ClickableHookItem() {
 
     private val TAG = nameof(AutoCleanCache)
     private const val CLEAN_INTERVAL = 30 * 60 * 1000L // 每 30 分钟清理一次
@@ -35,8 +35,8 @@ object AutoCleanCache : BaseClickableFunctionHookItem() {
     private val cleanPaths = run {
         val paths = mutableListOf<Path>()
 
-        val dataDir = HostInfo.getApplication().filesDir.parentFile!!.toPath()
-        val storageDataDir = HostInfo.getApplication().externalCacheDir!!.toPath().parent!!
+        val dataDir = HostInfo.application.filesDir.parentFile!!.toPath()
+        val storageDataDir = HostInfo.application.externalCacheDir!!.toPath().parent!!
 
         paths.add(dataDir / "cache")
         paths.add(storageDataDir / "cache")
@@ -57,7 +57,7 @@ object AutoCleanCache : BaseClickableFunctionHookItem() {
         return@run paths
     }
 
-    override fun entry(classLoader: ClassLoader) {
+    override fun onLoad(classLoader: ClassLoader) {
         startCleaningJob()
     }
 

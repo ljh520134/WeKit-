@@ -123,7 +123,7 @@ fun DexFinderContent(
                 TAG,
                 "Total descriptors: ${descriptors.size}, keys: ${descriptors.keys}"
             )
-            DexCacheManager.saveCache(item, descriptors)
+            DexCacheManager.saveItemCache(item, descriptors)
             progressChannel.send(ScanProgress.Complete(path))
             ScanResult.Success(path)
         } catch (e: Exception) {

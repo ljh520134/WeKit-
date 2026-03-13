@@ -2,7 +2,7 @@ package moe.ouom.wekit.hooks.items.moments
 
 import android.content.ContentValues
 import dev.ujhhgtg.nameof.nameof
-import moe.ouom.wekit.core.model.BaseSwitchFunctionHookItem
+import moe.ouom.wekit.core.model.SwitchHookItem
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import moe.ouom.wekit.hooks.sdk.base.WeDatabaseListenerApi
 import moe.ouom.wekit.utils.WeProtoData
@@ -12,7 +12,7 @@ import moe.ouom.wekit.utils.log.WeLogger
     path = "朋友圈/拦截朋友圈删除",
     desc = "移除删除标志并注入 '[拦截删除]' 标记"
 )
-object AntiMomentsDelete : BaseSwitchFunctionHookItem(), WeDatabaseListenerApi.IUpdateListener {
+object AntiMomentsDelete : SwitchHookItem(), WeDatabaseListenerApi.IUpdateListener {
 
     private val TAG = nameof(AntiMomentsDelete)
     private const val TBL_SNS_INFO = "SnsInfo"
@@ -31,11 +31,11 @@ object AntiMomentsDelete : BaseSwitchFunctionHookItem(), WeDatabaseListenerApi.I
         return false
     }
 
-    override fun entry(classLoader: ClassLoader) {
+    override fun onLoad(classLoader: ClassLoader) {
         WeDatabaseListenerApi.addListener(this)
     }
 
-    override fun unload(classLoader: ClassLoader) {
+    override fun onUnload(classLoader: ClassLoader) {
         WeDatabaseListenerApi.removeListener(this)
     }
 

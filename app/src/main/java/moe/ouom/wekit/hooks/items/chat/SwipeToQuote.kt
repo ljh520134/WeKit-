@@ -11,7 +11,7 @@ import android.widget.FrameLayout
 import com.highcapable.kavaref.KavaRef.Companion.asResolver
 import de.robv.android.xposed.XC_MethodHook
 import moe.ouom.wekit.core.dsl.dexClass
-import moe.ouom.wekit.core.model.BaseSwitchFunctionHookItem
+import moe.ouom.wekit.core.model.SwitchHookItem
 import moe.ouom.wekit.dexkit.intf.IDexFind
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import moe.ouom.wekit.hooks.sdk.base.WeMessageApi
@@ -19,7 +19,7 @@ import moe.ouom.wekit.hooks.sdk.base.WeServiceApi
 import moe.ouom.wekit.hooks.sdk.base.model.MessageInfo
 import moe.ouom.wekit.hooks.sdk.ui.WeChatMessageViewApi
 import moe.ouom.wekit.ui.utils.findViewByIdStr
-import moe.ouom.wekit.utils.common.SimpleLruCache
+import moe.ouom.wekit.utils.LruCache
 import org.luckypray.dexkit.DexKitBridge
 import kotlin.math.PI
 import kotlin.math.abs
@@ -28,18 +28,18 @@ import kotlin.math.exp
 
 @SuppressLint("StaticFieldLeak")
 @HookItem(path = "聊天/左划引用消息", desc = "在消息上左划以引用")
-object SwipeToQuote : BaseSwitchFunctionHookItem(), IDexFind,
+object SwipeToQuote : SwitchHookItem(), IDexFind,
     WeChatMessageViewApi.ICreateViewListener {
 
-    private val cache = SimpleLruCache<Pair<String, Long>, Boolean>()
+    private val cache = LruCache<Pair<String, Long>, Boolean>()
 
-    override fun entry(classLoader: ClassLoader) {
+    override fun onLoad(classLoader: ClassLoader) {
         WeChatMessageViewApi.addListener(this)
     }
 
-    override fun unload(classLoader: ClassLoader) {
+    override fun onUnload(classLoader: ClassLoader) {
         WeChatMessageViewApi.removeListener(this)
-        super.unload(classLoader)
+        super.onUnload(classLoader)
     }
 
     override fun onCreateView(

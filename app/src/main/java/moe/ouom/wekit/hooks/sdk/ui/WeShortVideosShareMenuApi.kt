@@ -52,7 +52,7 @@ object WeShortVideosShareMenuApi : ApiHookItem(), IDexFind {
     private val methodCreateMenu by dexMethod()
     private val methodSelectMenuItem by dexMethod()
 
-    override fun entry(classLoader: ClassLoader) {
+    override fun onLoad(classLoader: ClassLoader) {
         methodCreateMenu.toDexMethod {
             hook {
                 beforeIfEnabled { param ->

@@ -3,6 +3,7 @@ package moe.ouom.wekit.loader
 import moe.ouom.wekit.loader.startup.StartupInfo
 
 object LoaderExtensionHelper {
+
     const val CMD_GET_XPOSED_BRIDGE_CLASS: String = "GetXposedBridgeClass"
 
     fun getXposedBridgeClass(): Class<*>? {

@@ -1,13 +1,13 @@
 package moe.ouom.wekit.hooks.items.system
 
 import moe.ouom.wekit.core.dsl.dexMethod
-import moe.ouom.wekit.core.model.BaseSwitchFunctionHookItem
+import moe.ouom.wekit.core.model.SwitchHookItem
 import moe.ouom.wekit.dexkit.intf.IDexFind
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import org.luckypray.dexkit.DexKitBridge
 
 @HookItem(path = "系统与隐私/移除二维码扫描限制", desc = "移除长按图片与相册选择的二维码扫描限制")
-object RemoveQrcodeScanLimit : BaseSwitchFunctionHookItem(), IDexFind {
+object RemoveQrCodeScanLimit : SwitchHookItem(), IDexFind {
 
     enum class ScanScene(val source: Int, val a8KeyScene: Int) {
         CAMERA(0, 4), // 相机扫描
@@ -27,7 +27,7 @@ object RemoveQrcodeScanLimit : BaseSwitchFunctionHookItem(), IDexFind {
         return descriptors
     }
 
-    override fun entry(classLoader: ClassLoader) {
+    override fun onLoad(classLoader: ClassLoader) {
         methodQBarString.toDexMethod {
             hook {
                 beforeIfEnabled { param ->

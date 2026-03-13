@@ -2,7 +2,6 @@ package moe.ouom.wekit.utils
 
 import com.google.protobuf.CodedInputStream
 import com.google.protobuf.CodedOutputStream
-import moe.ouom.wekit.utils.HexUtils.hexToBytes
 import moe.ouom.wekit.utils.log.WeLogger
 import org.json.JSONArray
 import org.json.JSONObject

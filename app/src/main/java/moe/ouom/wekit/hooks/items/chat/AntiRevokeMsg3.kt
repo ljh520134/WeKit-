@@ -5,7 +5,7 @@ import android.database.Cursor
 import com.highcapable.kavaref.KavaRef.Companion.asResolver
 import dev.ujhhgtg.nameof.nameof
 import moe.ouom.wekit.core.dsl.dexMethod
-import moe.ouom.wekit.core.model.BaseSwitchFunctionHookItem
+import moe.ouom.wekit.core.model.SwitchHookItem
 import moe.ouom.wekit.dexkit.intf.IDexFind
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import moe.ouom.wekit.hooks.sdk.base.WeDatabaseApi
@@ -17,7 +17,7 @@ import java.util.regex.Pattern
 import kotlin.random.Random
 
 @HookItem(path = "聊天/阻止消息撤回 3", desc = "有撤回提示")
-object AntiRevokeMsg3 : BaseSwitchFunctionHookItem(), IDexFind {
+object AntiRevokeMsg3 : SwitchHookItem(), IDexFind {
 
     private val TAG = nameof(AntiRevokeMsg3)
 
@@ -38,7 +38,7 @@ object AntiRevokeMsg3 : BaseSwitchFunctionHookItem(), IDexFind {
 
     private val nameRegex by lazy { Pattern.compile("([\"「])(.*?)([」\"])") }
 
-    override fun entry(classLoader: ClassLoader) {
+    override fun onLoad(classLoader: ClassLoader) {
         methodXmlParser.toDexMethod {
             hook {
                 afterIfEnabled { param ->

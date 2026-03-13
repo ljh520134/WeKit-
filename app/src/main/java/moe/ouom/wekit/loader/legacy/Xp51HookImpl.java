@@ -11,7 +11,6 @@ import java.lang.reflect.Member;
 import java.lang.reflect.Method;
 
 import de.robv.android.xposed.XposedBridge;
-import moe.ouom.wekit.BuildConfig;
 import moe.ouom.wekit.loader.hookapi.IClassLoaderHelper;
 import moe.ouom.wekit.loader.hookapi.IHookBridge;
 import moe.ouom.wekit.loader.hookapi.ILoaderService;
@@ -101,29 +100,6 @@ public class Xp51HookImpl implements IHookBridge, ILoaderService {
     @Override
     public Object queryExtension(@NonNull String key, @Nullable Object... args) {
         return Xp51ExtCmd.handleQueryExtension(key, args);
-    }
-
-    @NonNull
-    @Override
-    public String getEntryPointName() {
-        return this.getClass().getName();
-    }
-
-    @NonNull
-    @Override
-    public String getLoaderVersionName() {
-        return BuildConfig.VERSION_NAME;
-    }
-
-    @Override
-    public int getLoaderVersionCode() {
-        return BuildConfig.VERSION_CODE;
-    }
-
-    @NonNull
-    @Override
-    public String getMainModulePath() {
-        return LegacyHookEntry.getModulePath();
     }
 
     @Override

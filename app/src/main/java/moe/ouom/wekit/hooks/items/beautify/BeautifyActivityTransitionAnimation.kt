@@ -8,7 +8,7 @@ import android.view.animation.PathInterpolator
 import android.widget.FrameLayout
 import com.highcapable.kavaref.KavaRef.Companion.asResolver
 import dev.ujhhgtg.nameof.nameof
-import moe.ouom.wekit.core.model.BaseSwitchFunctionHookItem
+import moe.ouom.wekit.core.model.SwitchHookItem
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import moe.ouom.wekit.utils.log.WeLogger
 
@@ -17,7 +17,7 @@ import moe.ouom.wekit.utils.log.WeLogger
     path = "界面美化/美化活动过渡动画",
     desc = "将部分活动过渡动画替换为默认过渡或元素级共享动画 (没做完)"
 )
-object BeautifyActivityTransitionAnimation : BaseSwitchFunctionHookItem() {
+object BeautifyActivityTransitionAnimation : SwitchHookItem() {
 
     private val TAG = nameof(BeautifyActivityTransitionAnimation)
     private var width = 0
@@ -26,7 +26,7 @@ object BeautifyActivityTransitionAnimation : BaseSwitchFunctionHookItem() {
     private var y = 0f
     private var backgroundColor = Color.WHITE
 
-    override fun entry(classLoader: ClassLoader) {
+    override fun onLoad(classLoader: ClassLoader) {
         // sender
         View::class.asResolver()
             .firstMethod {

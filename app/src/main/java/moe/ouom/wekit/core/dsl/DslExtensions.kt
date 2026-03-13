@@ -1,6 +1,6 @@
 package moe.ouom.wekit.core.dsl
 
-import moe.ouom.wekit.loader.startup.HybridClassLoader
+import com.highcapable.kavaref.extension.ClassLoaderProvider
 
 /**
  * DSL 扩展函数
@@ -14,9 +14,7 @@ import moe.ouom.wekit.loader.startup.HybridClassLoader
 fun DexMethodDescriptorWrapper.toDexMethod(
     block: DexMethodHookBuilder.HookConfigBuilder.() -> Unit
 ) {
-    this.toDexMethod(
-        HybridClassLoader.getHostClassLoader()
-    ) {
+    this.toDexMethod(ClassLoaderProvider.classLoader!!) {
         hook(block)
     }
 }
@@ -29,10 +27,7 @@ fun DexMethodDescriptorWrapper.toDexMethod(
     priority: Int,
     block: DexMethodHookBuilder.HookConfigBuilder.() -> Unit
 ) {
-    this.toDexMethod(
-        HybridClassLoader.getHostClassLoader(),
-        priority
-    ) {
+    this.toDexMethod(ClassLoaderProvider.classLoader!!, priority) {
         hook {
             block()
         }

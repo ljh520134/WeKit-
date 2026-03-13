@@ -7,6 +7,7 @@ import android.widget.Button
 import com.highcapable.kavaref.extension.toClass
 import de.robv.android.xposed.XposedHelpers
 import dev.ujhhgtg.nameof.nameof
+import moe.ouom.wekit.config.WePrefs
 import moe.ouom.wekit.core.model.ApiHookItem
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import moe.ouom.wekit.hooks.items.chat.SendCustomAppMessage
@@ -19,9 +20,9 @@ object WeChatFooterApi : ApiHookItem() {
 
     private val TAG = nameof(WeChatFooterApi)
     private const val CLASS_CHAT_FOOTER = "com.tencent.mm.pluginsdk.ui.chat.ChatFooter"
-    private const val FIELD_TO_USER = "wekit_cache_toUser"
+    private const val KEY_FIELD_TO_USER = "${WePrefs.CACHE_PREFS_NAME}_toUser"
 
-    override fun entry(classLoader: ClassLoader) {
+    override fun onLoad(classLoader: ClassLoader) {
         try {
             val chatFooterClass = CLASS_CHAT_FOOTER.toClass()
 
@@ -42,7 +43,7 @@ object WeChatFooterApi : ApiHookItem() {
                     if (!toUser.isNullOrEmpty()) {
                         XposedHelpers.setAdditionalInstanceField(
                             param.thisObject,
-                            FIELD_TO_USER,
+                            KEY_FIELD_TO_USER,
                             toUser
                         )
                     }
@@ -93,7 +94,7 @@ object WeChatFooterApi : ApiHookItem() {
             null
         }
 
-        val toUser = XposedHelpers.getAdditionalInstanceField(chatFooter, FIELD_TO_USER) as? String
+        val toUser = XposedHelpers.getAdditionalInstanceField(chatFooter, KEY_FIELD_TO_USER) as? String
 
         WeLogger.d(TAG, "content: $content, toUser: $toUser")
 

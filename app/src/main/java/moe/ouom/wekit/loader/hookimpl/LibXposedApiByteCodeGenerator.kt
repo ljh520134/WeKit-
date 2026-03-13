@@ -2,7 +2,6 @@ package moe.ouom.wekit.loader.hookimpl
 
 import moe.ouom.wekit.dexkit.DexMethodDescriptor
 import moe.ouom.wekit.loader.startup.StartupInfo
-import moe.ouom.wekit.utils.io.IoUtils
 import org.jf.dexlib2.Opcode
 import org.jf.dexlib2.Opcodes
 import org.jf.dexlib2.iface.ClassDef
@@ -28,14 +27,10 @@ object LibXposedApiByteCodeGenerator {
     private const val CMD_SET_WRAPPER = "SetLibXposedNewApiByteCodeGeneratorWrapper"
     private const val ACC_CONSTRUCTOR = 0x00010000
 
-    @JvmStatic
     fun init() {
         val loader = StartupInfo.getLoaderService()
-        val call = try {
-            LibXposedApiByteCodeGenerator::class.java.getMethod("call", Int::class.java, Array<Any>::class.java)
-        } catch (e: NoSuchMethodException) {
-            throw IoUtils.unsafeThrow(e)
-        }
+        val call = LibXposedApiByteCodeGenerator::class.java
+            .getMethod("call", Int::class.java, Array<Any>::class.java)
         loader.queryExtension(CMD_SET_WRAPPER, call)
     }
 
@@ -50,7 +45,7 @@ object LibXposedApiByteCodeGenerator {
                 args[4] as String
             )
         }
-        throw UnsupportedOperationException("Unsupported version: $version")
+        error("Unsupported version: $version")
     }
 
     private fun classNameToDescriptor(className: String): String =

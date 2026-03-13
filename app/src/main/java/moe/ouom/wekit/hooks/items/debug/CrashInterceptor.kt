@@ -14,31 +14,33 @@ import com.afollestad.materialdialogs.MaterialDialog
 import com.highcapable.kavaref.extension.toClass
 import dev.ujhhgtg.nameof.nameof
 import moe.ouom.wekit.config.RuntimeConfig
-import moe.ouom.wekit.core.model.BaseSwitchFunctionHookItem
+import moe.ouom.wekit.core.model.SwitchHookItem
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import moe.ouom.wekit.ui.utils.CommonContextWrapper
-import moe.ouom.wekit.utils.crash.CrashLogManager
+import moe.ouom.wekit.utils.crash.CrashLogsManager
 import moe.ouom.wekit.utils.crash.JavaCrashHandler
 import moe.ouom.wekit.utils.io.SafUtils
 import moe.ouom.wekit.utils.log.WeLogger
 import java.io.File
+import java.nio.file.Path
+import kotlin.io.path.name
 
 @HookItem(
     path = "调试/崩溃拦截",
     desc = "拦截 Java 层崩溃并记录详细信息，支持查看和导出日志"
 )
 @SuppressLint("StaticFieldLeak")
-object CrashInterceptor : BaseSwitchFunctionHookItem() {
+object CrashInterceptor : SwitchHookItem() {
 
     private val TAG = nameof(CrashInterceptor)
 
     private var javaCrashHandler: JavaCrashHandler? = null
-    private var crashLogManager: CrashLogManager? = null
+    private var crashLogsManager: CrashLogsManager? = null
     private var appContext: Context? = null
     private var hasPendingCrashToShow = false
     private var pendingDialog: MaterialDialog? = null
 
-    override fun entry(classLoader: ClassLoader) {
+    override fun onLoad(classLoader: ClassLoader) {
         try {
             // 获取 Application Context
             val activityThreadClass = "android.app.ActivityThread".toClass()
@@ -51,7 +53,7 @@ object CrashInterceptor : BaseSwitchFunctionHookItem() {
             }
 
             // 初始化崩溃日志管理器
-            crashLogManager = CrashLogManager(appContext!!)
+            crashLogsManager = CrashLogsManager()
 
             // 安装 Java 崩溃拦截器
             javaCrashHandler = JavaCrashHandler(appContext!!)
@@ -72,7 +74,7 @@ object CrashInterceptor : BaseSwitchFunctionHookItem() {
      */
     private fun checkPendingCrash() {
         try {
-            val manager = crashLogManager ?: return
+            val manager = crashLogsManager ?: return
 
             // 只在主进程中检查待处理的崩溃
             if (!isMainProcess()) {
@@ -108,7 +110,7 @@ object CrashInterceptor : BaseSwitchFunctionHookItem() {
                 try {
                     if (!hasPendingCrashToShow) return
 
-                    val activity = RuntimeConfig.getLauncherUIActivity()
+                    val activity = RuntimeConfig.getLauncherUiActivity()
                     if (activity != null && !activity.isFinishing && !activity.isDestroyed) {
                         WeLogger.i(
                             "CrashInterceptor",
@@ -165,15 +167,14 @@ object CrashInterceptor : BaseSwitchFunctionHookItem() {
      */
     private fun showPendingCrashDialog() {
         try {
-            val manager = crashLogManager ?: return
-            val activity = RuntimeConfig.getLauncherUIActivity()
+            val manager = crashLogsManager ?: return
+            val activity = RuntimeConfig.getLauncherUiActivity()
 
             if (activity == null || activity.isFinishing || activity.isDestroyed) {
                 hasPendingCrashToShow = true
                 return
             }
 
-            // 使用Java专用方法获取崩溃日志
             val crashLogFile = manager.pendingJavaCrashLogFile ?: run {
                 hasPendingCrashToShow = false
                 return
@@ -186,7 +187,7 @@ object CrashInterceptor : BaseSwitchFunctionHookItem() {
 
             val summary = extractCrashSummary(crashInfo)
 
-            WeLogger.e(TAG, "crashLogFile: ${crashLogFile.path}")
+            WeLogger.e(TAG, "crashLogFile: $crashLogFile")
 
             Handler(Looper.getMainLooper()).post {
                 try {
@@ -226,10 +227,10 @@ object CrashInterceptor : BaseSwitchFunctionHookItem() {
     /**
      * 显示崩溃详情对话框
      */
-    private fun showCrashDetailDialog(crashInfo: String, crashLogFile: File) {
+    private fun showCrashDetailDialog(crashInfo: String, crashLogFile: Path) {
         try {
-            val activity = RuntimeConfig.getLauncherUIActivity()
-            val manager = crashLogManager ?: return
+            val activity = RuntimeConfig.getLauncherUiActivity()
+            val manager = crashLogsManager ?: return
 
             if (activity == null || activity.isFinishing || activity.isDestroyed) {
                 showToast("无法显示详情, 请稍后重试")
@@ -292,7 +293,7 @@ object CrashInterceptor : BaseSwitchFunctionHookItem() {
     /**
      * 使用 SAF 导出日志
      */
-    private fun exportLog(activity: Activity, logFile: File) {
+    private fun exportLog(activity: Activity, logFile: Path) {
         try {
             val wrappedContext = CommonContextWrapper.createAppCompatContext(activity)
             val fileName = "crash_${logFile.name}"
@@ -317,10 +318,10 @@ object CrashInterceptor : BaseSwitchFunctionHookItem() {
     /**
      * 将日志写入 Uri
      */
-    private fun writeLogToUri(context: Context, sourceFile: File, targetUri: Uri) {
+    private fun writeLogToUri(context: Context, sourceFile: Path, targetUri: Uri) {
         Thread {
             try {
-                val manager = crashLogManager ?: return@Thread
+                val manager = crashLogsManager ?: return@Thread
                 // 使用 readFullCrashLog 读取完整日志，不截断
                 val crashInfo = manager.readFullCrashLog(sourceFile) ?: run {
                     Handler(Looper.getMainLooper()).post { showToast("读取源文件失败") }
@@ -401,8 +402,8 @@ object CrashInterceptor : BaseSwitchFunctionHookItem() {
         }
     }
 
-    override fun unload(classLoader: ClassLoader) {
+    override fun onUnload(classLoader: ClassLoader) {
         javaCrashHandler?.uninstall()
-        super.unload(classLoader)
+        super.onUnload(classLoader)
     }
 }

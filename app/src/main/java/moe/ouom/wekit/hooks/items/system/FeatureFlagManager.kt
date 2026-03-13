@@ -40,11 +40,10 @@ import com.highcapable.kavaref.extension.toClass
 import dev.ujhhgtg.nameof.nameof
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import moe.ouom.wekit.config.WeConfig
-import moe.ouom.wekit.constants.Constants
+import moe.ouom.wekit.config.WePrefs
 import moe.ouom.wekit.core.dsl.dexClass
 import moe.ouom.wekit.core.dsl.dexMethod
-import moe.ouom.wekit.core.model.BaseClickableFunctionHookItem
+import moe.ouom.wekit.core.model.ClickableHookItem
 import moe.ouom.wekit.dexkit.intf.IDexFind
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import moe.ouom.wekit.ui.content.AlertDialogContent
@@ -55,12 +54,11 @@ import org.luckypray.dexkit.DexKitBridge
 import java.lang.reflect.Modifier
 
 @HookItem(path = "系统与隐私/灰度测试管理器", desc = "覆盖应用灰度测试 (Feature Flag) 的值")
-object FeatureFlagManager : BaseClickableFunctionHookItem(), IDexFind {
+object FeatureFlagManager : ClickableHookItem(), IDexFind {
 
     private val TAG = nameof(FeatureFlagManager)
 
-    private val config = WeConfig.defaultConfig
-    private const val KEY_HOOKED_FEATURE_FLAGS = Constants.PREF_KEY_PREFIX + "hooked_feature_flags"
+    private const val KEY_HOOKED_FEATURE_FLAGS = "hooked_feature_flags"
 
     // explanation: i: int, f: float, l: long, s: string
     // example: "RepairerConfig_QuoteJumpOpt_Int;i;1"
@@ -76,7 +74,7 @@ object FeatureFlagManager : BaseClickableFunctionHookItem(), IDexFind {
     }
 
     private fun loadOverrides(): List<FeatureFlagOverride> {
-        val flags = config.getStringSet(KEY_HOOKED_FEATURE_FLAGS, setOf()) ?: setOf()
+        val flags = WePrefs.getStringSet(KEY_HOOKED_FEATURE_FLAGS, setOf())
 
         if (flags.isEmpty()) return emptyList()
 
@@ -117,12 +115,12 @@ object FeatureFlagManager : BaseClickableFunctionHookItem(), IDexFind {
             // 拼接成 "internalName,type,value"
             "${override.internalName},$typeChar,$value"
         }.toSet()
-        config.putStringSet(KEY_HOOKED_FEATURE_FLAGS, strSet)
+        WePrefs.putStringSet(KEY_HOOKED_FEATURE_FLAGS, strSet)
     }
 
     // FIXME: currently, to prevent lag, overrides are loaded only once, so we have to restart host app for changes to take effect
     private val overrides by lazy { loadOverrides() }
-    override fun entry(classLoader: ClassLoader) {
+    override fun onLoad(classLoader: ClassLoader) {
         methodRepairerConfigApiGet.toDexMethod {
             hook {
                 beforeIfEnabled { param ->
@@ -173,7 +171,7 @@ object FeatureFlagManager : BaseClickableFunctionHookItem(), IDexFind {
 
     @OptIn(ExperimentalMaterial3ExpressiveApi::class)
     override fun onClick(context: Context) {
-        showComposeDialog(context) { onDismiss ->
+        showComposeDialog(context) {
             var isLoading by remember { mutableStateOf(true) }
             var featureFlagClasses by remember { mutableStateOf<List<String>>(emptyList()) }
             // 1. 搜索状态

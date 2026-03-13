@@ -50,8 +50,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.google.accompanist.drawablepainter.rememberDrawablePainter
-import moe.ouom.wekit.config.WeConfig
-import moe.ouom.wekit.constants.Constants
+import moe.ouom.wekit.config.WePrefs
 import moe.ouom.wekit.ui.utils.showComposeDialog
 import moe.ouom.wekit.utils.common.ModuleRes
 import moe.ouom.wekit.utils.log.WeLogger
@@ -148,7 +147,7 @@ abstract class BasePrefDialog(
         rowCounter = 0
         initPreferences()
 
-        showComposeDialog(context) { onDismiss ->
+        showComposeDialog(context) {
             _dismissCallback = onDismiss
             DialogContent(
                 title = title,
@@ -175,11 +174,9 @@ abstract class BasePrefDialog(
         title: String,
         summary: String,
         iconName: String? = null,
-        useFullKey: Boolean = false,
     ): String {
-        val configKey = resolveKey(key, useFullKey)
-        val rk = nextKey("sw_$configKey")
-        rows += PrefRow.Switch(rk, configKey, title, summary, iconName)
+        val rk = nextKey("sw_$key")
+        rows += PrefRow.Switch(rk, key, title, summary, iconName)
         return rk
     }
 
@@ -193,13 +190,11 @@ abstract class BasePrefDialog(
         maxLength: Int = 0,
         singleLine: Boolean = true,
         iconName: String? = null,
-        useFullKey: Boolean = false,
         summaryFormatter: ((String) -> String)? = null,
     ) {
-        val configKey = resolveKey(key, useFullKey)
-        val rk = nextKey("et_$configKey")
+        val rk = nextKey("et_$key")
         rows += PrefRow.EditText(
-            rowKey = rk, configKey = configKey,
+            rowKey = rk, configKey = key,
             title = title, baseSummary = summary,
             defaultValue = defaultValue, hint = hint,
             inputType = inputType, maxLength = maxLength,
@@ -215,11 +210,9 @@ abstract class BasePrefDialog(
         options: Map<Int, String>,
         defaultValue: Int,
         iconName: String? = null,
-        useFullKey: Boolean = false,
     ) {
-        val configKey = resolveKey(key, useFullKey)
-        val rk = nextKey("sel_$configKey")
-        rows += PrefRow.Select(rk, configKey, title, summary, options, defaultValue, iconName)
+        val rk = nextKey("sel_$key")
+        rows += PrefRow.Select(rk, key, title, summary, options, defaultValue, iconName)
     }
 
     protected fun addPreference(
@@ -237,11 +230,9 @@ abstract class BasePrefDialog(
         dependencyKey: String,
         enableWhen: Boolean = true,
         hideWhenDisabled: Boolean = false,
-        useFullKey: Boolean = false,
     ) {
-        val configKey = resolveKey(dependencyKey, useFullKey)
         dependencies
-            .getOrPut(configKey) { mutableListOf() }
+            .getOrPut(dependencyKey) { mutableListOf() }
             .add(DepInfo(dependentKey, enableWhen, hideWhenDisabled))
     }
 
@@ -250,9 +241,6 @@ abstract class BasePrefDialog(
     // -----------------------------------------------------------------------
 
     private fun nextKey(base: String) = "${base}_${rowCounter++}"
-
-    private fun resolveKey(key: String, useFullKey: Boolean) =
-        if (useFullKey) key else "${Constants.PREF_KEY_PREFIX}$key"
 }
 
 // ---------------------------------------------------------------------------
@@ -273,7 +261,7 @@ private fun DialogContent(
     val switchStates = remember {
         mutableStateMapOf<String, Boolean>().also { map ->
             rows.filterIsInstance<PrefRow.Switch>().forEach { row ->
-                map[row.configKey] = WeConfig.defaultConfig.getBooleanOrFalse(row.configKey)
+                map[row.configKey] = WePrefs.getBoolOrFalse(row.configKey)
             }
         }
     }
@@ -282,13 +270,12 @@ private fun DialogContent(
     val summaryStates = remember {
         mutableStateMapOf<String, String>().also { map ->
             rows.filterIsInstance<PrefRow.EditText>().forEach { row ->
-                val v = WeConfig.defaultConfig.getString(row.configKey, row.defaultValue)
-                    ?: row.defaultValue
+                val v = WePrefs.getStringOrDef(row.configKey, row.defaultValue)
                 map[row.configKey] = row.summaryFormatter?.invoke(v)
                     ?: if (v.isEmpty()) row.baseSummary else "${row.baseSummary}: $v"
             }
             rows.filterIsInstance<PrefRow.Select>().forEach { row ->
-                val v = WeConfig.defaultConfig.getInt(row.configKey, row.defaultValue)
+                val v = WePrefs.getIntOrDef(row.configKey, row.defaultValue)
                 map[row.configKey] = row.options[v] ?: "${row.baseSummary}: $v"
             }
         }
@@ -298,7 +285,7 @@ private fun DialogContent(
     fun rowEnabled(rowKey: String): Boolean {
         dependencies.forEach { (configKey, depList) ->
             val value = switchStates[configKey]
-                ?: WeConfig.defaultConfig.getBooleanOrFalse(configKey)
+                ?: WePrefs.getBoolOrFalse(configKey)
             depList.forEach { dep ->
                 if (dep.dependentRowKey == rowKey) {
                     return if (dep.enableWhen) value else !value
@@ -311,7 +298,7 @@ private fun DialogContent(
     fun rowVisible(rowKey: String): Boolean {
         dependencies.forEach { (configKey, depList) ->
             val value = switchStates[configKey]
-                ?: WeConfig.defaultConfig.getBooleanOrFalse(configKey)
+                ?: WePrefs.getBoolOrFalse(configKey)
             depList.forEach { dep ->
                 if (dep.dependentRowKey == rowKey && dep.hideWhenDisabled) {
                     return if (dep.enableWhen) value else !value
@@ -396,8 +383,7 @@ private fun DialogContent(
                                     enabled = enabled,
                                     onCheckedChange = { checked ->
                                         switchStates[row.configKey] = checked
-                                        WeConfig.defaultConfig.edit()
-                                            .putBoolean(row.configKey, checked).apply()
+                                        WePrefs.putBool(row.configKey, checked)
                                         WeLogger.d(
                                             TAG,
                                             "Config changed [${row.configKey}] -> $checked"
@@ -467,7 +453,7 @@ private fun DialogContent(
         InputDialog(
             row = row,
             onConfirm = { newValue ->
-                WeConfig.defaultConfig.edit().putString(row.configKey, newValue).apply()
+                WePrefs.putString(row.configKey, newValue)
                 val display = row.summaryFormatter?.invoke(newValue)
                     ?: if (newValue.isEmpty()) row.baseSummary else "${row.baseSummary}: $newValue"
                 summaryStates[row.configKey] = display
@@ -483,7 +469,7 @@ private fun DialogContent(
         SelectDialog(
             row = row,
             onSelect = { value, displayText ->
-                WeConfig.defaultConfig.edit().putInt(row.configKey, value).apply()
+                WePrefs.putInt(row.configKey, value)
                 summaryStates[row.configKey] = displayText
                 WeLogger.d(TAG, "Config changed [${row.configKey}] -> $value")
                 selectDialogRow = null
@@ -625,8 +611,7 @@ private fun InputDialog(
     onConfirm: (String) -> Unit,
     onDismiss: () -> Unit,
 ) {
-    val current = WeConfig.defaultConfig
-        .getString(row.configKey, row.defaultValue) ?: row.defaultValue
+    val current = WePrefs.getStringOrDef(row.configKey, row.defaultValue)
     var text by remember { mutableStateOf(current) }
 
     val keyboardType = when {
@@ -667,7 +652,7 @@ private fun SelectDialog(
     onDismiss: () -> Unit,
 ) {
     var selected by remember {
-        mutableIntStateOf(WeConfig.defaultConfig.getInt(row.configKey, row.defaultValue))
+        mutableIntStateOf(WePrefs.getIntOrDef(row.configKey, row.defaultValue))
     }
 
     AlertDialog(

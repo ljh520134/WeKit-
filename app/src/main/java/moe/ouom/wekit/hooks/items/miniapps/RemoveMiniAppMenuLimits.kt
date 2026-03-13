@@ -2,44 +2,49 @@ package moe.ouom.wekit.hooks.items.miniapps
 
 import android.content.Context
 import moe.ouom.wekit.core.dsl.dexMethod
-import moe.ouom.wekit.core.model.BaseSwitchFunctionHookItem
+import moe.ouom.wekit.core.model.SwitchHookItem
 import moe.ouom.wekit.dexkit.intf.IDexFind
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import moe.ouom.wekit.utils.enumValueOfClass
 import org.luckypray.dexkit.DexKitBridge
 import org.luckypray.dexkit.query.enums.StringMatchType
 
-@HookItem(path = "小程序/去除小程序限制", desc = "移除小程序部分功能 (如复制链接) 的限制")
-object RemoveMiniAppLimits : BaseSwitchFunctionHookItem(), IDexFind {
+@HookItem(path = "小程序/去除菜单限制", desc = "移除小程序右上角菜单的限制")
+object RemoveMiniAppMenuLimits : SwitchHookItem(), IDexFind {
 
-    override fun entry(classLoader: ClassLoader) {
-        methodGetCopyLinkButtonState.toDexMethod {
+    private lateinit var showAndClickableEnumValue: Any
+
+    override fun onLoad(classLoader: ClassLoader) {
+        methodGetMenuItemVisibility1.toDexMethod {
             hook {
                 beforeIfEnabled { param ->
-                    val returnType  = methodGetCopyLinkButtonState.method.returnType
-                    param.result = enumValueOfClass(returnType, "SHOW_CLICKABLE")
+                    val returnType = methodGetMenuItemVisibility1.method.returnType
+                    if (!::showAndClickableEnumValue.isInitialized) {
+                        showAndClickableEnumValue = enumValueOfClass(returnType, "SHOW_CLICKABLE")
+                    }
+                    param.result = showAndClickableEnumValue
                 }
             }
         }
     }
 
-    private val methodGetCopyLinkButtonState by dexMethod()
+    private val methodGetMenuItemVisibility1 by dexMethod()
 
     override fun dexFind(dexKit: DexKitBridge): Map<String, String> {
         val descriptors = mutableMapOf<String, String>()
 
-        methodGetCopyLinkButtonState.find(dexKit, descriptors) {
+        methodGetMenuItemVisibility1.find(dexKit, descriptors) {
             searchPackages("com.tencent.mm.plugin.appbrand.menu")
             matcher {
                 declaredClass {
                     addMethod {
-                        usingNumbers(30)
+                        usingNumbers(39)
                     }
                 }
+                addParamType(Context::class.java)
                 addParamType {
                     className("com.tencent.mm.plugin.appbrand.page", StringMatchType.Contains)
                 }
-                addParamType(Context::class.java)
             }
         }
 

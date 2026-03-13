@@ -1,11 +1,10 @@
 package moe.ouom.wekit.ui.content
 
 import android.content.Context
-import moe.ouom.wekit.config.WeConfig
-import moe.ouom.wekit.constants.Constants
-import moe.ouom.wekit.core.bridge.HookFactoryBridge
-import moe.ouom.wekit.core.model.BaseClickableFunctionHookItem
-import moe.ouom.wekit.core.model.BaseSwitchFunctionHookItem
+import moe.ouom.wekit.config.WePrefs
+import moe.ouom.wekit.core.model.ClickableHookItem
+import moe.ouom.wekit.core.model.SwitchHookItem
+import moe.ouom.wekit.hooks.core.HookItemFactory
 
 class CategorySettingsDialog(
     context: Context,
@@ -13,7 +12,7 @@ class CategorySettingsDialog(
 ) : BaseSettingsDialog(context, categoryName) {
 
     override fun initList() {
-        val allItems = HookFactoryBridge.getAllItemList()
+        val allItems = HookItemFactory.getItems()
 
         val targetItems = allItems.filter { item ->
             item.path.startsWith("$categoryName/")
@@ -26,19 +25,19 @@ class CategorySettingsDialog(
             val desc = item.desc
 
             when (item) {
-                is BaseSwitchFunctionHookItem -> addSwitchItem(item, displayName, desc)
-                is BaseClickableFunctionHookItem -> addClickableItem(item, displayName, desc)
+                is SwitchHookItem -> addSwitchItem(item, displayName, desc)
+                is ClickableHookItem -> addClickableItem(item, displayName, desc)
             }
         }
     }
 
     private fun addSwitchItem(
-        item: BaseSwitchFunctionHookItem,
+        item: SwitchHookItem,
         title: String,
         summary: String,
     ) {
-        val configKey = "${Constants.PREF_KEY_PREFIX}${item.path}"
-        val initialChecked = WeConfig.defaultConfig.getBooleanOrFalse(configKey)
+        val configKey = item.path
+        val initialChecked = WePrefs.getBoolOrFalse(configKey)
 
         rows += SettingsRow.SwitchRow(
             rowKey = nextKey("sw_${item.path}"),
@@ -49,7 +48,7 @@ class CategorySettingsDialog(
             onBeforeToggle = { checked ->
                 val allowed = item.onBeforeToggle(checked, context)
                 if (allowed) {
-                    WeConfig.defaultConfig.edit().putBoolean(configKey, checked).apply()
+                    WePrefs.putBool(configKey, checked)
                     item.isEnabled = checked
                 }
                 allowed
@@ -65,12 +64,12 @@ class CategorySettingsDialog(
     }
 
     private fun addClickableItem(
-        item: BaseClickableFunctionHookItem,
+        item: ClickableHookItem,
         title: String,
         summary: String,
     ) {
-        val configKey = "${Constants.PREF_KEY_PREFIX}${item.path}"
-        val initialChecked = WeConfig.defaultConfig.getBooleanOrFalse(configKey)
+        val configKey = item.path
+        val initialChecked = WePrefs.getBoolOrFalse(configKey)
 
         rows += SettingsRow.ClickableRow(
             rowKey = nextKey("cl_${item.path}"),
@@ -82,7 +81,7 @@ class CategorySettingsDialog(
             onBeforeToggle = { checked ->
                 val allowed = item.onBeforeToggle(checked, context)
                 if (allowed) {
-                    WeConfig.defaultConfig.edit().putBoolean(configKey, checked).apply()
+                    WePrefs.putBool(configKey, checked)
                     item.isEnabled = checked
                 }
                 allowed

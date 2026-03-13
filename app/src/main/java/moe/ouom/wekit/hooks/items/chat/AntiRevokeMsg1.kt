@@ -1,14 +1,13 @@
 package moe.ouom.wekit.hooks.items.chat
 
 import moe.ouom.wekit.core.dsl.dexMethod
-import moe.ouom.wekit.core.dsl.resultNull
-import moe.ouom.wekit.core.model.BaseSwitchFunctionHookItem
+import moe.ouom.wekit.core.model.SwitchHookItem
 import moe.ouom.wekit.dexkit.intf.IDexFind
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import org.luckypray.dexkit.DexKitBridge
 
 @HookItem(path = "聊天/阻止消息撤回 1", desc = "无撤回提示")
-object AntiRevokeMsg1 : BaseSwitchFunctionHookItem(), IDexFind {
+object AntiRevokeMsg1 : SwitchHookItem(), IDexFind {
     private val methodRevokeMsg by dexMethod()
 
     override fun dexFind(dexKit: DexKitBridge): Map<String, String> {
@@ -21,11 +20,11 @@ object AntiRevokeMsg1 : BaseSwitchFunctionHookItem(), IDexFind {
         return descriptors
     }
 
-    override fun entry(classLoader: ClassLoader) {
+    override fun onLoad(classLoader: ClassLoader) {
         methodRevokeMsg.toDexMethod {
             hook {
                 beforeIfEnabled { param ->
-                    param.resultNull()
+                    param.result = null
                 }
             }
         }

@@ -149,7 +149,7 @@ object WeNetworkApi : ApiHookItem(), IDexFind {
         return descriptors
     }
 
-    override fun entry(classLoader: ClassLoader) {
+    override fun onLoad(classLoader: ClassLoader) {
         try {
             methodGetMgr = methodGetNetSceneQueue.method
 
@@ -160,7 +160,7 @@ object WeNetworkApi : ApiHookItem(), IDexFind {
         }
     }
 
-    override fun unload(classLoader: ClassLoader) {
+    override fun onUnload(classLoader: ClassLoader) {
         isInitialized = false
         methodGetMgr = null
 

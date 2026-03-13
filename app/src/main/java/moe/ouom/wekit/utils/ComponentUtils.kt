@@ -7,7 +7,7 @@ import android.content.Intent
 import android.content.pm.PackageManager
 
 @SuppressLint("QueryPermissionsNeeded")
-fun ComponentName.getEnable(ctx: Context): Boolean {
+fun ComponentName.getEnabled(ctx: Context): Boolean {
     val packageManager: PackageManager = ctx.packageManager
     val list = packageManager.queryIntentActivities(
         Intent().setComponent(this), PackageManager.MATCH_DEFAULT_ONLY
@@ -15,9 +15,9 @@ fun ComponentName.getEnable(ctx: Context): Boolean {
     return list.isNotEmpty()
 }
 
-fun ComponentName.setEnable(ctx: Context, enabled: Boolean) {
+fun ComponentName.setEnabled(ctx: Context, enabled: Boolean) {
     val packageManager: PackageManager = ctx.packageManager
-    if (this.getEnable(ctx) == enabled) return
+    if (this.getEnabled(ctx) == enabled) return
     packageManager.setComponentEnabledSetting(
         this,
         if (enabled) PackageManager.COMPONENT_ENABLED_STATE_ENABLED else

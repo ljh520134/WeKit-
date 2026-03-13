@@ -31,7 +31,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import moe.ouom.wekit.core.dsl.dexClass
 import moe.ouom.wekit.core.dsl.dexMethod
-import moe.ouom.wekit.core.model.BaseClickableFunctionHookItem
+import moe.ouom.wekit.core.model.ClickableHookItem
 import moe.ouom.wekit.dexkit.intf.IDexFind
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import moe.ouom.wekit.hooks.sdk.base.WeDatabaseApi
@@ -57,7 +57,7 @@ import kotlin.io.path.writeText
     path = "聊天/贴纸包同步",
     desc = "从指定路径将所有图片注册为贴纸包\n搭配 Telegram Xposed 模块 StickersSync 使用, 或使用自带此功能的 (例如 Nagram) 的第三方客户端\n注意: 每张贴纸第一次加载由于需要计算 MD5 速度较慢, 后续加载得益于缓存与并发速度将大大加快 (~2000 个贴纸仅需 4 秒)"
 )
-object StickersSync : BaseClickableFunctionHookItem(), IDexFind {
+object StickersSync : ClickableHookItem(), IDexFind {
 
     private val TAG = nameof(StickersSync)
     private const val STICKER_PACK_ID_PREFIX = "wekit.stickers.sync"
@@ -158,7 +158,7 @@ object StickersSync : BaseClickableFunctionHookItem(), IDexFind {
                                     val fileName = actualPath.fileName.toString()
 
                                     val md5 = hashCache.hashes[fileName]
-                                        ?: getEmojiMd5FromPath(HostInfo.getApplication(), absPath)
+                                        ?: getEmojiMd5FromPath(HostInfo.application, absPath)
                                     newHashes[fileName] = md5
 
                                     // 反射调用构造微信对象
@@ -287,7 +287,7 @@ object StickersSync : BaseClickableFunctionHookItem(), IDexFind {
         return emojiThumb
     }
 
-    override fun entry(classLoader: ClassLoader) {
+    override fun onLoad(classLoader: ClassLoader) {
         val emojiGroupInfoCls = "com.tencent.mm.storage.emotion.EmojiGroupInfo".toClass(classLoader)
 
         @Suppress("PLATFORM_CLASS_MAPPED_TO_KOTLIN", "UNCHECKED_CAST")
@@ -458,7 +458,7 @@ object StickersSync : BaseClickableFunctionHookItem(), IDexFind {
 
     @OptIn(ExperimentalMaterial3Api::class)
     override fun onClick(context: Context) {
-        showComposeDialog(context) { onDismiss ->
+        showComposeDialog(context) {
             AlertDialogContent(
                 title = { Text("贴纸包同步") },
                 text = {

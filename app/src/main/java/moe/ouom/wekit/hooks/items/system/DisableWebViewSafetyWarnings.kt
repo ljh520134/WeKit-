@@ -1,17 +1,17 @@
 package moe.ouom.wekit.hooks.items.system
 
 import moe.ouom.wekit.core.dsl.dexMethod
-import moe.ouom.wekit.core.model.BaseSwitchFunctionHookItem
+import moe.ouom.wekit.core.model.SwitchHookItem
 import moe.ouom.wekit.dexkit.intf.IDexFind
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import org.luckypray.dexkit.DexKitBridge
 
 @HookItem(path = "系统与隐私/禁用 WebView 安全警告", desc = "禁用 WebView 相关的安全警告提示")
-object DisableWebViewSafetyWarnings : BaseSwitchFunctionHookItem(), IDexFind {
+object DisableWebViewSafetyWarnings : SwitchHookItem(), IDexFind {
     private val methodGetIsInterceptEnabled by dexMethod()
     private val methodGetIsUrlSafe by dexMethod()
 
-    override fun entry(classLoader: ClassLoader) {
+    override fun onLoad(classLoader: ClassLoader) {
         methodGetIsInterceptEnabled.toDexMethod {
             hook {
                 beforeIfEnabled { param ->

@@ -3,34 +3,32 @@ package moe.ouom.wekit.hooks.core
 import android.content.pm.ApplicationInfo
 import android.os.Handler
 import android.os.Looper
+import dev.ujhhgtg.nameof.nameof
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
 import moe.ouom.wekit.config.RuntimeConfig
-import moe.ouom.wekit.config.WeConfig
-import moe.ouom.wekit.constants.Constants.DISABLE_DEX_FIND_PREF_KEY
-import moe.ouom.wekit.constants.Constants.PREF_KEY_PREFIX
+import moe.ouom.wekit.config.WePrefs
+import moe.ouom.wekit.constants.Constants.DISABLE_DEX_LOCATE_PREF_KEY
 import moe.ouom.wekit.core.model.ApiHookItem
-import moe.ouom.wekit.core.model.BaseClickableFunctionHookItem
 import moe.ouom.wekit.core.model.BaseHookItem
-import moe.ouom.wekit.core.model.BaseSwitchFunctionHookItem
+import moe.ouom.wekit.core.model.ClickableHookItem
+import moe.ouom.wekit.core.model.SwitchHookItem
 import moe.ouom.wekit.dexkit.cache.DexCacheManager
 import moe.ouom.wekit.dexkit.intf.IDexFind
-import moe.ouom.wekit.hooks.core.factory.HookItemFactory
+import moe.ouom.wekit.host.HostInfo
 import moe.ouom.wekit.ui.content.DexFinderContent
 import moe.ouom.wekit.ui.utils.showComposeDialog
 import moe.ouom.wekit.utils.common.SyncUtils
 import moe.ouom.wekit.utils.log.WeLogger
 
-/**
- * HookItem 加载器
- * 负责加载所有 HookItem，优先加载有效缓存，后台异步修复无效缓存
- */
-class HookItemLoader {
-    fun loadHookItem(process: Int) {
-        val appInfo = RuntimeConfig.getHostApplicationInfo()
+object HookItemsLoader {
 
-        loadHookItem(process, appInfo)
+    private val TAG = nameof(HookItemsLoader)
+
+    fun loadHookItems(process: Int) {
+        val appInfo = HostInfo.appInfo
+        loadHookItems(process, appInfo)
     }
 
     /**
@@ -41,12 +39,12 @@ class HookItemLoader {
      * 3. 对“待修复列表”启动异步线程弹出 Dialog
      * 4. 仅筛选出那些配置开启且缓存就绪（或不需要缓存）的项进行最终加载
      */
-    fun loadHookItem(
+    fun loadHookItems(
         process: Int,
         appInfo: ApplicationInfo
     ) {
         // 获取全量 HookItem 列表
-        val allHookItems = HookItemFactory.getAllItemListStatic()
+        val allHookItems = HookItemFactory.getItems()
 
         // 筛选出所有需要进行 Dex 查找的项
         val allDexFindItems = allHookItems.filterIsInstance<IDexFind>()
@@ -58,8 +56,8 @@ class HookItemLoader {
         val potentiallyValidItems = allDexFindItems.filterNot { outdatedItems.contains(it) }
 
         WeLogger.i(
-            "HookItemLoader",
-            "Found ${outdatedItems.size} outdated items, ${potentiallyValidItems.size} potentially valid items"
+            TAG,
+            "found ${outdatedItems.size} outdated items, ${potentiallyValidItems.size} potentially valid items"
         )
 
         // 尝试从缓存加载 Descriptor，返回加载失败的项
@@ -71,18 +69,16 @@ class HookItemLoader {
         // 如果存在不可用的项，根据配置决定是否启动修复流程
         if (allBrokenItems.isNotEmpty()) {
             handleBrokenItemsAsync(process, appInfo, allBrokenItems)
-        } else {
-            WeLogger.i("HookItemLoader", "All Dex cache entries are valid.")
         }
 
         // 开始构建最终需要执行的列表
-        val enabledItems = mutableListOf<Any>()
+        val enabledItems = mutableListOf<BaseHookItem>()
 
         allHookItems.forEach { hookItem ->
             // 如果该项需要 Dex 查找，且属于 损坏/过期 列表，则直接跳过，不尝试加载
             if (hookItem is IDexFind && allBrokenItems.contains(hookItem)) {
                 WeLogger.w(
-                    "HookItemLoader",
+                    TAG,
                     "Skipping ${(hookItem as? BaseHookItem)?.path} due to missing or invalid cache"
                 )
                 return@forEach
@@ -90,15 +86,13 @@ class HookItemLoader {
 
             var isEnabled = false
             when (hookItem) {
-                is BaseSwitchFunctionHookItem -> {
-                    hookItem.isEnabled = WeConfig.defaultConfig
-                        .getBooleanOrFalse("$PREF_KEY_PREFIX${hookItem.path}")
+                is SwitchHookItem -> {
+                    hookItem.isEnabled = WePrefs.getBoolOrFalse(hookItem.path)
                     isEnabled = hookItem.isEnabled && process == hookItem.targetProcess
                 }
 
-                is BaseClickableFunctionHookItem -> {
-                    hookItem.isEnabled = WeConfig.defaultConfig
-                        .getBooleanOrFalse("$PREF_KEY_PREFIX${hookItem.path}")
+                is ClickableHookItem -> {
+                    hookItem.isEnabled = WePrefs.getBoolOrFalse(hookItem.path)
                     isEnabled =
                         (hookItem.isEnabled && process == hookItem.targetProcess) || hookItem.alwaysRun
                 }
@@ -116,7 +110,7 @@ class HookItemLoader {
 
         // 执行加载（此时列表里只有 缓存有效 或 不需要缓存 的项）
         WeLogger.i(
-            "HookItemLoader",
+            TAG,
             "Executing load for ${enabledItems.size} ready items in process: $process"
         )
         loadAllItems(enabledItems)
@@ -130,19 +124,18 @@ class HookItemLoader {
         appInfo: ApplicationInfo,
         brokenItems: List<IDexFind>
     ) {
-        val disableVersionAdaptation = WeConfig.defaultConfig
-            .getBooleanOrFalse(DISABLE_DEX_FIND_PREF_KEY)
+        val disableVersionAdaptation = WePrefs.getBoolOrFalse(DISABLE_DEX_LOCATE_PREF_KEY)
 
         if (disableVersionAdaptation) {
             WeLogger.w(
-                "HookItemLoader",
+                TAG,
                 "Version adaptation disabled. ${brokenItems.size} items will not run."
             )
             return
         }
 
         WeLogger.i(
-            "HookItemLoader",
+            TAG,
             "Launching background thread to repair ${brokenItems.size} items"
         )
 
@@ -160,7 +153,7 @@ class HookItemLoader {
                     return@Thread
                 }
 
-                val activity = RuntimeConfig.getLauncherUIActivity()
+                val activity = RuntimeConfig.getLauncherUiActivity()
                 if (activity != null) {
                     // 确保 Activity 已经初始化完成
                     try {
@@ -169,8 +162,8 @@ class HookItemLoader {
                     }
 
                     Handler(Looper.getMainLooper()).post {
-                        WeLogger.i("HookItemLoader", "Showing DexFinderDialog for repair")
-                        showComposeDialog(activity) { onDismiss ->
+                        WeLogger.i(TAG, "Showing DexFinderDialog for repair")
+                        showComposeDialog(activity) {
                             DexFinderContent(
                                 activity,
                                 brokenItems,
@@ -184,7 +177,7 @@ class HookItemLoader {
                 }
             }
             WeLogger.e(
-                "HookItemLoader",
+                TAG,
                 "Wait for LauncherUIActivity timed out after 90s, dialog skipped"
             )
         }.start()
@@ -199,13 +192,13 @@ class HookItemLoader {
 
         items.forEach { item ->
             try {
-                val cache = DexCacheManager.loadCache(item)
+                val cache = DexCacheManager.loadItemCache(item)
                 if (cache != null) {
-                    // WeLogger.d("HookItemLoader", "Loading cache for ${(item as? BaseHookItem)?.path}")
+                    // WeLogger.d(TAG, "Loading cache for ${(item as? BaseHookItem)?.path}")
                     item.loadFromCache(cache)
                 } else {
                     WeLogger.w(
-                        "HookItemLoader",
+                        TAG,
                         "Cache is null for ${(item as? BaseHookItem)?.path}"
                     )
                     failedItems.add(item)
@@ -213,7 +206,7 @@ class HookItemLoader {
             } catch (e: Exception) {
                 // 捕获所有异常，视为缓存损坏
                 val path = (item as? BaseHookItem)?.path ?: "unknown"
-                WeLogger.e("HookItemLoader", "Cache load failed for $path", e)
+                WeLogger.e(TAG, "Cache load failed for $path", e)
 
                 // 尝试清理坏掉的缓存
                 try {
@@ -231,27 +224,15 @@ class HookItemLoader {
     /**
      * 加载所有已筛选通过的 HookItem
      */
-    private fun loadAllItems(items: List<Any>) {
+    private fun loadAllItems(items: List<BaseHookItem>) {
         items.forEach { hookItem ->
             runCatching {
-                when (hookItem) {
-                    is BaseSwitchFunctionHookItem -> {
-                        WeLogger.i("HookItemLoader", "[Switch] Init ${hookItem.path}")
-                    }
-
-                    is BaseClickableFunctionHookItem -> {
-                        WeLogger.i("HookItemLoader", "[Clickable] Init ${hookItem.path}")
-                    }
-
-                    is ApiHookItem -> {
-                        WeLogger.i("HookItemLoader", "[API] Init ${hookItem.path}")
-                        hookItem.startLoad()
-                    }
-                }
+                WeLogger.i(TAG, "initializing ${hookItem.path}")
+                hookItem.loadItem()
             }.onFailure { e ->
                 WeLogger.e(
-                    "HookItemLoader",
-                    "Error initializing item: ${hookItem.javaClass.simpleName}",
+                    TAG,
+                    "error initializing item ${hookItem.javaClass.simpleName}",
                     e
                 )
             }

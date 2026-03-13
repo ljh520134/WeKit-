@@ -57,7 +57,7 @@ import androidx.compose.ui.unit.sp
 import com.highcapable.kavaref.KavaRef.Companion.asResolver
 import dev.ujhhgtg.nameof.nameof
 import moe.ouom.wekit.constants.PackageConstants
-import moe.ouom.wekit.core.model.BaseSwitchFunctionHookItem
+import moe.ouom.wekit.core.model.SwitchHookItem
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import moe.ouom.wekit.hooks.sdk.base.WeConversationApi
 import moe.ouom.wekit.hooks.sdk.ui.WeMainActivityBeautifyApi
@@ -69,7 +69,7 @@ import moe.ouom.wekit.utils.log.WeLogger
 import java.util.concurrent.CopyOnWriteArrayList
 
 @HookItem(path = "界面美化/主屏幕添加 FAB", desc = "向应用主屏幕添加浮动操作按钮")
-object AddMainScreenFab : BaseSwitchFunctionHookItem() {
+object AddMainScreenFab : SwitchHookItem() {
 
     interface IMenuItemsProvider {
         fun getMenuItems(activity: Activity): List<MenuItem>
@@ -107,7 +107,7 @@ object AddMainScreenFab : BaseSwitchFunctionHookItem() {
         context.startActivity(intent)
     }
 
-    override fun entry(classLoader: ClassLoader) {
+    override fun onLoad(classLoader: ClassLoader) {
         WeMainActivityBeautifyApi.methodDoOnCreate.toDexMethod {
             hook {
                 afterIfEnabled { param ->

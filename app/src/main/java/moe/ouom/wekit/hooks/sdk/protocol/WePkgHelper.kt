@@ -62,7 +62,7 @@ object WePkgHelper : ApiHookItem(), IDexFind {
 
     const val TAG = "PkgHelper"
 
-    override fun entry(classLoader: ClassLoader) {
+    override fun onLoad(classLoader: ClassLoader) {
         this.classLoader = classLoader
 
         // 映射业务请求类

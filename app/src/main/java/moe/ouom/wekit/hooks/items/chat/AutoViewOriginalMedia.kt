@@ -4,13 +4,13 @@ import android.widget.Button
 import androidx.core.view.isVisible
 import com.highcapable.kavaref.KavaRef.Companion.asResolver
 import moe.ouom.wekit.core.dsl.dexMethod
-import moe.ouom.wekit.core.model.BaseSwitchFunctionHookItem
+import moe.ouom.wekit.core.model.SwitchHookItem
 import moe.ouom.wekit.dexkit.intf.IDexFind
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import org.luckypray.dexkit.DexKitBridge
 
 @HookItem(path = "聊天/自动查看原图", desc = "在打开图片和视频时自动点击查看原图")
-object AutoViewOriginalMedia : BaseSwitchFunctionHookItem(), IDexFind {
+object AutoViewOriginalMedia : SwitchHookItem(), IDexFind {
     private val methodSetImageHdImgBtnVisibility by dexMethod()
     private val methodCheckNeedShowOriginVideoBtn by dexMethod()
 
@@ -34,7 +34,7 @@ object AutoViewOriginalMedia : BaseSwitchFunctionHookItem(), IDexFind {
         return descriptors
     }
 
-    override fun entry(classLoader: ClassLoader) {
+    override fun onLoad(classLoader: ClassLoader) {
         listOf(
             methodSetImageHdImgBtnVisibility,
             methodCheckNeedShowOriginVideoBtn
@@ -68,5 +68,5 @@ object AutoViewOriginalMedia : BaseSwitchFunctionHookItem(), IDexFind {
         }
     }
 
-    override fun unload(classLoader: ClassLoader) {}
+    override fun onUnload(classLoader: ClassLoader) {}
 }

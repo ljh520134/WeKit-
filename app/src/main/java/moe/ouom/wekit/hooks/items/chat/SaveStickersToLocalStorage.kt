@@ -8,7 +8,7 @@ import com.highcapable.kavaref.condition.type.Modifiers
 import com.highcapable.kavaref.extension.toClass
 import dev.ujhhgtg.nameof.nameof
 import moe.ouom.wekit.core.dsl.dexClass
-import moe.ouom.wekit.core.model.BaseSwitchFunctionHookItem
+import moe.ouom.wekit.core.model.SwitchHookItem
 import moe.ouom.wekit.dexkit.intf.IDexFind
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import moe.ouom.wekit.hooks.sdk.base.model.MessageType
@@ -20,20 +20,20 @@ import moe.ouom.wekit.utils.log.WeLogger
 import org.luckypray.dexkit.DexKitBridge
 
 @HookItem(path = "聊天/贴纸保存到本地", desc = "在贴纸消息菜单添加保存按钮, 允许将图片保存到本地")
-object SaveStickersToLocalStorage : BaseSwitchFunctionHookItem(), IDexFind,
+object SaveStickersToLocalStorage : SwitchHookItem(), IDexFind,
     WeChatMessageContextMenuApi.IMenuItemsProvider {
 
     private val TAG = nameof(SaveStickersToLocalStorage)
 
     private val classEmojiFileEncryptMgr by dexClass()
 
-    override fun entry(classLoader: ClassLoader) {
+    override fun onLoad(classLoader: ClassLoader) {
         WeChatMessageContextMenuApi.addProvider(this)
     }
 
-    override fun unload(classLoader: ClassLoader) {
+    override fun onUnload(classLoader: ClassLoader) {
         WeChatMessageContextMenuApi.removeProvider(this)
-        super.unload(classLoader)
+        super.onUnload(classLoader)
     }
 
     override fun dexFind(dexKit: DexKitBridge): Map<String, String> {
@@ -84,7 +84,7 @@ object SaveStickersToLocalStorage : BaseSwitchFunctionHookItem(), IDexFind,
                     }
                     .invoke(bytes) as ByteArray
 
-                val resolver = HostInfo.getApplication().contentResolver
+                val resolver = HostInfo.application.contentResolver
                 val fileName = "sticker_${System.currentTimeMillis()}.gif"
                 val contentValues = ContentValues().apply {
                     put(MediaStore.MediaColumns.DISPLAY_NAME, fileName)

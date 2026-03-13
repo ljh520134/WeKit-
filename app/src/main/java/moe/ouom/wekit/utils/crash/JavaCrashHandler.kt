@@ -24,7 +24,7 @@ class JavaCrashHandler(context: Context) : Thread.UncaughtExceptionHandler {
      * 
      * @return 崩溃日志管理器
      */
-    val crashLogManager: CrashLogManager = CrashLogManager(this.context)
+    val crashLogsManager: CrashLogsManager = CrashLogsManager()
     private var isHandling = false
 
     /**
@@ -73,7 +73,7 @@ class JavaCrashHandler(context: Context) : Thread.UncaughtExceptionHandler {
             val crashInfo = collectCrashInfo(context, throwable, "JAVA")
 
             // 保存崩溃日志（标记为Java崩溃）
-            val logPath = crashLogManager.saveCrashLog(crashInfo, true)
+            val logPath = crashLogsManager.saveCrashLog(crashInfo, true)
             if (logPath != null) {
                 WeLogger.i("JavaCrashHandler", "Java crash log saved to: $logPath")
             } else {

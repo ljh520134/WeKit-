@@ -46,9 +46,8 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.highcapable.kavaref.KavaRef.Companion.asResolver
 import com.kyant.backdrop.backdrops.rememberLayerBackdrop
-import moe.ouom.wekit.config.WeConfig
-import moe.ouom.wekit.constants.Constants
-import moe.ouom.wekit.core.model.BaseClickableFunctionHookItem
+import moe.ouom.wekit.config.WePrefs
+import moe.ouom.wekit.core.model.ClickableHookItem
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import moe.ouom.wekit.hooks.sdk.ui.WeMainActivityBeautifyApi
 import moe.ouom.wekit.ui.content.AlertDialogContent
@@ -62,7 +61,7 @@ import moe.ouom.wekit.ui.utils.showComposeDialog
     path = "界面美化/美化首页底部导航栏",
     desc = "将首页底部导航栏替换为 Jetpack Compose 组件"
 )
-object BeautifyMainScreenTabBar : BaseClickableFunctionHookItem() {
+object BeautifyMainScreenTabBar : ClickableHookItem() {
 
     private val ICONS = listOf(
         Icons.Default.Home to "主页",
@@ -71,11 +70,9 @@ object BeautifyMainScreenTabBar : BaseClickableFunctionHookItem() {
         Icons.Default.Person to "我"
     )
 
-    private val config = WeConfig.defaultConfig
-
     private const val KEY_USE_BACKDROP = "tab_bar_use_backdrop"
 
-    override fun entry(classLoader: ClassLoader) {
+    override fun onLoad(classLoader: ClassLoader) {
         WeMainActivityBeautifyApi.methodDoOnCreate.toDexMethod {
             hook {
                 afterIfEnabled { param ->
@@ -121,7 +118,7 @@ object BeautifyMainScreenTabBar : BaseClickableFunctionHookItem() {
                             scrollOffsetState.floatValue = positionOffset
                         }
 
-                    val useBackdrop = config.getBoolPref(KEY_USE_BACKDROP)
+                    val useBackdrop = WePrefs.getBoolOrFalse(KEY_USE_BACKDROP)
 
                     bottomTabViewGroup.removeAllViews()
                     bottomTabViewGroup.addView(
@@ -251,8 +248,9 @@ object BeautifyMainScreenTabBar : BaseClickableFunctionHookItem() {
     }
 
     override fun onClick(context: Context) {
-        showComposeDialog(context) { onDismiss ->
-            var useBackdrop by remember { mutableStateOf(config.getBoolPref(KEY_USE_BACKDROP)) }
+        showComposeDialog(context) {
+            var useBackdrop by remember { mutableStateOf(
+                WePrefs.getBoolOrFalse(KEY_USE_BACKDROP)) }
 
             AlertDialogContent(
                 title = { Text("美化首页底部导航栏") },
@@ -265,7 +263,7 @@ object BeautifyMainScreenTabBar : BaseClickableFunctionHookItem() {
                 },
                 dismissButton = { TextButton(onDismiss) { Text("取消") } },
                 confirmButton = { Button(onClick = {
-                    config.putBoolean(Constants.PREF_KEY_PREFIX + KEY_USE_BACKDROP, useBackdrop)
+                    WePrefs.putBool(KEY_USE_BACKDROP, useBackdrop)
                     onDismiss()
                 }) { Text("确定") } }
             )

@@ -1,223 +1,118 @@
-package moe.ouom.wekit.utils.common;
+package moe.ouom.wekit.utils.common
 
-import android.annotation.SuppressLint;
-import android.app.ActivityManager;
-import android.content.Context;
-import android.os.Handler;
-import android.os.Looper;
+import android.app.ActivityManager
+import android.content.Context
+import moe.ouom.wekit.host.HostInfo
+import moe.ouom.wekit.utils.log.WeLogger
+import java.util.concurrent.Executors
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
+object SyncUtils {
 
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+    const val PROC_MAIN = 1
+    const val PROC_PUSH = 1 shl 1
+    const val PROC_APPBRAND = 1 shl 2
+    const val PROC_TOOLS = 1 shl 3
+    const val PROC_SANDBOX = 1 shl 4
+    const val PROC_HOTPOT = 1 shl 5
+    const val PROC_EXDEVICE = 1 shl 6
+    const val PROC_SUPPORT = 1 shl 7
+    const val PROC_CUPLOADER = 1 shl 8
+    const val PROC_PATCH = 1 shl 9
+    const val PROC_FALLBACK = 1 shl 10
+    const val PROC_DEXOPT = 1 shl 11
+    const val PROC_RECOVERY = 1 shl 12
+    const val PROC_NOSPACE = 1 shl 13
+    const val PROC_JECTL = 1 shl 14
+    const val PROC_OPENGL_DETECTOR = 1 shl 15
+    const val PROC_RUBBISHBIN = 1 shl 16
+    const val PROC_ISOLATED = 1 shl 17
+    const val PROC_RES_CAN_WORKER = 1 shl 18
+    const val PROC_EXTMIG = 1 shl 19
+    const val PROC_BACKTRACE = 1 shl 20
+    const val PROC_TMASSISTANT = 1 shl 21
+    const val PROC_SWITCH = 1 shl 22
+    const val PROC_HLD = 1 shl 23
+    const val PROC_PLAYCORE = 1 shl 24
+    const val PROC_HLDFL = 1 shl 25
+    const val PROC_MAGIC_EMOJI = 1 shl 26
+    const val PROC_OTHERS = 1 shl 30
 
-import moe.ouom.wekit.host.impl.HostInfo;
-import moe.ouom.wekit.utils.log.WeLogger;
+    private val sExecutor = Executors.newCachedThreadPool()
+    private var mProcType = 0
+    private var mProcName: String? = null
 
-@SuppressLint("PrivateApi")
-public class SyncUtils {
+    fun getProcessType(): Int {
+        if (mProcType != 0) return mProcType
 
-    // 微信的进程常量
-    public static final int PROC_MAIN = 1;              // com.tencent.mm
-    public static final int PROC_PUSH = 1 << 1;         // :push
-    public static final int PROC_APPBRAND = 1 << 2;     // :appbrand0~4
-    public static final int PROC_TOOLS = 1 << 3;        // :tools, :toolsmp
-    public static final int PROC_SANDBOX = 1 << 4;      // :sandbox
-    public static final int PROC_HOTPOT = 1 << 5;       // :hotpot..
-    public static final int PROC_EXDEVICE = 1 << 6;     // :exdevice
-    public static final int PROC_SUPPORT = 1 << 7;      // :support
-    public static final int PROC_CUPLOADER = 1 << 8;    // :cuploader
-    public static final int PROC_PATCH = 1 << 9;        // :patch
-    public static final int PROC_FALLBACK = 1 << 10;    // :fallback
-    public static final int PROC_DEXOPT = 1 << 11;      // :dexopt
-    public static final int PROC_RECOVERY = 1 << 12;    // :recovery
-    public static final int PROC_NOSPACE = 1 << 13;     // :nospace
-    public static final int PROC_JECTL = 1 << 14;       // :jectl
-    public static final int PROC_OPENGL_DETECTOR = 1 << 15;  // :opengl_detector
-    public static final int PROC_RUBBISHBIN = 1 << 16;  // :rubbishbin
-    public static final int PROC_ISOLATED = 1 << 17;    // :isolated_process0, :isolated_process1
-    public static final int PROC_RES_CAN_WORKER = 1 << 18;  // :res_can_worker
-    public static final int PROC_EXTMIG = 1 << 19;      // :extmig
-    public static final int PROC_BACKTRACE = 1 << 20;   // :backtrace__
-    public static final int PROC_TMASSISTANT = 1 << 21; // :TMAssistantDownloadSDKService
-    public static final int PROC_SWITCH = 1 << 22;      // :switch
-    public static final int PROC_HLD = 1 << 23;         // :hld
-    public static final int PROC_PLAYCORE = 1 << 24;    // :playcore_missing_splits_activity
-    public static final int PROC_HLDFL = 1 << 25;       // :hldfl
-    public static final int PROC_MAGIC_EMOJI = 1 << 26; // :magic_emoji
+        val procName = getProcessName()
+        val parts = procName.split(":")
 
-    public static final int PROC_OTHERS = 1 << 30;      // 其他未知进程
-    private static final ExecutorService sExecutor = Executors.newCachedThreadPool();
-    private static int mProcType = 0;
-    private static String mProcName = null;
-    private static Handler sHandler;
-
-    private SyncUtils() {
-        throw new AssertionError("No instance for you!");
-    }
-
-    /**
-     * 获取当前进程类型
-     */
-    public static int getProcessType() {
-        if (mProcType != 0) {
-            return mProcType;
-        }
-
-        var procName = getProcessName();
-        var parts = procName.split(":");
-
-        if (parts.length == 1) {
-            mProcType = PROC_MAIN;
+        mProcType = if (parts.size == 1) {
+            PROC_MAIN
         } else {
-            var tail = parts[parts.length - 1];
-
-            // 按照进程名称匹配
-            if ("push".equals(tail)) {
-                mProcType = PROC_PUSH;
-            } else if (tail.startsWith("appbrand")) {
-                mProcType = PROC_APPBRAND;
-            } else if (tail.startsWith("tools")) {
-                mProcType = PROC_TOOLS;
-            } else if ("sandbox".equals(tail)) {
-                mProcType = PROC_SANDBOX;
-            } else if (tail.startsWith("hotpot")) {
-                mProcType = PROC_HOTPOT;
-            } else if ("exdevice".equals(tail)) {
-                mProcType = PROC_EXDEVICE;
-            } else if ("support".equals(tail)) {
-                mProcType = PROC_SUPPORT;
-            } else if ("cuploader".equals(tail)) {
-                mProcType = PROC_CUPLOADER;
-            } else if ("patch".equals(tail)) {
-                mProcType = PROC_PATCH;
-            } else if ("fallback".equals(tail)) {
-                mProcType = PROC_FALLBACK;
-            } else if ("dexopt".equals(tail)) {
-                mProcType = PROC_DEXOPT;
-            } else if ("recovery".equals(tail)) {
-                mProcType = PROC_RECOVERY;
-            } else if ("nospace".equals(tail)) {
-                mProcType = PROC_NOSPACE;
-            } else if ("jectl".equals(tail)) {
-                mProcType = PROC_JECTL;
-            } else if ("opengl_detector".equals(tail)) {
-                mProcType = PROC_OPENGL_DETECTOR;
-            } else if ("rubbishbin".equals(tail)) {
-                mProcType = PROC_RUBBISHBIN;
-            } else if (tail.startsWith("isolated_process")) {
-                mProcType = PROC_ISOLATED;
-            } else if ("res_can_worker".equals(tail)) {
-                mProcType = PROC_RES_CAN_WORKER;
-            } else if ("extmig".equals(tail)) {
-                mProcType = PROC_EXTMIG;
-            } else if (tail.startsWith("backtrace")) {
-                mProcType = PROC_BACKTRACE;
-            } else if ("TMAssistantDownloadSDKService".equals(tail)) {
-                mProcType = PROC_TMASSISTANT;
-            } else if ("switch".equals(tail)) {
-                mProcType = PROC_SWITCH;
-            } else if ("hld".equals(tail)) {
-                mProcType = PROC_HLD;
-            } else if ("playcore_missing_splits_activity".equals(tail)) {
-                mProcType = PROC_PLAYCORE;
-            } else if ("hldfl".equals(tail)) {
-                mProcType = PROC_HLDFL;
-            } else if ("magic_emoji".equals(tail)) {
-                mProcType = PROC_MAGIC_EMOJI;
-            } else {
-                mProcType = PROC_OTHERS;
+            when (val tail = parts.last()) {
+                "push" -> PROC_PUSH
+                "sandbox" -> PROC_SANDBOX
+                "exdevice" -> PROC_EXDEVICE
+                "support" -> PROC_SUPPORT
+                "cuploader" -> PROC_CUPLOADER
+                "patch" -> PROC_PATCH
+                "fallback" -> PROC_FALLBACK
+                "dexopt" -> PROC_DEXOPT
+                "recovery" -> PROC_RECOVERY
+                "nospace" -> PROC_NOSPACE
+                "jectl" -> PROC_JECTL
+                "opengl_detector" -> PROC_OPENGL_DETECTOR
+                "rubbishbin" -> PROC_RUBBISHBIN
+                "res_can_worker" -> PROC_RES_CAN_WORKER
+                "extmig" -> PROC_EXTMIG
+                "TMAssistantDownloadSDKService" -> PROC_TMASSISTANT
+                "switch" -> PROC_SWITCH
+                "hld" -> PROC_HLD
+                "playcore_missing_splits_activity" -> PROC_PLAYCORE
+                "hldfl" -> PROC_HLDFL
+                "magic_emoji" -> PROC_MAGIC_EMOJI
+                else -> when {
+                    tail.startsWith("appbrand") -> PROC_APPBRAND
+                    tail.startsWith("tools") -> PROC_TOOLS
+                    tail.startsWith("hotpot") -> PROC_HOTPOT
+                    tail.startsWith("isolated_process") -> PROC_ISOLATED
+                    tail.startsWith("backtrace") -> PROC_BACKTRACE
+                    else -> PROC_OTHERS
+                }
             }
         }
-        return mProcType;
+        return mProcType
     }
 
-    public static boolean isMainProcess() {
-        return getProcessType() == PROC_MAIN;
-    }
+    @JvmStatic
+    fun isMainProcess(): Boolean = getProcessType() == PROC_MAIN
 
-    public static boolean isTargetProcess(int target) {
-        return (getProcessType() & target) != 0;
-    }
+    fun getProcessName(): String {
+        mProcName?.let { return it }
 
-    public static String getProcessName() {
-        if (mProcName != null) {
-            return mProcName;
-        }
-        var name = "unknown";
-        var retry = 0;
+        var retry = 0
         do {
             try {
-                Context context = HostInfo.getHostInfo().getApplication();
-
-                var runningAppProcesses =
-                        ((ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE))
-                                .getRunningAppProcesses();
-                if (runningAppProcesses != null) {
-                    for (var runningAppProcessInfo : runningAppProcesses) {
-                        if (runningAppProcessInfo != null && runningAppProcessInfo.pid == android.os.Process.myPid()) {
-                            mProcName = runningAppProcessInfo.processName;
-                            return runningAppProcessInfo.processName;
-                        }
+                val ctx = HostInfo.application
+                val am = ctx.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+                val myPid = android.os.Process.myPid()
+                am.runningAppProcesses?.forEach { info ->
+                    if (info?.pid == myPid) {
+                        mProcName = info.processName
+                        return info.processName
                     }
                 }
-            } catch (Throwable e) {
-                WeLogger.e("getProcessName error " + e);
+            } catch (e: Throwable) {
+                WeLogger.e("getProcessName error $e")
             }
-            retry++;
-            if (retry >= 3) {
-                break;
-            }
-        } while ("unknown".equals(name));
-        return name;
+            retry++
+        } while (retry < 3)
+
+        return "unknown"
     }
 
-    public static void runOnUiThread(@NonNull Runnable r) {
-        if (Looper.myLooper() == Looper.getMainLooper()) {
-            r.run();
-        } else {
-            post(r);
-        }
-    }
-
-    public static void async(@NonNull Runnable r) {
-        sExecutor.execute(r);
-    }
-
-    @SuppressLint("LambdaLast")
-    public static void postDelayed(@NonNull Runnable r, long ms) {
-        if (sHandler == null) {
-            sHandler = new Handler(Looper.getMainLooper());
-        }
-        sHandler.postDelayed(r, ms);
-    }
-
-    public static void postDelayed(long ms, @NonNull Runnable r) {
-        postDelayed(r, ms);
-    }
-
-    public static void post(@NonNull Runnable r) {
-        postDelayed(r, 0L);
-    }
-
-    public static void requiresUiThread() {
-        requiresUiThread(null);
-    }
-
-    public static void requiresUiThread(@Nullable String msg) {
-        if (Looper.myLooper() != Looper.getMainLooper()) {
-            throw new IllegalStateException(msg == null ? "UI thread required" : msg);
-        }
-    }
-
-    public static void requiresNonUiThread() {
-        requiresNonUiThread(null);
-    }
-
-    public static void requiresNonUiThread(@Nullable String msg) {
-        if (Looper.myLooper() == Looper.getMainLooper()) {
-            throw new IllegalStateException(msg == null ? "non-UI thread required" : msg);
-        }
+    fun async(r: Runnable) {
+        sExecutor.execute(r)
     }
 }

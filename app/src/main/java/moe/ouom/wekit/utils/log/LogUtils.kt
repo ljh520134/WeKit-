@@ -1,9 +1,9 @@
 package moe.ouom.wekit.utils.log
 
 import de.robv.android.xposed.XposedBridge
-import moe.ouom.wekit.config.WeConfig
+import moe.ouom.wekit.config.WePrefs
 import moe.ouom.wekit.constants.Constants
-import moe.ouom.wekit.loader.core.NativeCoreBridge
+import moe.ouom.wekit.loader.core.NativeLoader
 import moe.ouom.wekit.utils.formatEpoch
 import moe.ouom.wekit.utils.io.FileUtils
 import moe.ouom.wekit.utils.io.PathUtils
@@ -62,26 +62,13 @@ object LogUtils {
     /**
      * 记录异常
      */
-    @JvmStatic
     fun addError(tag: String, e: Throwable) {
         addLog(tag, e.toString(), e, true)
     }
 
-    /**
-     * 记录异常
-     * 
-     * @param tag         标签 文件名
-     * @param desc        错误的相关描述
-     * @param e           Exception
-     */
-    fun addError(tag: String, desc: String?, e: Throwable?) {
-        addLog(tag, desc, e, true)
-    }
-
     private fun addLog(fileName: String, desc: String?, content: Any?, isError: Boolean) {
         try {
-            if (NativeCoreBridge.isNativeCoreInitialized() && !WeConfig.defaultConfig
-                    .getBooleanOrFalse(Constants.ENABLE_LOG_PREF_KEY)
+            if (NativeLoader.isInitialized() && !WePrefs.getBoolOrFalse(Constants.ENABLE_LOG_PREF_KEY)
             ) {
                 return
             }

@@ -10,33 +10,36 @@ import android.os.Looper
 import com.afollestad.materialdialogs.MaterialDialog
 import com.afollestad.materialdialogs.list.listItems
 import dev.ujhhgtg.nameof.nameof
-import moe.ouom.wekit.core.model.BaseClickableFunctionHookItem
+import moe.ouom.wekit.core.model.ClickableHookItem
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import moe.ouom.wekit.ui.utils.CommonContextWrapper
 import moe.ouom.wekit.utils.common.ToastUtils
-import moe.ouom.wekit.utils.crash.CrashLogManager
+import moe.ouom.wekit.utils.crash.CrashLogsManager
 import moe.ouom.wekit.utils.formatBytesSize
 import moe.ouom.wekit.utils.formatEpoch
 import moe.ouom.wekit.utils.io.SafUtils
 import moe.ouom.wekit.utils.log.WeLogger
-import java.io.File
+import java.nio.file.Path
+import kotlin.io.path.fileSize
+import kotlin.io.path.getLastModifiedTime
+import kotlin.io.path.name
 
 @HookItem(
     path = "调试/崩溃日志查看器",
     desc = "查看历史崩溃日志"
 )
-object CrashLogViewer : BaseClickableFunctionHookItem() {
+object CrashLogsViewer : ClickableHookItem() {
 
-    private val TAG = nameof(CrashLogViewer)
+    private val TAG = nameof(CrashLogsViewer)
 
-    private var crashLogManager: CrashLogManager? = null
+    private var crashLogsManager: CrashLogsManager? = null
 
     override fun onClick(context: Context) {
         // 懒加载初始化 crashLogManager
-        if (crashLogManager == null) {
+        if (crashLogsManager == null) {
             WeLogger.i(TAG, "Lazy initializing CrashLogManager")
             try {
-                crashLogManager = CrashLogManager(context)
+                crashLogsManager = CrashLogsManager()
             } catch (e: Throwable) {
                 WeLogger.e(TAG, "Failed to initialize CrashLogManager", e)
                 ToastUtils.showToast(context, "初始化失败: ${e.message}")
@@ -52,7 +55,7 @@ object CrashLogViewer : BaseClickableFunctionHookItem() {
      */
     private fun showCrashLogList(context: Context) {
         try {
-            val manager = crashLogManager ?: return
+            val manager = crashLogsManager ?: return
             val logFiles = manager.allCrashLogs
 
             if (logFiles.isEmpty()) {
@@ -62,8 +65,8 @@ object CrashLogViewer : BaseClickableFunctionHookItem() {
 
             // 构建日志列表
             val logItems = logFiles.map { file ->
-                val time = formatEpoch(file.lastModified(), true)
-                val size = formatBytesSize(file.length())
+                val time = formatEpoch(file.getLastModifiedTime().toMillis(), true)
+                val size = formatBytesSize(file.fileSize())
                 "$time ($size)"
             }
 
@@ -104,7 +107,7 @@ object CrashLogViewer : BaseClickableFunctionHookItem() {
     /**
      * 显示崩溃日志操作选项
      */
-    private fun showCrashLogOptions(context: Context, logFile: File) {
+    private fun showCrashLogOptions(context: Context, logFile: Path) {
         try {
             val options = listOf(
                 "查看详情",
@@ -161,9 +164,9 @@ object CrashLogViewer : BaseClickableFunctionHookItem() {
     /**
      * 显示崩溃日志详情
      */
-    private fun showCrashLogDetail(context: Context, logFile: File) {
+    private fun showCrashLogDetail(context: Context, logFile: Path) {
         try {
-            val manager = crashLogManager ?: run {
+            val manager = crashLogsManager ?: run {
                 ToastUtils.showToast(context, "管理器未初始化")
                 return
             }
@@ -214,9 +217,9 @@ object CrashLogViewer : BaseClickableFunctionHookItem() {
     /**
      * 复制日志到剪贴板
      */
-    private fun copyLogToClipboard(context: Context, logFile: File) {
+    private fun copyLogToClipboard(context: Context, logFile: Path) {
         try {
-            val manager = crashLogManager ?: return
+            val manager = crashLogsManager ?: return
             val crashInfo = manager.readCrashLog(logFile) ?: run {
                 ToastUtils.showToast(context, "读取日志失败")
                 return
@@ -238,9 +241,9 @@ object CrashLogViewer : BaseClickableFunctionHookItem() {
     /**
      * 分享日志
      */
-    private fun shareLog(context: Context, logFile: File) {
+    private fun shareLog(context: Context, logFile: Path) {
         try {
-            val manager = crashLogManager ?: return
+            val manager = crashLogsManager ?: return
             val crashInfo = manager.readCrashLog(logFile) ?: run {
                 ToastUtils.showToast(context, "读取日志失败")
                 return
@@ -266,7 +269,7 @@ object CrashLogViewer : BaseClickableFunctionHookItem() {
     /**
      * 导出日志
      */
-    private fun exportLog(context: Context, logFile: File) {
+    private fun exportLog(context: Context, logFile: Path) {
         try {
             Handler(Looper.getMainLooper()).post {
                 try {
@@ -298,11 +301,11 @@ object CrashLogViewer : BaseClickableFunctionHookItem() {
     /**
      * 将日志文件内容写入到用户选择的 Uri 中
      */
-    private fun writeLogToUri(context: Context, sourceFile: File, targetUri: Uri) {
+    private fun writeLogToUri(context: Context, sourceFile: Path, targetUri: Uri) {
         // 建议在子线程执行 IO 操作，防止阻塞主线程
         Thread {
             try {
-                val manager = crashLogManager ?: return@Thread
+                val manager = crashLogsManager ?: return@Thread
                 val crashInfo = manager.readCrashLog(sourceFile) ?: run {
                     Handler(Looper.getMainLooper()).post {
                         ToastUtils.showToast(context, "读取源日志失败")
@@ -333,7 +336,7 @@ object CrashLogViewer : BaseClickableFunctionHookItem() {
     /**
      * 确认删除日志
      */
-    private fun confirmDeleteLog(context: Context, logFile: File) {
+    private fun confirmDeleteLog(context: Context, logFile: Path) {
         try {
             val wrappedContext = CommonContextWrapper.createAppCompatContext(context)
 
@@ -357,9 +360,9 @@ object CrashLogViewer : BaseClickableFunctionHookItem() {
     /**
      * 删除日志
      */
-    private fun deleteLog(context: Context, logFile: File) {
+    private fun deleteLog(context: Context, logFile: Path) {
         try {
-            val manager = crashLogManager ?: return
+            val manager = crashLogsManager ?: return
             if (manager.deleteCrashLog(logFile)) {
                 WeLogger.i(TAG, "Crash log deleted: ${logFile.name}")
                 ToastUtils.showToast(context, "日志已删除")
@@ -399,7 +402,7 @@ object CrashLogViewer : BaseClickableFunctionHookItem() {
      */
     private fun deleteAllLogs(context: Context) {
         try {
-            val manager = crashLogManager ?: return
+            val manager = crashLogsManager ?: return
             val count = manager.deleteAllCrashLogs()
             WeLogger.i(TAG, "Deleted $count crash logs")
             ToastUtils.showToast(context, "已删除 $count 条日志")
@@ -412,15 +415,15 @@ object CrashLogViewer : BaseClickableFunctionHookItem() {
     /**
      * 构建崩溃简易信息
      */
-    private fun buildCrashSummary(logFile: File): String {
+    private fun buildCrashSummary(logFile: Path): String {
         try {
-            val manager = crashLogManager ?: return "管理器未初始化"
+            val manager = crashLogsManager ?: return "管理器未初始化"
             val crashInfo = manager.readCrashLog(logFile) ?: return "读取日志失败"
 
             val summary = StringBuilder()
             summary.append("文件名: ${logFile.name}\n")
-            summary.append("时间: ${formatEpoch(logFile.lastModified(), true)}\n")
-            summary.append("大小: ${formatBytesSize(logFile.length())}\n\n")
+            summary.append("时间: ${formatEpoch(logFile.getLastModifiedTime().toMillis(), true)}\n")
+            summary.append("大小: ${formatBytesSize(logFile.fileSize())}\n\n")
 
             // 提取关键信息
             val lines = crashInfo.lines()

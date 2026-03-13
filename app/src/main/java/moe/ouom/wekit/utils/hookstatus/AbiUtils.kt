@@ -5,7 +5,6 @@ import android.content.pm.PackageManager
 import moe.ouom.wekit.host.HostInfo
 import moe.ouom.wekit.loader.startup.StartupInfo
 import java.io.File
-import java.io.IOException
 import java.util.zip.ZipEntry
 import java.util.zip.ZipFile
 
@@ -21,9 +20,8 @@ object AbiUtils {
 
     private var cachedModuleAbiFlavor: String? = null
 
-    @JvmStatic
     fun getApplicationActiveAbi(packageName: String): String? {
-        val ctx: Context = HostInfo.getApplication()
+        val ctx: Context = HostInfo.application
         val pm = ctx.packageManager
         try {
             // find apk path
@@ -53,11 +51,11 @@ object AbiUtils {
                 return cachedModuleAbiFlavor!!
             }
             val apkPath: String
-            if (HostInfo.isInHostProcess()) {
+            if (HostInfo.isHost) {
                 apkPath = StartupInfo.getModulePath()
             } else {
                 // self process
-                apkPath = HostInfo.getApplication().packageCodePath
+                apkPath = HostInfo.application.packageCodePath
             }
             check(
                 File(apkPath).exists()
@@ -101,7 +99,6 @@ object AbiUtils {
         return abiFlags
     }
 
-    @JvmStatic
     fun queryModuleAbiList(): Set<String> {
         when (moduleFlavorName) {
             "arm32" -> {
@@ -126,35 +123,6 @@ object AbiUtils {
         }
     }
 
-    @JvmStatic
-    fun getModuleABI(): Int {
-        val abi: Int
-        when (moduleFlavorName) {
-            "arm32" -> {
-                abi = ABI_ARM32
-            }
-
-            "arm64" -> {
-                abi = ABI_ARM64
-            }
-
-            "armAll" -> {
-                abi = ABI_ARM32 or ABI_ARM64
-            }
-
-            "universal" -> {
-                abi =
-                    ABI_ARM32 or ABI_ARM64 or ABI_X86 or ABI_X86_64
-            }
-
-            else -> {
-                abi = 0
-            }
-        }
-        return abi
-    }
-
-    @Throws(IOException::class)
     fun getApkAbiList(apkPath: String): HashSet<String> {
         val zipFile = ZipFile(apkPath)
         val abiList = HashSet<String>(4)
@@ -170,7 +138,6 @@ object AbiUtils {
         return abiList
     }
 
-    @JvmStatic
     fun archStringToLibDirName(arch: String): String {
         return when (arch) {
             "x86", "i386", "i486", "i586", "i686" -> "x86"
@@ -181,45 +148,19 @@ object AbiUtils {
         }
     }
 
-    @JvmStatic
     fun archStringToArchInt(arch: String): Int {
-        when (arch) {
+        return when (arch) {
             "arm", "arm32", "armeabi", "armeabi-v7a", "armv7l" ->                 // actually, armv7l is ARMv8 CPU in 32-bit compatibility mode,
                 // I don't know if we should throw armv7l into ABI_ARM64
-                return ABI_ARM32
+                ABI_ARM32
 
-            "arm64", "arm64-v8a", "aarch64" -> return ABI_ARM64
-            "x86", "i386", "i486", "i586", "i686" -> return ABI_X86
-            "x86_64", "amd64" -> return ABI_X86_64
-            else -> return 0
+            "arm64", "arm64-v8a", "aarch64" -> ABI_ARM64
+            "x86", "i386", "i486", "i586", "i686" -> ABI_X86
+            "x86_64", "amd64" -> ABI_X86_64
+            else -> 0
         }
     }
 
-    fun archIntToNames(abi: Int): String {
-        val results = ArrayList<String?>(4)
-        if ((abi and ABI_ARM32) != 0) {
-            results.add("armeabi-v7a")
-        }
-        if ((abi and ABI_ARM64) != 0) {
-            results.add("arm64-v8a")
-        }
-        if ((abi and ABI_X86) != 0) {
-            results.add("x86")
-        }
-        if ((abi and ABI_X86_64) != 0) {
-            results.add("x86_64")
-        }
-        if (results.isEmpty()) {
-            return "none"
-        }
-        val sb = StringBuilder()
-        for (s in results) {
-            sb.append(s).append('|')
-        }
-        return sb.substring(0, sb.length - 1)
-    }
-
-    @JvmStatic
     fun getSuggestedAbiVariant(requestedAbi: Int): String {
         if (requestedAbi == ABI_ARM32) {
             return "arm32"

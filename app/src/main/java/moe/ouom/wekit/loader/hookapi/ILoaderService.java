@@ -7,22 +7,6 @@ import androidx.annotation.Nullable;
 @Keep
 public interface ILoaderService {
 
-    @NonNull
-    String getEntryPointName();
-
-    @NonNull
-    String getLoaderVersionName();
-
-    int getLoaderVersionCode();
-
-    /**
-     * Get the main module path (loaded target module path).
-     *
-     * @return The main module path
-     */
-    @NonNull
-    String getMainModulePath();
-
     void log(@NonNull String msg);
 
     void log(@NonNull Throwable tr);
@@ -53,5 +37,4 @@ public interface ILoaderService {
      * @param helper The class loader helper instance
      */
     void setClassLoaderHelper(@Nullable IClassLoaderHelper helper);
-
 }

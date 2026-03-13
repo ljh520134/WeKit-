@@ -7,8 +7,7 @@ import com.highcapable.kavaref.extension.toClass
 import de.robv.android.xposed.XposedHelpers
 import moe.ouom.wekit.core.dsl.dexClass
 import moe.ouom.wekit.core.dsl.dexMethod
-import moe.ouom.wekit.core.dsl.resultNull
-import moe.ouom.wekit.core.model.BaseSwitchFunctionHookItem
+import moe.ouom.wekit.core.model.SwitchHookItem
 import moe.ouom.wekit.dexkit.intf.IDexFind
 import moe.ouom.wekit.utils.log.WeLogger
 import org.json.JSONObject
@@ -21,7 +20,7 @@ import org.luckypray.dexkit.DexKitBridge
 // 下面这一行在写功能的时候必须保留，否则 ksp 将无法标记此类，这里为了防止被扫描所以注释掉了
 //@HookItem(path = "example/示例写法", desc = "展示新架构的简化写法")
 class SimpleExample :
-    BaseSwitchFunctionHookItem() /* 这里也可以继承 BaseClickableFunctionHookItem */, IDexFind {
+    SwitchHookItem() /* 这里也可以继承 BaseClickableFunctionHookItem */, IDexFind {
 
     // DSL: Dex 方法委托（自动生成 key）
     private val methodTargetMethod by dexMethod()
@@ -68,7 +67,7 @@ class SimpleExample :
     }
 
     // Hook 入口
-    override fun entry(classLoader: ClassLoader) {
+    override fun onLoad(classLoader: ClassLoader) {
         // 日志输出请务必使用 `WeLogger`，他会自动添加 TAG，并且适配多种输出需求，如：
         WeLogger.i(
             "SimplifiedExample",
@@ -89,8 +88,7 @@ class SimpleExample :
         methodTargetMethod.toDexMethod {
             hook {
                 beforeIfEnabled { param ->
-                    // ...
-                    param.resultNull()
+                    param.result = null
                 }
             }
         }
@@ -169,7 +167,7 @@ class SimpleExample :
         // 此处不再举例....
     }
 
-    override fun unload(classLoader: ClassLoader) {
+    override fun onUnload(classLoader: ClassLoader) {
         // 在这里清理资源
     }
 

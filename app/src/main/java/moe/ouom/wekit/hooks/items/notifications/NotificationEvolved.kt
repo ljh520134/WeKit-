@@ -18,7 +18,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import moe.ouom.wekit.constants.PackageConstants
-import moe.ouom.wekit.core.model.BaseSwitchFunctionHookItem
+import moe.ouom.wekit.core.model.SwitchHookItem
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import moe.ouom.wekit.hooks.sdk.base.WeConversationApi
 import moe.ouom.wekit.hooks.sdk.base.WeDatabaseApi
@@ -33,7 +33,7 @@ import java.net.URL
     path = "通知/通知进化",
     desc = "让应用的新消息通知更易用\n1. '快速回复' 按钮\n2. '标记为已读' 按钮\n3. 使用原生对话样式 (MessagingStyle)"
 )
-object NotificationEvolved : BaseSwitchFunctionHookItem() {
+object NotificationEvolved : SwitchHookItem() {
 
     private val TAG = nameof(NotificationEvolved)
     private const val ACTION_REPLY = "${PackageConstants.PACKAGE_NAME_WECHAT}.ACTION_WEKIT_REPLY"
@@ -78,8 +78,8 @@ object NotificationEvolved : BaseSwitchFunctionHookItem() {
 
     val multiMessageRegex = Regex("""^\[\d+条].+?: (.*)$""")
 
-    override fun entry(classLoader: ClassLoader) {
-        val context = HostInfo.getApplication()
+    override fun onLoad(classLoader: ClassLoader) {
+        val context = HostInfo.application
 
         val filter = IntentFilter().apply {
             addAction(ACTION_REPLY)

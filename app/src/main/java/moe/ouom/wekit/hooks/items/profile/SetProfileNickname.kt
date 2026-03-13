@@ -8,7 +8,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
-import moe.ouom.wekit.core.model.BaseClickableFunctionHookItem
+import moe.ouom.wekit.core.model.ClickableHookItem
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import moe.ouom.wekit.hooks.sdk.protocol.WePkgHelper
 import moe.ouom.wekit.ui.content.AlertDialogContent
@@ -16,10 +16,10 @@ import moe.ouom.wekit.ui.utils.showComposeDialog
 import moe.ouom.wekit.utils.log.WeLogger
 
 @HookItem(path = "个人资料/设置微信昵称", desc = "通过发包来更灵活的设置微信昵称")
-object SetProfileNickname : BaseClickableFunctionHookItem() {
+object SetProfileNickname : ClickableHookItem() {
 
     override fun onClick(context: Context) {
-        showComposeDialog(context) { onDismiss ->
+        showComposeDialog(context) {
             var nickname by remember { mutableStateOf("") }
 
             AlertDialogContent(
@@ -44,7 +44,7 @@ object SetProfileNickname : BaseClickableFunctionHookItem() {
                         ) {
                             onSuccess { json, _ ->
                                 WeLogger.i("WeProfileNameSetter", "成功，回包: $json")
-                                showComposeDialog(context) { onDismiss ->
+                                showComposeDialog(context) {
                                     AlertDialogContent(
                                         title = { Text("发送成功, 响应结果:") },
                                         text = { Text(json) },
@@ -56,7 +56,7 @@ object SetProfileNickname : BaseClickableFunctionHookItem() {
                             }
 
                             onFail { type, code, msg ->
-                                showComposeDialog(context) { onDismiss ->
+                                showComposeDialog(context) {
                                     AlertDialogContent(
                                         title = { Text("发送失败, 响应结果:") },
                                         text = { Text("type: $type, code: $code, msg: $msg") },

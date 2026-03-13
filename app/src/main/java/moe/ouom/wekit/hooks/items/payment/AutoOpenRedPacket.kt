@@ -9,10 +9,10 @@ import androidx.compose.material3.TextButton
 import androidx.core.net.toUri
 import de.robv.android.xposed.XposedHelpers
 import dev.ujhhgtg.nameof.nameof
-import moe.ouom.wekit.config.WeConfig
+import moe.ouom.wekit.config.WePrefs
 import moe.ouom.wekit.core.dsl.dexClass
 import moe.ouom.wekit.core.dsl.dexMethod
-import moe.ouom.wekit.core.model.BaseClickableFunctionHookItem
+import moe.ouom.wekit.core.model.ClickableHookItem
 import moe.ouom.wekit.dexkit.intf.IDexFind
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import moe.ouom.wekit.hooks.sdk.base.WeDatabaseApi
@@ -31,7 +31,7 @@ import kotlin.random.Random
 
 @SuppressLint("DiscouragedApi")
 @HookItem(path = "红包与支付/自动抢红包", desc = "监听消息并自动拆开红包")
-object AutoOpenRedPacket : BaseClickableFunctionHookItem(), WeDatabaseListenerApi.IInsertListener,
+object AutoOpenRedPacket : ClickableHookItem(), WeDatabaseListenerApi.IInsertListener,
     IDexFind {
 
     private val TAG = nameof(AutoOpenRedPacket)
@@ -43,8 +43,6 @@ object AutoOpenRedPacket : BaseClickableFunctionHookItem(), WeDatabaseListenerAp
 
     private val currentRedPacketMap = ConcurrentHashMap<String, RedPacketInfo>()
 
-    private val config = WeConfig.defaultConfig
-
     data class RedPacketInfo(
         val sendId: String,
         val nativeUrl: String,
@@ -55,7 +53,7 @@ object AutoOpenRedPacket : BaseClickableFunctionHookItem(), WeDatabaseListenerAp
         val nickName: String = ""
     )
 
-    override fun entry(classLoader: ClassLoader) {
+    override fun onLoad(classLoader: ClassLoader) {
         WeDatabaseListenerApi.addListener(this)
         hookReceiveCallback()
         hookOpenReqEndCallback()
@@ -73,7 +71,7 @@ object AutoOpenRedPacket : BaseClickableFunctionHookItem(), WeDatabaseListenerAp
 
     private fun handleRedPacket(values: ContentValues) {
         try {
-            if (values.getAsInteger("isSend") == 1 && !config.getBoolPref("red_packet_self")) return
+            if (values.getAsInteger("isSend") == 1 && !WePrefs.getBoolOrFalse("red_packet_self")) return
 
             val content = values.getAsString("content") ?: return
             val talker = values.getAsString("talker") ?: ""
@@ -108,9 +106,9 @@ object AutoOpenRedPacket : BaseClickableFunctionHookItem(), WeDatabaseListenerAp
                 nickName = nickName
             )
 
-            val isRandomDelay = config.getBoolPref("red_packet_delay_random")
+            val isRandomDelay = WePrefs.getBoolOrFalse("red_packet_delay_random")
             val customDelay =
-                config.getStringPref("red_packet_delay_custom", "0")?.toLongOrNull() ?: 0L
+                WePrefs.getStringOrDef("red_packet_delay_custom", "0").toLongOrNull() ?: 0L
 
             WeLogger.i(TAG, "config - isRandomDelay=$isRandomDelay, customDelay=$customDelay")
 
@@ -194,7 +192,7 @@ object AutoOpenRedPacket : BaseClickableFunctionHookItem(), WeDatabaseListenerAp
         methodOnOpenGYNetEnd.toDexMethod {
             hook {
                 afterIfEnabled { param ->
-                    val notifEnabled = config.getBoolPref("red_packet_notification")
+                    val notifEnabled = WePrefs.getBoolOrFalse("red_packet_notification")
                     if (!notifEnabled) return@afterIfEnabled
 
                     val json = param.args[2] as? JSONObject ?: return@afterIfEnabled
@@ -233,12 +231,12 @@ object AutoOpenRedPacket : BaseClickableFunctionHookItem(), WeDatabaseListenerAp
         return matchSimple?.groupValues?.get(1) ?: ""
     }
 
-    override fun unload(classLoader: ClassLoader) {
+    override fun onUnload(classLoader: ClassLoader) {
         WeLogger.i(TAG, "unload() called, removing db listener")
         WeDatabaseListenerApi.removeListener(this)
         currentRedPacketMap.clear()
         WeLogger.i(TAG, "removed db listener and cleared red packet map")
-        super.unload(classLoader)
+        super.onUnload(classLoader)
     }
 
     private class ConfigDialog(context: Context) : BasePrefDialog(context, "自动抢红包") {
@@ -330,7 +328,7 @@ object AutoOpenRedPacket : BaseClickableFunctionHookItem(), WeDatabaseListenerAp
 
     override fun onBeforeToggle(newState: Boolean, context: Context): Boolean {
         if (newState) {
-            showComposeDialog(context) { onDismiss ->
+            showComposeDialog(context) {
                 AlertDialogContent(
                     title = { Text(text = "警告") },
                     text = { Text(text = "此功能可能导致账号异常, 确定要启用吗?") },

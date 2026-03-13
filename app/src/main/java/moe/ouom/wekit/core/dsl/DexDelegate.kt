@@ -1,7 +1,7 @@
 package moe.ouom.wekit.core.dsl
 
+import com.highcapable.kavaref.extension.ClassLoaderProvider
 import com.highcapable.kavaref.extension.toClass
-import moe.ouom.wekit.config.RuntimeConfig
 import moe.ouom.wekit.dexkit.DexMethodDescriptor
 import org.luckypray.dexkit.DexKitBridge
 import org.luckypray.dexkit.query.FindClass
@@ -111,7 +111,7 @@ class DexMethodDelegate internal constructor(
     val method: Method
         get() {
             if (cachedMethod == null && descriptor != null) {
-                cachedMethod = descriptor!!.getMethodInstance(RuntimeConfig.getHostClassLoader())
+                cachedMethod = descriptor!!.getMethodInstance(ClassLoaderProvider.classLoader)
             }
             return cachedMethod ?: throw IllegalStateException("Method not found for key: $key")
         }

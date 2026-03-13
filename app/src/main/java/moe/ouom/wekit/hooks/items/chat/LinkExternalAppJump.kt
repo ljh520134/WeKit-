@@ -39,7 +39,7 @@ import androidx.core.graphics.drawable.toBitmap
 import androidx.core.net.toUri
 import de.robv.android.xposed.XC_MethodHook
 import dev.ujhhgtg.nameof.nameof
-import moe.ouom.wekit.core.model.BaseSwitchFunctionHookItem
+import moe.ouom.wekit.core.model.SwitchHookItem
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import moe.ouom.wekit.hooks.sdk.ui.WeStartActivityApi
 import moe.ouom.wekit.host.HostInfo
@@ -52,7 +52,7 @@ import moe.ouom.wekit.utils.log.WeLogger
     path = "聊天/链接跳转系统打开方式",
     desc = "打开链接或卡片链接时显示对话框, 可直接使用系统打开方式打开\n若要跳转到第三方应用, 需先在对应应用设置中启用 '在此应用中打开支持的网页链接'"
 )
-object LinkExternalAppJump : BaseSwitchFunctionHookItem(),
+object LinkExternalAppJump : SwitchHookItem(),
     WeStartActivityApi.IStartActivityListener {
 
     private val TAG = nameof(LinkExternalAppJump)
@@ -68,13 +68,13 @@ object LinkExternalAppJump : BaseSwitchFunctionHookItem(),
         "pay.wechatpay.cn"
     )
 
-    override fun entry(classLoader: ClassLoader) {
+    override fun onLoad(classLoader: ClassLoader) {
         WeStartActivityApi.addListener(this)
     }
 
-    override fun unload(classLoader: ClassLoader) {
+    override fun onUnload(classLoader: ClassLoader) {
         WeStartActivityApi.removeListener(this)
-        super.unload(classLoader)
+        super.onUnload(classLoader)
     }
 
     override fun onStartActivity(
@@ -99,27 +99,28 @@ object LinkExternalAppJump : BaseSwitchFunctionHookItem(),
         newIntent.data = url
         newIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
 
-        val packageManager = HostInfo.getApplication().packageManager
+        val pm = HostInfo.application.packageManager
 
         @SuppressLint("QueryPermissionsNeeded")
-        val resolveInfos = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            packageManager.queryIntentActivities(
-                newIntent,
-                PackageManager.ResolveInfoFlags.of(PackageManager.MATCH_DEFAULT_ONLY.toLong())
-            )
-        } else {
-            @Suppress("DEPRECATION")
-            packageManager.queryIntentActivities(newIntent, PackageManager.MATCH_DEFAULT_ONLY)
-        }
+        val resolveInfos =
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                pm.queryIntentActivities(
+                    newIntent,
+                    PackageManager.ResolveInfoFlags.of(PackageManager.MATCH_DEFAULT_ONLY.toLong())
+                )
+            } else {
+                @Suppress("DEPRECATION")
+                pm.queryIntentActivities(newIntent, PackageManager.MATCH_DEFAULT_ONLY)
+            }
 
         val context = param.thisObject as Context
-        showComposeDialog(context) { onDismiss ->
+        showComposeDialog(context) {
             AlertDialogContent(
                 title = { Text("选择打开方式") },
                 text = {
                     LazyColumn {
                         items(resolveInfos) { info ->
-                            AppItemRow(info, packageManager) {
+                            AppItemRow(info, pm) {
                                 launchApp(context, info, url)
                                 onDismiss()
                             }

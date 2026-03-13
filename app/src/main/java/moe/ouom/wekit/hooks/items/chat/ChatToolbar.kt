@@ -33,7 +33,7 @@ import com.highcapable.kavaref.KavaRef.Companion.asResolver
 import com.highcapable.kavaref.extension.toClass
 import dev.ujhhgtg.nameof.nameof
 import moe.ouom.wekit.core.dsl.dexMethod
-import moe.ouom.wekit.core.model.BaseSwitchFunctionHookItem
+import moe.ouom.wekit.core.model.SwitchHookItem
 import moe.ouom.wekit.dexkit.intf.IDexFind
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import moe.ouom.wekit.ui.utils.AppTheme
@@ -45,7 +45,7 @@ import org.luckypray.dexkit.DexKitBridge
 
 @SuppressLint("StaticFieldLeak")
 @HookItem(path = "聊天/聊天工具栏", desc = "在输入框上方添加工具栏")
-object ChatToolbar : BaseSwitchFunctionHookItem(), IDexFind {
+object ChatToolbar : SwitchHookItem(), IDexFind {
 
     private val TAG = nameof(ChatToolbar)
     private const val VIEW_TAG = "wekit_chat_toolbar"
@@ -56,7 +56,7 @@ object ChatToolbar : BaseSwitchFunctionHookItem(), IDexFind {
     private lateinit var appPanel: LinearLayout
 
     // TODO: match menu item by text instead of undeterministic index
-    override fun entry(classLoader: ClassLoader) {
+    override fun onLoad(classLoader: ClassLoader) {
         methodAppPanelInitAppGrid.toDexMethod {
             hook {
                 beforeIfEnabled { param ->
