@@ -32,7 +32,7 @@ private val TAG = nameof(::showComposeDialog)
 // creating multiple windows
 fun showComposeDialog(
     context: Context? = null,
-    dismissable: Boolean = true,
+    directlyDismissable: Boolean = true,
     content: @Composable ShowComposeDialogScope.() -> Unit
 ) {
     val ctx =
@@ -67,9 +67,9 @@ fun showComposeDialog(
             }
         }
 
-        // doesn't work
+        // FIXME: this doesn't work:
         // setCanceledOnTouchOutside(dismissable)
-        setCancelable(dismissable)
+        setCancelable(directlyDismissable)
 
         val scope = ShowComposeDialogScope(ctx, this, window!!, ::dismiss)
 

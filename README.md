@@ -31,6 +31,8 @@
 - ~~实验性的基于 Kotlin Scripting 的脚本引擎 (直接与宿主与模块互通)~~ (暂未开发完成)
 - 贴纸包同步 (Telegram Stickers Sync)
 - 通知进化
+- Markdown 消息渲染
+- 自动抢红包
 
 ## 下载
 

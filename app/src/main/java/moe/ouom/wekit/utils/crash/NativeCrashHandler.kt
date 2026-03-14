@@ -1,11 +1,9 @@
 package moe.ouom.wekit.utils.crash
 
-import android.content.Context
 import lombok.Getter
 import moe.ouom.wekit.utils.log.WeLogger
 
-class NativeCrashHandler(context: Context) {
-    private val context: Context = context.applicationContext
+class NativeCrashHandler {
 
     /**
      * 获取崩溃日志管理器

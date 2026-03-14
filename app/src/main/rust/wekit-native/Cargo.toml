@@ -10,6 +10,7 @@ crate-type = ["cdylib"]
 [dependencies]
 jni = { version = "0.22.3", default-features = false }
 libc = "0.2"
+markdown = "1.0.0"
 
 [profile.release]
 opt-level = "z"

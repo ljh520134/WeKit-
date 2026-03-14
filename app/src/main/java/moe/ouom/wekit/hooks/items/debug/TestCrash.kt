@@ -39,7 +39,7 @@ object TestCrash : ClickableHookItem() {
             if (appContext != null) {
                 // 初始化 Native 崩溃处理器（用于测试）
                 WeLogger.i("TestCrash", "Creating NativeCrashHandler...")
-                nativeCrashHandler = NativeCrashHandler(appContext!!)
+                nativeCrashHandler = NativeCrashHandler()
                 WeLogger.i("TestCrash", "NativeCrashHandler created")
 
                 // 安装 Native 崩溃拦截器（确保测试时能够拦截崩溃）
@@ -237,7 +237,7 @@ object TestCrash : ClickableHookItem() {
 
             if (appContext != null) {
                 try {
-                    nativeCrashHandler = NativeCrashHandler(appContext!!)
+                    nativeCrashHandler = NativeCrashHandler()
                     WeLogger.i("TestCrash", "Native crash handler created")
                 } catch (e: Throwable) {
                     WeLogger.e("[TestCrash] Failed to create native crash handler", e)

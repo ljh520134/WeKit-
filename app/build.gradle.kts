@@ -372,16 +372,26 @@ dependencies {
     implementation(libs.okhttp3.okhttp)
 
     implementation(libs.rhino.android)
-    // implementation(libs.kotlin.scripting.common)
-    // implementation(libs.kotlin.scripting.jvm)
-    // implementation(libs.kotlin.scripting.jvm.host)
-    // implementation(libs.kotlin.compiler.embeddable)
-    // implementation(libs.kotlinx.coroutines.core)
 
     compileOnly(libs.lombok)
     annotationProcessor(libs.lombok)
 
+    implementation(libs.markwon.core)
+    implementation(libs.markwon.ext.latex)
+    implementation(libs.markwon.ext.strikethrough)
+    implementation(libs.markwon.ext.tables)
+    implementation(libs.markwon.ext.tasklist)
+    implementation(libs.markwon.html)
+    implementation(libs.markwon.image)
+    implementation(libs.markwon.linkify)
+    implementation(libs.markwon.syntax.highlight)
+
     implementation(project(":libs:external:nameof-kt:api"))
+}
+
+// markwon conflict
+configurations.all {
+    exclude(group = "org.jetbrains", module = "annotations-java5")
 }
 
 evaluationDependsOn(":libs:external:nameof-kt:plugin")

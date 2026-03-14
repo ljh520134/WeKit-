@@ -10,7 +10,7 @@ import moe.ouom.wekit.utils.log.WeLogger
 abstract class ClickableHookItem : BaseHookItem() {
 
     companion object {
-        private val TAG = nameof(ClickableHookItem)
+        private val TAG = nameof(ClickableHookItem::class)
     }
 
     val targetProcess: Int = targetProcess()

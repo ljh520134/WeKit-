@@ -48,6 +48,7 @@ biometric = "1.2.0-alpha05"
 browser = "1.9.0"
 kyant0-backdrop = "2.0.0-alpha03"
 kyant0-shapes = "1.2.0"
+markwon = "4.6.2"
 
 [libraries]
 android-tools = { module = "com.android.tools.build:gradle", version.ref = "agp" }
@@ -71,6 +72,16 @@ androidx-biometric = { module = "androidx.biometric:biometric", version.ref = "b
 androidx-browser = { module = "androidx.browser:browser", version.ref = "browser" }
 kyant0-backdrop = { module = "io.github.kyant0:backdrop", version.ref = "kyant0-backdrop" }
 kyant0-shapes = { module = "io.github.kyant0:shapes", version.ref = "kyant0-shapes" }
+
+markwon-core = { module = "io.noties.markwon:core", version.ref = "markwon" }
+markwon-ext-latex = { module = "io.noties.markwon:ext-latex", version.ref = "markwon" }
+markwon-ext-strikethrough = { module = "io.noties.markwon:ext-strikethrough", version.ref = "markwon" }
+markwon-ext-tables = { module = "io.noties.markwon:ext-tables", version.ref = "markwon" }
+markwon-ext-tasklist = { module = "io.noties.markwon:ext-tasklist", version.ref = "markwon" }
+markwon-html = { module = "io.noties.markwon:html", version.ref = "markwon" }
+markwon-image = { module = "io.noties.markwon:image", version.ref = "markwon" }
+markwon-linkify = { module = "io.noties.markwon:linkify", version.ref = "markwon" }
+markwon-syntax-highlight = { module = "io.noties.markwon:syntax-highlight", version.ref = "markwon" }
 
 material-dialogs-core = { module = "com.afollestad.material-dialogs:core", version.ref = "materialDialog" }
 material-dialogs-input = { module = "com.afollestad.material-dialogs:input", version.ref = "materialDialog" }

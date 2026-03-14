@@ -7,6 +7,7 @@ import moe.ouom.wekit.BuildConfig
 import kotlin.math.min
 
 object WeLogger {
+
     private const val TAG = BuildConfig.TAG
 
     private const val CHUNK_SIZE = 4000

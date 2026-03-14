@@ -55,7 +55,7 @@ object NativeCrashInterceptor : SwitchHookItem() {
             crashLogsManager = CrashLogsManager()
 
             // 安装 Native 崩溃拦截器
-            nativeCrashHandler = NativeCrashHandler(appContext!!)
+            nativeCrashHandler = NativeCrashHandler()
             val installed = nativeCrashHandler?.install() ?: false
 
             if (installed) {

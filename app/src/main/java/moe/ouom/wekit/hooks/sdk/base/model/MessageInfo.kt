@@ -43,7 +43,7 @@ class MessageInfo(val instance: Any) {
                 ?: throw IllegalArgumentException("could not determine pat message's from user")
         }
 
-        if (isSend()) {
+        if (isSelfSender()) {
             return@lazy WeDatabaseApi.getSelfProfileField(SelfProfileField.WXID) as String
         }
 
@@ -54,7 +54,7 @@ class MessageInfo(val instance: Any) {
         return@lazy content.split(':')[0]
     }
 
-    fun isSend(): Boolean {
+    fun isSelfSender(): Boolean {
         return isSend == 1
     }
 

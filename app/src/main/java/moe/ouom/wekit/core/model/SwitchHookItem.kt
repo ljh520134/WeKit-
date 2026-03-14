@@ -10,7 +10,7 @@ import moe.ouom.wekit.utils.log.WeLogger
 abstract class SwitchHookItem : BaseHookItem() {
 
     companion object {
-        private val TAG = nameof(SwitchHookItem)
+        private val TAG = nameof(SwitchHookItem::class)
     }
 
     val targetProcess: Int = targetProcess()
