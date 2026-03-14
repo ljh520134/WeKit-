@@ -35,7 +35,7 @@ object WeMomentsContextMenuApi : ApiHookItem(), IDexFind {
 
     data class MenuItem(
         val id: Int,
-        val text: String, val drawable: Lazy<Drawable>,
+        val text: String, val drawable: Lazy<Drawable?>,
         val shouldShow: (context: MomentsContext, itemId: Int) -> Boolean,
         val onClick: (context: MomentsContext) -> Unit
     )

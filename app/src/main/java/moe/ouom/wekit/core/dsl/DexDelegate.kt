@@ -1,7 +1,7 @@
 package moe.ouom.wekit.core.dsl
 
 import com.highcapable.kavaref.extension.ClassLoaderProvider
-import com.highcapable.kavaref.extension.toClass
+import com.highcapable.kavaref.extension.toClassOrNull
 import moe.ouom.wekit.dexkit.DexMethodDescriptor
 import org.luckypray.dexkit.DexKitBridge
 import org.luckypray.dexkit.query.FindClass
@@ -29,7 +29,7 @@ class DexClassDelegate internal constructor(
     val clazz: Class<*>
         get() {
             if (cachedClass == null && descriptorString != null) {
-                cachedClass = (descriptorString as String).toClass()
+                cachedClass = descriptorString!!.toClassOrNull()
             }
             return cachedClass ?: throw IllegalStateException("Class not found for key: $key")
         }
@@ -84,10 +84,6 @@ class DexClassDelegate internal constructor(
     fun getClassData(dexKit: DexKitBridge): ClassData {
         val name = getDescriptorString()
         return dexKit.findClassData(name!!)!!
-    }
-
-    fun getSuperClass(dexKit: DexKitBridge): ClassData? {
-        return getClassData(dexKit).superClass
     }
 
     override fun getValue(thisRef: Any?, property: KProperty<*>): DexClassDelegate = this

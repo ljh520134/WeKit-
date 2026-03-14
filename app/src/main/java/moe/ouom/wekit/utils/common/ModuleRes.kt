@@ -1,23 +1,24 @@
-package moe.ouom.wekit.utils.common;
+package moe.ouom.wekit.utils.common
 
-import android.annotation.SuppressLint;
-import android.content.Context;
-import android.content.pm.PackageManager;
-import android.content.res.Resources;
-import android.graphics.drawable.Drawable;
-
-import moe.ouom.wekit.utils.log.WeLogger;
+import android.annotation.SuppressLint
+import android.content.Context
+import android.content.res.Resources
+import android.graphics.drawable.Drawable
+import dev.ujhhgtg.nameof.nameof
+import moe.ouom.wekit.utils.log.WeLogger
 
 /**
  * 模块资源加载器助手
  * 用于简化 Xposed 模块加载自身资源（布局、图片、字符串）的流程
  */
-public class ModuleRes {
+@SuppressLint("StaticFieldLeak")
+object ModuleRes {
 
-    @SuppressLint("StaticFieldLeak")
-    private static Context sModuleContext;
-    private static Resources sResources;
-    private static String sPackageName;
+    private val TAG = nameof(ModuleRes)
+
+    var moduleContext: Context? = null
+    private var resources: Resources? = null
+    private lateinit var packageName: String
 
     /**
      * 初始化加载器，只需在 Hook 入口处调用一次
@@ -25,72 +26,56 @@ public class ModuleRes {
      * @param hostContext   宿主的 Context
      * @param modulePkgName 模块的包名
      */
-    public static void init(Context hostContext, String modulePkgName) {
-        if (sModuleContext != null) return; // 避免重复初始化
+    @SuppressLint("DiscouragedApi")
+    fun init(hostContext: Context, modulePkgName: String) {
+        if (moduleContext != null) return
 
         try {
-            // 创建指向模块 APK 的 Context
-            sModuleContext = hostContext.createPackageContext(
-                    modulePkgName,
-                    Context.CONTEXT_IGNORE_SECURITY | Context.CONTEXT_INCLUDE_CODE
-            );
-            sResources = sModuleContext.getResources();
-            sPackageName = modulePkgName;
+            moduleContext = hostContext.createPackageContext(
+                modulePkgName,
+                Context.CONTEXT_IGNORE_SECURITY or Context.CONTEXT_INCLUDE_CODE
+            )
+            resources = moduleContext!!.resources
+            packageName = modulePkgName
 
-            // 给模块 Context 设置 Material 主题，否则在部分场景下它会崩溃
-            var themeId = sResources.getIdentifier("Theme.WeKit", "style", sPackageName);
+            val themeId = resources!!.getIdentifier("Theme.WeKit", "style", packageName)
             if (themeId != 0) {
-                sModuleContext.setTheme(themeId);
+                moduleContext!!.setTheme(themeId)
             } else {
-                WeLogger.e("ModuleRes: 未找到 Theme.WeKit，Material 组件可能会崩溃！");
+                WeLogger.e(TAG, "theme not found! module ui might crash")
             }
-
-            WeLogger.i("ModuleRes: 初始化成功 [" + modulePkgName + "]");
-        } catch (PackageManager.NameNotFoundException e) {
-            WeLogger.e("ModuleRes: 初始化失败，未找到模块包名: " + modulePkgName);
+        } catch (e: Exception) {
+            WeLogger.e(TAG, "failed to initialize", e)
         }
     }
 
-    /**
-     * 获取模块 Context (例如用于创建 View 或 Dialog)
-     */
-    public static Context getContext() {
-        return sModuleContext;
-    }
-
-    /**
-     * 通用：根据名称获取资源 ID
-     */
     @SuppressLint("DiscouragedApi")
-    public static int getId(String resName, String resType) {
-        if (sResources == null) return 0;
-        var id = sResources.getIdentifier(resName, resType, sPackageName);
-        if (id == 0) {
-            WeLogger.e("ModuleRes: 未找到资源 " + resType + "/" + resName);
-        }
-        return id;
+    fun getId(resName: String, resType: String): Int {
+        val res = resources ?: return 0
+        val id = res.getIdentifier(resName, resType, packageName)
+        if (id == 0) WeLogger.e(TAG, "resource $resType/$resName not found")
+        return id
     }
 
-    public static String getString(String resName) {
-        var id = getId(resName, "string");
-        return id == 0 ? "" : sResources.getString(id);
+    fun getString(resName: String): String {
+        val id = getId(resName, "string")
+        return if (id == 0) "" else resources!!.getString(id)
     }
 
-    public static int getColor(String resName) {
-        var id = getId(resName, "color");
-        return id == 0 ? 0 : sResources.getColor(id, null);
+    fun getColor(resName: String): Int {
+        val id = getId(resName, "color")
+        return if (id == 0) 0 else resources!!.getColor(id, null)
     }
 
     @SuppressLint("UseCompatLoadingForDrawables")
-    public static Drawable getDrawable(String resName) {
-        var id = getId(resName, "drawable");
-        // 尝试去 mipmap 找
-        if (id == 0) id = getId(resName, "mipmap");
-        return id == 0 ? null : sResources.getDrawable(id, null);
+    fun getDrawable(resName: String): Drawable? {
+        var id = getId(resName, "drawable")
+        if (id == 0) id = getId(resName, "mipmap")
+        return if (id == 0) null else resources!!.getDrawable(id, null)
     }
 
-    public static float getDimen(String resName) {
-        var id = getId(resName, "dimen");
-        return id == 0 ? 0 : sResources.getDimension(id);
+    fun getDimen(resName: String): Float {
+        val id = getId(resName, "dimen")
+        return if (id == 0) 0f else resources!!.getDimension(id)
     }
 }

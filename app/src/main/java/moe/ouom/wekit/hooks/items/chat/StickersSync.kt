@@ -469,7 +469,7 @@ object StickersSync : ClickableHookItem(), IDexFind {
                                 .clickable {
                                     var deletedCount = 0
                                     stickerPacks.forEach { pack ->
-                                        WeDatabaseApi.dbInstance!!.asResolver()
+                                        WeDatabaseApi.dbInstance.asResolver()
                                             .firstMethod {
                                                 name = "delete"
                                                 parameters(

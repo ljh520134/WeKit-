@@ -39,6 +39,7 @@ object WeDatabaseListenerApi : ApiHookItem() {
     private val insertListeners = CopyOnWriteArrayList<IInsertListener>()
     private val updateListeners = CopyOnWriteArrayList<IUpdateListener>()
     private val queryListeners = CopyOnWriteArrayList<IQueryListener>()
+
     fun addListener(listener: Any) {
         val addedTypes = mutableListOf<String>()
 
@@ -59,7 +60,7 @@ object WeDatabaseListenerApi : ApiHookItem() {
         if (addedTypes.isNotEmpty()) {
             WeLogger.i(
                 TAG,
-                "监听器已添加: ${listener.javaClass.simpleName} [${addedTypes.joinToString()}]"
+                "listener added: ${listener.javaClass.simpleName} [${addedTypes.joinToString()}]"
             )
         }
     }

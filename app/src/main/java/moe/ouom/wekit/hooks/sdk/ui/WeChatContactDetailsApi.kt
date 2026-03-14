@@ -4,15 +4,16 @@ import android.app.Activity
 import android.content.Context
 import android.widget.BaseAdapter
 import com.highcapable.kavaref.KavaRef.Companion.asResolver
+import com.highcapable.kavaref.condition.type.Modifiers
 import com.highcapable.kavaref.extension.toClass
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XposedBridge
 import moe.ouom.wekit.core.model.ApiHookItem
 import moe.ouom.wekit.hooks.core.annotation.HookItem
+import moe.ouom.wekit.utils.log.WeLogger
 import java.lang.reflect.Constructor
 import java.lang.reflect.Field
 import java.lang.reflect.Method
-import java.lang.reflect.Modifier
 import java.util.concurrent.CopyOnWriteArrayList
 
 @HookItem(path = "API/用户联系页面扩展")
@@ -21,8 +22,6 @@ object WeChatContactDetailsApi : ApiHookItem() {
     private val initCallbacks = CopyOnWriteArrayList<InitContactInfoViewCallback>()
     private val clickListeners = CopyOnWriteArrayList<OnContactInfoItemClickListener>()
 
-    @Volatile
-    private var isRefInitialized = false
     private lateinit var prefConstructor: Constructor<*>
     private lateinit var prefKeyField: Field
     private lateinit var adapterField: Field
@@ -31,7 +30,6 @@ object WeChatContactDetailsApi : ApiHookItem() {
     private lateinit var setKeyMethod: Method
     private lateinit var setSummaryMethod: Method
     private lateinit var setTitleMethod: Method
-
 
     fun addInitCallback(callback: InitContactInfoViewCallback) {
         initCallbacks.add(callback)
@@ -72,50 +70,59 @@ object WeChatContactDetailsApi : ApiHookItem() {
     }
 
     private fun initReflection() {
-        if (isRefInitialized) return
+        WeLogger.d("WeChatContactDetailsApi", "initReflection")
 
-        synchronized(this) {
-            if (isRefInitialized) return
+        val prefClass = "com.tencent.mm.ui.base.preference.Preference".toClass()
 
-            val prefClass = "com.tencent.mm.ui.base.preference.Preference".toClass()
-            prefConstructor = prefClass.getConstructor(Context::class.java)
-            prefKeyField = prefClass.declaredFields.first { field ->
-                field.type == String::class.java && !Modifier.isFinal(field.modifiers)
-            }
+        prefConstructor = prefClass.asResolver()
+            .firstConstructor {
+                parameters(Context::class)
+            }.self
 
-            val contactInfoUIClass = "com.tencent.mm.plugin.profile.ui.ContactInfoUI".toClass()
-            adapterField = contactInfoUIClass.superclass!!.declaredFields.first {
-                BaseAdapter::class.java.isAssignableFrom(it.type)
-            }.apply { isAccessible = true }
-            onPreferenceTreeClickMethod = contactInfoUIClass.declaredMethods.first {
-                it.name == "onPreferenceTreeClick"
-            }
+        prefKeyField = prefClass.asResolver()
+            .firstField {
+                type = String::class
+                modifiers { !it.contains(Modifiers.FINAL) }
+            }.self
 
-            val adapterClass = adapterField.type
-            addPreferenceMethod = adapterClass.declaredMethods.first {
-                !Modifier.isFinal(it.modifiers)
-                        && it.parameterCount == 2 &&
-                        it.parameterTypes[0] == prefClass
-                        && it.parameterTypes[1] == Int::class.java
-            }
+        val contactInfoUIClass = "com.tencent.mm.plugin.profile.ui.ContactInfoUI".toClass()
 
-            setKeyMethod = prefClass.declaredMethods.first {
-                it.parameterCount == 1 && it.parameterTypes[0] == String::class.java
-            }
+        adapterField = contactInfoUIClass.asResolver()
+            .firstField {
+                superclass()
+                modifiers { !it.contains(Modifiers.STATIC) }
+                type { BaseAdapter::class.java.isAssignableFrom(it) }
+            }.self
 
-            val charSeqMethods = prefClass.declaredMethods.filter {
-                it.parameterCount == 1 && it.parameterTypes[0] == CharSequence::class.java
-            }
+        onPreferenceTreeClickMethod = contactInfoUIClass.asResolver()
+            .firstMethod {
+                name = "onPreferenceTreeClick"
+            }.self
 
-            // 可能需要之后维护 不稳定的方法
-            setSummaryMethod = charSeqMethods.getOrElse(0) {
-                throw RuntimeException("setTitle method not found")
-            }
-            setTitleMethod = charSeqMethods.getOrElse(1) {
-                throw RuntimeException("setSummary method not found")
-            }
+        val adapterClass = adapterField.type
 
-            isRefInitialized = true
+        addPreferenceMethod = adapterClass.asResolver()
+            .firstMethod {
+                modifiers { !it.contains(Modifiers.FINAL) }
+                parameters(prefClass, Int::class)
+            }.self
+
+        setKeyMethod = prefClass.asResolver()
+            .firstMethod {
+                parameters(String::class)
+                returnType = Void.TYPE
+            }.self
+
+        val charSeqMethods = prefClass.asResolver()
+            .method {
+                parameters(CharSequence::class)
+            }.map { it.self }
+
+        setSummaryMethod = charSeqMethods.getOrElse(0) {
+            throw RuntimeException("setSummary method not found")
+        }
+        setTitleMethod = charSeqMethods.getOrElse(1) {
+            throw RuntimeException("setTitle method not found")
         }
     }
 

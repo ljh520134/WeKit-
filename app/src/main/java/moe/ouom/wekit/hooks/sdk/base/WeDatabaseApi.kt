@@ -220,23 +220,17 @@ object WeDatabaseApi : ApiHookItem(), IDexFind {
     }
 
     override fun onLoad() {
-        try {
-            methodGetStorage.method.hookAfter { param ->
-                val storageObj = param.result ?: return@hookAfter
+        methodGetStorage.method.hookAfter { param ->
+            if (::dbInstance.isInitialized) return@hookAfter
+            val storageObj = param.result ?: return@hookAfter
 
-                if (!::dbInstance.isInitialized) {
-                    initializeDatabase(storageObj)
-                }
-            }
-
-        } catch (e: Exception) {
-            WeLogger.e(TAG, "Entry 初始化异常", e)
+            initializeDatabase(storageObj)
         }
     }
 
     @Synchronized
     private fun initializeDatabase(storageObj: Any): Boolean {
-        try {
+        return runCatching {
             // 在 Storage 中寻找 Wrapper
             val wrapperObj = storageObj.asResolver()
                 .firstField {
@@ -261,12 +255,12 @@ object WeDatabaseApi : ApiHookItem(), IDexFind {
                     name = "execSQL"
                     parameters(String::class)
                 }.self
-            return true
 
-        } catch (e: Exception) {
-            WeLogger.e(TAG, "数据库初始化失败", e)
+            return true
         }
-        return false
+        .onSuccess { WeLogger.i(TAG, "db init success") }
+        .onFailure { e -> WeLogger.e("exception during db init", e) }
+        .getOrDefault(false)
     }
 
     fun executeQuery(sql: String, args: Array<Any>? = null): List<Map<String, Any?>> {

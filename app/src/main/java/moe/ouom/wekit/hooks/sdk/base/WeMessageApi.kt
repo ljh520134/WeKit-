@@ -3,6 +3,8 @@ package moe.ouom.wekit.hooks.sdk.base
 import android.annotation.SuppressLint
 import android.content.ContentValues
 import com.highcapable.kavaref.KavaRef.Companion.asResolver
+import com.highcapable.kavaref.condition.type.Modifiers
+import com.highcapable.kavaref.condition.type.VagueType
 import com.highcapable.kavaref.extension.createInstance
 import com.highcapable.kavaref.extension.toClass
 import de.robv.android.xposed.XposedHelpers
@@ -12,13 +14,14 @@ import moe.ouom.wekit.core.dsl.dexMethod
 import moe.ouom.wekit.core.model.ApiHookItem
 import moe.ouom.wekit.dexkit.intf.IDexFind
 import moe.ouom.wekit.hooks.core.annotation.HookItem
-import moe.ouom.wekit.utils.common.SyncUtils
 import moe.ouom.wekit.utils.common.Utils.extractXmlAttr
 import moe.ouom.wekit.utils.common.Utils.extractXmlTag
 import moe.ouom.wekit.utils.log.WeLogger
 import org.luckypray.dexkit.DexKitBridge
 import java.io.FileNotFoundException
 import java.io.IOException
+import java.io.InputStream
+import java.io.OutputStream
 import java.lang.reflect.Field
 import java.lang.reflect.Method
 import java.lang.reflect.Modifier
@@ -64,7 +67,7 @@ object WeMessageApi : ApiHookItem(), IDexFind {
     // 语音发送组件
     // -------------------------------------------------------------------------------------
     private val classVoiceParams by dexClass()     // 语音参数模型 (原 rc0.a)
-    private val dexClassVoiceTask by dexClass()       // 语音发送任务 (原 uc0.v)
+    private val classVoiceTask by dexClass()       // 语音发送任务 (原 uc0.v)
     private val classVoiceNameGen by dexClass()    // 语音文件名生成 (原 py0.g1)
     private val classVfs by dexClass()             // VFS 文件操作 (原 w6)
     private val classPathUtil by dexClass()        // 路径计算工具 (原 h1)
@@ -130,347 +133,324 @@ object WeMessageApi : ApiHookItem(), IDexFind {
     override fun dexFind(dexKit: DexKitBridge): Map<String, String> {
         val descriptors = mutableMapOf<String, String>()
 
-        try {
-            WeLogger.i(
-                TAG,
-                ">>>> 开始查找消息发送 API (Process: ${SyncUtils.getProcessName()}) <<<<"
-            )
+        // ---------------------------------------------------------------------------------
+        // 基础组件查找
+        // ---------------------------------------------------------------------------------
 
-            // ---------------------------------------------------------------------------------
-            // 基础组件查找
-            // ---------------------------------------------------------------------------------
-
-            classChattingDataAdapter.find(dexKit, descriptors) {
-                matcher {
-                    usingEqStrings(
-                        "MicroMsg.ChattingDataAdapterV3",
-                        "[handleMsgChange] isLockNotify:"
-                    )
-                }
+        classChattingDataAdapter.find(dexKit, descriptors) {
+            matcher {
+                usingEqStrings(
+                    "MicroMsg.ChattingDataAdapterV3",
+                    "[handleMsgChange] isLockNotify:"
+                )
             }
+        }
 
-            classChattingContext.find(dexKit, descriptors) {
-                matcher {
-                    usingEqStrings("MicroMsg.ChattingContext", "[notifyDataSetChange]")
-                }
+        classChattingContext.find(dexKit, descriptors) {
+            matcher {
+                usingEqStrings("MicroMsg.ChattingContext", "[notifyDataSetChange]")
             }
+        }
 
-            classNetSceneObserverOwner.find(dexKit, descriptors = descriptors) {
-                matcher {
-                    methods {
-                        add {
-                            paramCount = 4
-                            usingStrings("MicroMsg.Mvvm.NetSceneObserverOwner")
-                        }
-                    }
-                }
-            }
-
-            classNetSceneSendMsg.find(dexKit, descriptors = descriptors) {
-                matcher {
-                    methods {
-                        add {
-                            paramCount = 1
-                            usingStrings("MicroMsg.NetSceneSendMsg", "markMsgFailed for id:%d")
-                        }
-                    }
-                }
-            }
-
-            classNetSceneQueue.find(dexKit, descriptors = descriptors) {
-                searchPackages("com.tencent.mm.modelbase")
-                matcher {
-                    methods {
-                        add {
-                            paramCount = 2
-                            usingStrings("worker thread has not been se", "MicroMsg.NetSceneQueue")
-                        }
-                    }
-                }
-            }
-
-            classNetSceneBase.find(dexKit, descriptors = descriptors) {
-                matcher {
-                    methods {
-                        add {
-                            paramCount = 3
-                            usingStrings("scene security verification not passed, type=")
-                        }
-                    }
-                }
-            }
-
-            methodGetSendMsgObject.find(dexKit, descriptors, true) {
-                matcher {
-                    paramCount = 0
-                    returnType = classNetSceneObserverOwner.getDescriptorString() ?: ""
-                }
-            }
-
-            methodPostToQueue.find(dexKit, descriptors, true) {
-                searchPackages("com.tencent.mm.modelbase")
-                matcher {
-                    declaredClass = classNetSceneQueue.getDescriptorString() ?: ""
-                    paramTypes(classNetSceneBase.getDescriptorString() ?: "")
-                    returnType = "boolean"
-                    usingNumbers(0)
-                }
-            }
-
-            methodShareFile.find(dexKit, descriptors = descriptors) {
-                matcher {
-                    paramTypes(
-                        "com.tencent.mm.opensdk.modelmsg.WXMediaMessage",
-                        "java.lang.String",
-                        "java.lang.String",
-                        "java.lang.String",
-                        "int",
-                        "java.lang.String"
-                    )
-                }
-            }
-
-            classMsgInfo.find(dexKit, descriptors) {
-                searchPackages("com.tencent.mm.storage")
-                matcher {
-                    usingEqStrings("MicroMsg.MsgInfo", "[parseNewXmlSysMsg]")
-                }
-            }
-
-
-            classMsgInfoStorage.find(dexKit, descriptors) {
-                searchPackages("com.tencent.mm.storage")
-                matcher {
-                    usingEqStrings("MicroMsg.MsgInfoStorage", "deleted dirty msg ,count is %d")
-                }
-            }
-
-            methodMsgInfoStorageInsertMessage.find(dexKit, descriptors) {
-                matcher {
-                    declaredClass(classMsgInfoStorage.clazz)
-                    usingEqStrings("MsgInfo processAddMsg insert db error")
-                }
-            }
-
-            classTransformChattingComponent.find(dexKit, descriptors) {
-                searchPackages("com.tencent.mm.ui.chatting.component")
-                matcher {
-                    usingEqStrings("MicroMsg.TransformComponent", "[onChattingPause]")
-                }
-            }
-
-            // ---------------------------------------------------------------------------------
-            // 图片组件查找
-            // ---------------------------------------------------------------------------------
-
-            classImageSender.find(dexKit, descriptors = descriptors) {
-                matcher {
-                    usingStrings(
-                        "MicroMsg.ImgUpload.MsgImgSyncSendFSC",
-                        "/cgi-bin/micromsg-bin/uploadmsgimg"
-                    )
-                }
-            }
-
-            val senderDesc = descriptors[classImageSender.key]
-            if (senderDesc != null) {
-                val sendMethodData = dexKit.findMethod {
-                    matcher {
-                        declaredClass = senderDesc
-                        modifiers = Modifier.PUBLIC or Modifier.STATIC or Modifier.FINAL
+        classNetSceneObserverOwner.find(dexKit, descriptors = descriptors) {
+            matcher {
+                methods {
+                    add {
                         paramCount = 4
-                        paramTypes(senderDesc, null, null, null)
+                        usingStrings("MicroMsg.Mvvm.NetSceneObserverOwner")
+                    }
+                }
+            }
+        }
+
+        classNetSceneSendMsg.find(dexKit, descriptors = descriptors) {
+            matcher {
+                methods {
+                    add {
+                        paramCount = 1
+                        usingStrings("MicroMsg.NetSceneSendMsg", "markMsgFailed for id:%d")
+                    }
+                }
+            }
+        }
+
+        classNetSceneQueue.find(dexKit, descriptors = descriptors) {
+            searchPackages("com.tencent.mm.modelbase")
+            matcher {
+                methods {
+                    add {
+                        paramCount = 2
+                        usingStrings("worker thread has not been se", "MicroMsg.NetSceneQueue")
+                    }
+                }
+            }
+        }
+
+        classNetSceneBase.find(dexKit, descriptors = descriptors) {
+            matcher {
+                methods {
+                    add {
+                        paramCount = 3
+                        usingStrings("scene security verification not passed, type=")
+                    }
+                }
+            }
+        }
+
+        methodGetSendMsgObject.find(dexKit, descriptors, true) {
+            matcher {
+                paramCount = 0
+                returnType = classNetSceneObserverOwner.getDescriptorString() ?: ""
+            }
+        }
+
+        methodPostToQueue.find(dexKit, descriptors, true) {
+            searchPackages("com.tencent.mm.modelbase")
+            matcher {
+                declaredClass = classNetSceneQueue.getDescriptorString() ?: ""
+                paramTypes(classNetSceneBase.getDescriptorString() ?: "")
+                returnType = "boolean"
+                usingNumbers(0)
+            }
+        }
+
+        methodShareFile.find(dexKit, descriptors = descriptors) {
+            matcher {
+                paramTypes(
+                    "com.tencent.mm.opensdk.modelmsg.WXMediaMessage",
+                    "java.lang.String",
+                    "java.lang.String",
+                    "java.lang.String",
+                    "int",
+                    "java.lang.String"
+                )
+            }
+        }
+
+        classMsgInfo.find(dexKit, descriptors) {
+            searchPackages("com.tencent.mm.storage")
+            matcher {
+                usingEqStrings("MicroMsg.MsgInfo", "[parseNewXmlSysMsg]")
+            }
+        }
+
+
+        classMsgInfoStorage.find(dexKit, descriptors) {
+            searchPackages("com.tencent.mm.storage")
+            matcher {
+                usingEqStrings("MicroMsg.MsgInfoStorage", "deleted dirty msg ,count is %d")
+            }
+        }
+
+        methodMsgInfoStorageInsertMessage.find(dexKit, descriptors) {
+            matcher {
+                declaredClass(classMsgInfoStorage.clazz)
+                usingEqStrings("MsgInfo processAddMsg insert db error")
+            }
+        }
+
+        classTransformChattingComponent.find(dexKit, descriptors) {
+            searchPackages("com.tencent.mm.ui.chatting.component")
+            matcher {
+                usingEqStrings("MicroMsg.TransformComponent", "[onChattingPause]")
+            }
+        }
+
+        // ---------------------------------------------------------------------------------
+        // 图片组件查找
+        // ---------------------------------------------------------------------------------
+
+        classImageSender.find(dexKit, descriptors = descriptors) {
+            matcher {
+                usingStrings(
+                    "MicroMsg.ImgUpload.MsgImgSyncSendFSC",
+                    "/cgi-bin/micromsg-bin/uploadmsgimg"
+                )
+            }
+        }
+
+        val senderDesc = descriptors[classImageSender.key]
+        if (senderDesc != null) {
+            val sendMethodData = dexKit.findMethod {
+                matcher {
+                    declaredClass = senderDesc
+                    modifiers = Modifier.PUBLIC or Modifier.STATIC or Modifier.FINAL
+                    paramCount = 4
+                    paramTypes(senderDesc, null, null, null)
+                }
+            }.singleOrNull()
+
+            if (sendMethodData != null) {
+                descriptors[methodImageSendEntry.key] = sendMethodData.descriptor
+
+                val taskClassName = sendMethodData.paramTypes[1]
+                descriptors[classImageTask.key] = taskClassName.name
+
+                val taskDescriptorForSearch = "L" + taskClassName.name.replace(".", "/") + ";"
+                val mapFieldData = dexKit.findField {
+                    matcher {
+                        declaredClass = taskDescriptorForSearch
+                        type = "java.util.Map"
                     }
                 }.singleOrNull()
 
-                if (sendMethodData != null) {
-                    descriptors[methodImageSendEntry.key] = sendMethodData.descriptor
-
-                    val taskClassName = sendMethodData.paramTypes[1]
-                    descriptors[classImageTask.key] = taskClassName.name
-
-                    val taskDescriptorForSearch = "L" + taskClassName.name.replace(".", "/") + ";"
-                    val mapFieldData = dexKit.findField {
-                        matcher {
-                            declaredClass = taskDescriptorForSearch
-                            type = "java.util.Map"
-                        }
-                    }.singleOrNull()
-
-                    if (mapFieldData != null) {
-                        descriptors["${javaClass.simpleName}:$KEY_MAP_FIELD"] =
-                            mapFieldData.descriptor
-                    }
+                if (mapFieldData != null) {
+                    descriptors["${javaClass.simpleName}:$KEY_MAP_FIELD"] =
+                        mapFieldData.descriptor
                 }
+            }
 
-                classMvvmBase.find(dexKit, descriptors) {
+            classMvvmBase.find(dexKit, descriptors) {
+                matcher {
+                    usingStrings(
+                        "MicroMsg.Mvvm.MvvmPlugin",
+                        "onAccountInitialized start"
+                    )
+                }
+            }
+
+            val mvvmBaseDesc = descriptors[classMvvmBase.key]
+            if (mvvmBaseDesc != null) {
+                classImageServiceImpl.find(dexKit, descriptors) {
                     matcher {
-                        usingStrings(
-                            "MicroMsg.Mvvm.MvvmPlugin",
-                            "onAccountInitialized start"
-                        )
-                    }
-                }
-
-                val mvvmBaseDesc = descriptors[classMvvmBase.key]
-                if (mvvmBaseDesc != null) {
-                    classImageServiceImpl.find(dexKit, descriptors) {
-                        matcher {
-                            usingStrings("MicroMsg.ImgUpload.MsgImgFeatureService")
-                            superClass(mvvmBaseDesc)
-                        }
-                    }
-                }
-
-                // 查找 ServiceManager
-                classServiceManager.find(dexKit, descriptors) {
-                    matcher {
-                        usingStrings("MicroMsg.ServiceManager")
-                        methods {
-                            add {
-                                modifiers = Modifier.PUBLIC or Modifier.STATIC
-                                paramCount = 1
-                                paramTypes(Class::class.java.name)
-                            }
-                        }
-                    }
-                }
-
-                classConfigLogic.find(dexKit, descriptors) {
-                    matcher { usingStrings("MicroMsg.ConfigStorageLogic", "get userinfo fail") }
-                }
-
-                classImageTask.find(dexKit, descriptors) {
-                    matcher { usingStrings("msg_raw_img_send") }
-                }
-            }
-
-            // ---------------------------------------------------------------------------------
-            // 语音/VFS 组件动态查找
-            // ---------------------------------------------------------------------------------
-
-            classVfs.find(dexKit, descriptors) {
-                matcher {
-                    usingStrings("MicroMsg.VFSFileOp", "Cannot resolve path or URI")
-                }
-            }
-
-            classVoiceNameGen.find(dexKit, descriptors) {
-                matcher {
-                    usingStrings("CREATE TABLE IF NOT EXISTS voiceinfo ( FileName TEXT PRIMARY KEY")
-                }
-            }
-
-            classVoiceParams.find(dexKit, descriptors) {
-                matcher {
-                    methods {
-                        add {
-                            name = "<init>"
-                            returnType = "void"
-                            usingStrings("send_voice_msg")
-                        }
+                        usingStrings("MicroMsg.ImgUpload.MsgImgFeatureService")
+                        superClass(mvvmBaseDesc)
                     }
                 }
             }
 
-            dexClassVoiceTask.find(dexKit, descriptors) {
+            // 查找 ServiceManager
+            classServiceManager.find(dexKit, descriptors) {
                 matcher {
-                    usingStrings("MicroMsg.VoiceMsg.VoiceMsgSendTask")
-                    methods {
-                        add {
-                            name = "<init>"
-                            returnType = "void"
-                            paramTypes(classVoiceParams.clazz)
-                        }
-                    }
-                }
-            }
-
-            classPathUtil.find(dexKit, descriptors) {
-                searchPackages("com.tencent.mm.sdk.platformtools")
-                matcher {
+                    usingStrings("MicroMsg.ServiceManager")
                     methods {
                         add {
                             modifiers = Modifier.PUBLIC or Modifier.STATIC
-                            returnType = "java.lang.String"
-                            paramTypes(
-                                "java.lang.String",
-                                "java.lang.String",
-                                "java.lang.String",
-                                "java.lang.String",
-                                "int"
-                            )
+                            paramCount = 1
+                            paramTypes(Class::class.java.name)
                         }
                     }
                 }
             }
 
-            classMmKernel.find(dexKit, descriptors) {
-                matcher {
-                    usingStrings("MicroMsg.MMKernel", "Initialize skeleton")
-                }
+            classConfigLogic.find(dexKit, descriptors) {
+                matcher { usingStrings("MicroMsg.ConfigStorageLogic", "get userinfo fail") }
             }
 
-            methodMmKernelGetStorage.find(dexKit, descriptors, true) {
-                matcher {
-                    declaredClass(classMmKernel.clazz)
-                    modifiers = Modifier.PUBLIC or Modifier.STATIC
-                    paramCount = 0
-                    usingStrings("mCoreStorage not initialized!")
-                }
+            classImageTask.find(dexKit, descriptors) {
+                matcher { usingStrings("msg_raw_img_send") }
             }
-
-            // 定位 VoiceServiceImpl (tc0.k)
-            classVoiceServiceImpl.find(dexKit, descriptors, throwOnFailure = false) {
-                matcher {
-                    usingStrings("MicroMsg.VoiceMsgAsyncSendFSC")
-                    // 必须包含 sendSync 方法，且该方法使用特定字符串
-                    methods {
-                        add {
-                            usingStrings("sendSync only support BaseSendMsgTask Type")
-                        }
-                    }
-                }
-            }
-
-            // 定位 sendSync 方法 (gh)
-            val serviceImplDesc = descriptors[classVoiceServiceImpl.key]
-            if (serviceImplDesc != null) {
-                methodSendVoice.find(dexKit, descriptors, true) {
-                    matcher {
-                        declaredClass(classVoiceServiceImpl.clazz)
-                        usingStrings("sendSync only support BaseSendMsgTask Type")
-                        paramCount = 1
-                    }
-                }
-
-                // 从实现类反推接口
-                val implClassData = dexKit.findClass {
-                    matcher {
-                        className = serviceImplDesc
-                    }
-                }.firstOrNull()
-
-                if (implClassData != null) {
-                    // 遍历所有接口，找到第一个非系统接口作为 Service 接口
-                    val targetInterface = implClassData.interfaces.firstOrNull {
-                        !it.name.startsWith("java.") && !it.name.startsWith("android.") && !it.name.startsWith(
-                            "kotlin."
-                        ) && !it.name.startsWith("ki0.")
-                    }
-                    if (targetInterface != null) {
-                        // 将找到的接口名填入 map，防止 HookItemLoader 认为缓存缺失
-                        descriptors[classVoiceServiceInterface.key] = targetInterface.descriptor
-                        WeLogger.i(TAG, "从实现类反推接口成功: $targetInterface")
-                    } else {
-                        WeLogger.e(TAG, "反推接口失败：未找到合适的接口")
-                    }
-                }
-            }
-        } catch (e: Exception) {
-            WeLogger.e(TAG, "查找过程崩溃", e)
-            throw e
         }
+
+        // ---------------------------------------------------------------------------------
+        // 语音/VFS 组件动态查找
+        // ---------------------------------------------------------------------------------
+
+        classVfs.find(dexKit, descriptors) {
+            matcher {
+                usingStrings("MicroMsg.VFSFileOp", "Cannot resolve path or URI")
+            }
+        }
+
+        classVoiceNameGen.find(dexKit, descriptors) {
+            matcher {
+                usingStrings("CREATE TABLE IF NOT EXISTS voiceinfo ( FileName TEXT PRIMARY KEY")
+            }
+        }
+
+        classVoiceParams.find(dexKit, descriptors) {
+            matcher {
+                methods {
+                    add {
+                        name = "<init>"
+                        returnType = "void"
+                        usingStrings("send_voice_msg")
+                    }
+                }
+            }
+        }
+
+        classVoiceTask.find(dexKit, descriptors) {
+            matcher {
+                usingStrings("MicroMsg.VoiceMsg.VoiceMsgSendTask")
+                methods {
+                    add {
+                        name = "<init>"
+                        returnType = "void"
+                        paramTypes(classVoiceParams.clazz)
+                    }
+                }
+            }
+        }
+
+        classPathUtil.find(dexKit, descriptors) {
+            searchPackages("com.tencent.mm.sdk.platformtools")
+            matcher {
+                methods {
+                    add {
+                        modifiers = Modifier.PUBLIC or Modifier.STATIC
+                        returnType = "java.lang.String"
+                        paramTypes(
+                            "java.lang.String",
+                            "java.lang.String",
+                            "java.lang.String",
+                            "java.lang.String",
+                            "int"
+                        )
+                    }
+                }
+            }
+        }
+
+        classMmKernel.find(dexKit, descriptors) {
+            matcher {
+                usingStrings("MicroMsg.MMKernel", "Initialize skeleton")
+            }
+        }
+
+        methodMmKernelGetStorage.find(dexKit, descriptors, true) {
+            matcher {
+                declaredClass(classMmKernel.clazz)
+                modifiers = Modifier.PUBLIC or Modifier.STATIC
+                paramCount = 0
+                usingStrings("mCoreStorage not initialized!")
+            }
+        }
+
+        // 定位 VoiceServiceImpl (tc0.k)
+        classVoiceServiceImpl.find(dexKit, descriptors, throwOnFailure = false) {
+            matcher {
+                usingStrings("MicroMsg.VoiceMsgAsyncSendFSC")
+                methods {
+                    add {
+                        usingStrings("sendSync only support BaseSendMsgTask Type")
+                    }
+                }
+            }
+        }
+
+        // 定位 sendSync 方法 (gh)
+        methodSendVoice.find(dexKit, descriptors, true) {
+            matcher {
+                declaredClass(classVoiceServiceImpl.clazz)
+                usingStrings("sendSync only support BaseSendMsgTask Type")
+                paramCount = 1
+            }
+        }
+
+        // 遍历所有接口，找到第一个非系统接口作为 Service 接口
+        val targetInterface = classVoiceServiceImpl.clazz.interfaces.firstOrNull {
+            !it.name.startsWith("java.") && !it.name.startsWith("android.") && !it.name.startsWith(
+                "kotlin."
+            ) && !it.name.startsWith("ki0.") // FIXME: might change with WeChat version
+        }
+        if (targetInterface != null) {
+            descriptors[classVoiceServiceInterface.key] = targetInterface.name
+            WeLogger.i(TAG, "从实现类反推接口成功: ${targetInterface.name}")
+        } else {
+            WeLogger.e(TAG, "反推接口失败：未找到合适的接口")
+        }
+
         return descriptors
     }
 
@@ -485,140 +465,107 @@ object WeMessageApi : ApiHookItem(), IDexFind {
     }
 
     override fun onLoad() {
-        try {
-            WeLogger.i(TAG, "WeMessageApi initializing...")
+        runCatching {
+            // 初始化 Unsafe 反射
+            initUnsafe()
 
-            try {
-                // 初始化 Unsafe 反射
-                initUnsafe()
+            // -----------------------------------------------------------------------------
+            // 文本/文件组件初始化
+            // -----------------------------------------------------------------------------
+            netSceneSendMsgClass = classNetSceneSendMsg.clazz
+            getSendMsgObjectMethod = methodGetSendMsgObject.method
+            postToQueueMethod = methodPostToQueue.method
+            shareFileMethod = methodShareFile.method
+            p6Method = methodImageSendEntry.method
 
-                // -----------------------------------------------------------------------------
-                // 文本/文件组件初始化
-                // -----------------------------------------------------------------------------
-                netSceneSendMsgClass = classNetSceneSendMsg.clazz
-                getSendMsgObjectMethod = methodGetSendMsgObject.method
-                postToQueueMethod = methodPostToQueue.method
-                shareFileMethod = methodShareFile.method
-                p6Method = methodImageSendEntry.method
+            wxFileObjectClass = "com.tencent.mm.opensdk.modelmsg.WXFileObject".toClass()
+            wxMediaMessageClass = "com.tencent.mm.opensdk.modelmsg.WXMediaMessage".toClass()
 
-                try {
-                    wxFileObjectClass =
-                        "com.tencent.mm.opensdk.modelmsg.WXFileObject".toClass()
-                    wxMediaMessageClass =
-                        "com.tencent.mm.opensdk.modelmsg.WXMediaMessage".toClass()
-                } catch (e: Exception) {
-                    WeLogger.e(TAG, "初始化文件发送组件时失败", e)
-                }
+            // -----------------------------------------------------------------------------
+            // 图片组件初始化
+            // -----------------------------------------------------------------------------
+            val taskClazz = classImageTask.clazz
+            taskConstructor = taskClazz.asResolver()
+                .firstConstructor { parameterCount = 5 }
+                .self
 
-                // -----------------------------------------------------------------------------
-                // 图片组件初始化
-                // -----------------------------------------------------------------------------
-                val taskClazz = classImageTask.clazz
-                taskConstructor =
-                    taskClazz.declaredConstructors.firstOrNull { it.parameterCount == 5 }
-                taskConstructor?.isAccessible = true
+            crossParamsClass = taskConstructor!!.parameterTypes[4]
+            crossParamsConstructor = crossParamsClass?.asResolver()
+                ?.firstConstructor { emptyParameters() }
+                ?.self
 
-                if (taskConstructor != null) {
-                    crossParamsClass = taskConstructor!!.parameterTypes[4]
-                    crossParamsConstructor =
-                        crossParamsClass?.declaredConstructors?.firstOrNull { it.parameterCount == 0 }
-                    crossParamsConstructor?.isAccessible = true
-                } else {
-                    WeLogger.e(TAG, "警告: 未找到 ImageTask 构造函数")
-                }
+            imageMetadataMapField = taskClazz.asResolver()
+                .firstField { type { Map::class.java.isAssignableFrom(it) } }
+                .self
 
-                imageMetadataMapField = taskClazz.declaredFields.firstOrNull {
-                    Map::class.java.isAssignableFrom(it.type)
-                }
-                imageMetadataMapField?.isAccessible = true
+            // -----------------------------------------------------------------------------
+            // 语音/VFS 组件初始化
+            // -----------------------------------------------------------------------------
 
-                // -----------------------------------------------------------------------------
-                // 语音/VFS 组件初始化
-                // -----------------------------------------------------------------------------
+            // VFS
+            classVfs.clazz.asResolver().let { vfs ->
+                vfsReadMethod = vfs.firstMethod {
+                    modifiers(Modifiers.STATIC)
+                    parameters(String::class)
+                    returnType = InputStream::class
+                }.self
 
-                // VFS
-                classVfs.clazz.let { vfsClazz ->
-                    vfsReadMethod = vfsClazz.declaredMethods.find {
-                        Modifier.isStatic(it.modifiers) &&
-                                it.parameterCount == 1 &&
-                                it.parameterTypes[0] == String::class.java &&
-                                it.returnType == java.io.InputStream::class.java
-                    }
-                    vfsCopyMethod = vfsClazz.declaredMethods.find {
-                        Modifier.isStatic(it.modifiers) &&
-                                it.parameterCount == 2 &&
-                                it.parameterTypes[0] == String::class.java &&
-                                it.parameterTypes[1] == Boolean::class.javaPrimitiveType &&
-                                it.returnType == java.io.OutputStream::class.java
-                    }
-                    vfsExistsMethod = vfsClazz.declaredMethods.find {
-                        Modifier.isStatic(it.modifiers) &&
-                                it.parameterCount == 1 &&
-                                it.parameterTypes[0] == String::class.java &&
-                                it.returnType == Boolean::class.javaPrimitiveType
-                    }
-                }
+                vfsCopyMethod = vfs.firstMethod {
+                    modifiers(Modifiers.STATIC)
+                    parameters(String::class, Boolean::class)
+                    returnType = OutputStream::class
+                }.self
 
-                // Kernel
-                kernelStorageMethod = methodMmKernelGetStorage.method
-
-                // PathUtil
-                classPathUtil.clazz.let { pathClazz ->
-                    pathGenMethod = pathClazz.declaredMethods.find {
-                        Modifier.isStatic(it.modifiers) &&
-                                it.parameterCount == 5 &&
-                                it.returnType == String::class.java &&
-                                it.parameterTypes[4] == Int::class.javaPrimitiveType
-                    }
-                }
-
-                // Voice Components
-                classVoiceNameGen.clazz.let { clazz ->
-                    voiceNameGenMethod = clazz.declaredMethods.find {
-                        Modifier.isStatic(it.modifiers) && it.parameterCount == 2 &&
-                                it.parameterTypes[0] == String::class.java && it.returnType == String::class.java
-                    }
-                }
-
-                classVoiceParams.clazz.let { clazz ->
-                    voiceParamsClass = clazz
-                    val intFields =
-                        clazz.declaredFields.filter { it.type == Int::class.javaPrimitiveType }
-                    if (intFields.isNotEmpty()) {
-                        voiceDurationField = intFields.firstOrNull()
-                        voiceDurationField?.isAccessible = true
-                        if (intFields.size > 1) {
-                            voiceOffsetField = intFields[1]
-                            voiceOffsetField?.isAccessible = true
-                        }
-                    }
-                }
-
-                dexClassVoiceTask.clazz.let { clazz ->
-                    voiceTaskClass = clazz
-                    voiceTaskConstructor = clazz.declaredConstructors.find {
-                        it.parameterCount == 1 && it.parameterTypes[0] == voiceParamsClass
-                    }
-                }
-
-                // Voice Service
-                // 从 dexFind 结果中恢复接口类
-                voiceServiceInterfaceClass = classVoiceServiceInterface.clazz
-
-                // 从 dexFind 结果中恢复方法
-                voiceSendMethod = methodSendVoice.method
-
-                bindServiceFramework()
-                bindImageBusinessLogic()
-
-            } catch (e: Exception) {
-                WeLogger.e(TAG, "Entry 初始化失败", e)
+                vfsExistsMethod = vfs.firstMethod {
+                    modifiers(Modifiers.STATIC)
+                    parameters(String::class)
+                    returnType = Boolean::class
+                }.self
             }
 
-            WeLogger.i(TAG, "WeMessageApi 初始化完毕")
-        } catch (e: Exception) {
-            WeLogger.e(TAG, "Entry 初始化异常", e)
-        }
+            // Kernel
+            kernelStorageMethod = methodMmKernelGetStorage.method
+
+            // PathUtil
+            classPathUtil.clazz.asResolver().let { pathUtil ->
+                pathGenMethod = pathUtil.firstMethod {
+                    modifiers(Modifiers.STATIC)
+                    parameters(VagueType, VagueType, VagueType, VagueType, Int::class)
+                    returnType = String::class
+                }.self
+            }
+
+            // Voice Components
+            classVoiceNameGen.clazz.asResolver().let { voice ->
+                voiceNameGenMethod = voice.firstMethod {
+                    modifiers(Modifiers.STATIC)
+                    parameters(String::class, VagueType)
+                    returnType = String::class
+                }.self
+            }
+
+            classVoiceParams.clazz.asResolver().let { voiceParams ->
+                voiceParamsClass = classVoiceParams.clazz
+                val intFields = voiceParams.field { type = Int::class }
+                voiceDurationField = intFields.firstOrNull()?.self
+                voiceOffsetField = intFields.getOrNull(1)?.self
+            }
+
+            classVoiceTask.clazz.asResolver().let { voiceTask ->
+                voiceTaskClass = classVoiceTask.clazz
+                voiceTaskConstructor = voiceTask.firstConstructor {
+                    parameters(voiceParamsClass!!)
+                }.self
+            }
+
+            // Voice Service
+            voiceServiceInterfaceClass = classVoiceServiceInterface.clazz
+            voiceSendMethod = methodSendVoice.method
+
+            bindServiceFramework()
+            bindImageBusinessLogic()
+
+        }.onFailure { e -> WeLogger.e(TAG, "Entry 初始化失败", e) }
     }
 
     /**

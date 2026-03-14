@@ -24,7 +24,7 @@ object WeShortVideosShareMenuApi : ApiHookItem(), IDexFind {
 
     data class MenuItem(
         val id: Int,
-        val text: String, val drawable: Drawable,
+        val text: String, val drawable: Lazy<Drawable?>,
         val onClick: (XC_MethodHook.MethodHookParam, Int, List<JSONObject>) -> Unit
     )
 

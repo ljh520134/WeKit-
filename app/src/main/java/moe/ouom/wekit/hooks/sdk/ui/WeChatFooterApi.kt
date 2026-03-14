@@ -51,9 +51,6 @@ object WeChatFooterApi : ApiHookItem() {
             } catch (e: Throwable) {
                 WeLogger.e(TAG, "Hook setUserName 失败，可能方法名被混淆", e)
             }
-
-            WeLogger.i(TAG, "ChatFooter Hook 初始化成功")
-
         } catch (e: Throwable) {
             WeLogger.e(TAG, "ChatFooter Hook 初始化失败", e)
         }

@@ -31,11 +31,11 @@ class CommonContextWrapper(base: Context?, themeResId: Int) : ContextWrapper(bas
     private val mTheme: Resources.Theme
     private var mInflater: LayoutInflater? = null
     private val mResources: Resources
-    private val mModuleContext: Context = ModuleRes.getContext()
+    private val mModuleContext = ModuleRes.moduleContext
 
     init {
         // 锁定资源：只用模块的资源
-        this.mResources = mModuleContext.resources
+        this.mResources = mModuleContext!!.resources
 
         // 创建独立 Theme
         this.mTheme = this.mResources.newTheme()
@@ -155,7 +155,7 @@ class CommonContextWrapper(base: Context?, themeResId: Int) : ContextWrapper(bas
             try {
                 if (constructor == null) {
                     val clazz = mClassLoader!!.loadClass(name)
-                    constructor = clazz.asSubclass<View?>(View::class.java)
+                    constructor = clazz.asSubclass(View::class.java)
                         .getConstructor(Context::class.java, AttributeSet::class.java)
                     constructor.isAccessible = true
                     sConstructorCache[name] = constructor
@@ -173,7 +173,7 @@ class CommonContextWrapper(base: Context?, themeResId: Int) : ContextWrapper(bas
 
     companion object {
         fun createAppCompatContext(base: Context): Context {
-            if (ModuleRes.getContext() == null) {
+            if (ModuleRes.moduleContext == null) {
                 return base
             }
             val themeId = ModuleRes.getId("Theme.WeKit", "style")

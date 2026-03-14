@@ -101,9 +101,6 @@ object FakeMomentsLikes : SwitchHookItem(), WeMomentsContextMenuApi.IMenuItemsPr
 
             snsUserProtobufClass = "com.tencent.mm.plugin.sns.ui.SnsCommentFooter".toClass()
                 .getMethod("getCommentInfo").returnType
-
-            WeLogger.d(TAG, "反射初始化成功")
-
         } catch (e: Exception) {
             WeLogger.e(TAG, "反射初始化失败", e)
         }

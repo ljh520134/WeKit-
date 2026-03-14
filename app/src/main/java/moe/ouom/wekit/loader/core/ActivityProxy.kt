@@ -306,7 +306,6 @@ object ActivityProxy {
             }
         }
 
-        // Delegation boilerplate
         override fun onCreate(arguments: Bundle?) = base.onCreate(arguments)
         override fun start() = base.start()
         override fun onStart() = base.onStart()

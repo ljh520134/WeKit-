@@ -53,7 +53,7 @@ import moe.ouom.wekit.hooks.sdk.ui.WeMainActivityBeautifyApi
 import moe.ouom.wekit.ui.content.AlertDialogContent
 import moe.ouom.wekit.ui.content.LiquidBottomTab
 import moe.ouom.wekit.ui.content.LiquidBottomTabs
-import moe.ouom.wekit.ui.utils.XposedLifecycleOwner
+import moe.ouom.wekit.ui.utils.MainActivityLifecycleOwnerProvider
 import moe.ouom.wekit.ui.utils.setLifecycleOwner
 import moe.ouom.wekit.ui.utils.showComposeDialog
 
@@ -99,7 +99,7 @@ object BeautifyMainScreenTabBar : ClickableHookItem() {
                     val viewParent = viewPager.parent as ViewGroup
                     val bottomTabViewGroup = viewParent.getChildAt(1) as ViewGroup
 
-                    val lifecycleOwner = XposedLifecycleOwner().apply { onCreate(); onResume() }
+                    val lifecycleOwner = MainActivityLifecycleOwnerProvider.lifecycleOwner
                     val decorView = activity.window.decorView
 
                     decorView.setLifecycleOwner(lifecycleOwner)

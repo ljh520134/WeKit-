@@ -12,26 +12,16 @@ import org.luckypray.dexkit.DexKitBridge
 import java.lang.reflect.Method
 import java.lang.reflect.Modifier
 
-/**
- * 微信 AppMsg (XML消息) 发送 API
- * 适配版本：WeChat 待补充 ~ 8.0.68
- */
 @SuppressLint("DiscouragedApi")
 @HookItem(path = "API/AppMsg 发送服务", desc = "提供 XML 卡片消息发送能力")
 object WeAppMsgApi : ApiHookItem(), IDexFind {
 
-    // -------------------------------------------------------------------------------------
-    // DexKit 定义
-    // -------------------------------------------------------------------------------------
     private val classAppMsgContent by dexClass() // op0.q
     private val classAppMsgLogic by dexClass()   // com.tencent.mm.pluginsdk.model.app.k0
 
     private val methodParseXml by dexMethod()    // op0.q.u(String)
     private val methodSendAppMsg by dexMethod()  // k0.J(...)
 
-    // -------------------------------------------------------------------------------------
-    // 运行时缓存
-    // -------------------------------------------------------------------------------------
     private var parseXmlMethod: Method? = null
     private var sendAppMsgMethod: Method? = null
     private var appMsgContentClass: Class<*>? = null
@@ -96,24 +86,11 @@ object WeAppMsgApi : ApiHookItem(), IDexFind {
     }
 
     override fun onLoad() {
-        try {
-            // 初始化方法引用
+        runCatching {
             parseXmlMethod = methodParseXml.method
             sendAppMsgMethod = methodSendAppMsg.method
             appMsgContentClass = classAppMsgContent.clazz
-
-            if (isValid()) {
-                WeLogger.i(TAG, "WeAppMsgApi 初始化成功")
-            } else {
-                WeLogger.e(TAG, "WeAppMsgApi 初始化不完整，部分功能不可用")
-            }
-        } catch (e: Exception) {
-            WeLogger.e(TAG, "Entry 初始化异常", e)
-        }
-    }
-
-    private fun isValid(): Boolean {
-        return parseXmlMethod != null && sendAppMsgMethod != null
+        }.onFailure {e -> WeLogger.e(TAG, "exception during init", e) }
     }
 
     /**
@@ -127,11 +104,6 @@ object WeAppMsgApi : ApiHookItem(), IDexFind {
         data: ByteArray?,
         xmlContent: String
     ): Boolean {
-        if (!isValid()) {
-            WeLogger.e(TAG, "API 未就绪，无法发送")
-            return false
-        }
-
         return try {
             WeLogger.i(TAG, "准备发送 AppMsg -> $toUser")
             val contentObj = parseXmlMethod!!.invoke(null, xmlContent)
@@ -141,16 +113,15 @@ object WeAppMsgApi : ApiHookItem(), IDexFind {
             }
 
             sendAppMsgMethod!!.invoke(
-                null,           // static
-                contentObj,     // content
-                appId,          // appId
-                title,          // title/appName
-                toUser,         // toUser
-                url,           // url
-                data            // thumbDat
+                null,         // static
+                contentObj, // content
+                appId,            // appId
+                title,            // title/appName
+                toUser,           // toUser
+                url,              // url
+                data              // thumbDat
             )
 
-            WeLogger.i(TAG, "AppMsg 发送指令已调用")
             true
         } catch (e: Throwable) {
             WeLogger.e(TAG, "发送 AppMsg 失败", e)

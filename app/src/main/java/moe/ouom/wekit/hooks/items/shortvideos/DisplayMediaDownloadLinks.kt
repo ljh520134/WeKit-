@@ -37,7 +37,7 @@ object DisplayMediaDownloadLinks : SwitchHookItem(),
             WeShortVideosShareMenuApi.MenuItem(
                 777004,
                 "复制链接",
-                ModuleRes.getDrawable("link_24px")
+                lazy { ModuleRes.getDrawable("link_24px") }
             )
             { _, mediaType, mediaList ->
                 if (mediaType == 2) {

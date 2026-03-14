@@ -149,13 +149,13 @@ object NotificationEvolved : SwitchHookItem() {
                         ?: ""
 
                 val matchResult = MULTI_MESSAGE_REGEX.find(rawText)
-                var cleanText = if (matchResult != null) {
+                var text = if (matchResult != null) {
                     matchResult.groupValues[1]
                 } else {
                     rawText
                 }
 
-                cleanText = cleanText
+                text = text
                     .replaceRichContent()
                     .replaceEmojis()
 
@@ -183,10 +183,9 @@ object NotificationEvolved : SwitchHookItem() {
 
                 val senderName: String
                 if (isGroupChat(convWxId)) {
-                    senderName = parseGroupChatMessageSender(rawText, convWxId) ?: run {
-                        WeLogger.w(TAG, "failed to parse message sender, rawText=${rawText.take(20)}, convWxId=$convWxId")
-                        notifTitle
-                    }
+                    val result = parseGroupChatMessage(convWxId, text)
+                    senderName = result.first
+                    text = result.second
 
                     messagingStyle.isGroupConversation = true
                     messagingStyle.conversationTitle = notifTitle
@@ -196,7 +195,7 @@ object NotificationEvolved : SwitchHookItem() {
                 }
 
                 val senderPerson = Person.Builder().setName(senderName).build()
-                messagingStyle.addMessage(cleanText, System.currentTimeMillis(), senderPerson)
+                messagingStyle.addMessage(text, System.currentTimeMillis(), senderPerson)
 
                 builder.style = messagingStyle
 
@@ -239,16 +238,23 @@ object NotificationEvolved : SwitchHookItem() {
             }
     }
 
-    private val GROUP_CHAT_MSG_REGEX = Regex("""^(.+?): .+""")
+    private val GROUP_CHAT_MSG_REGEX = Regex("""^(.+?): (.+)$""")
 
-    private fun parseGroupChatMessageSender(rawText: String, convWxId: String): String? {
+    private fun parseGroupChatMessage(convWxId: String, rawText: String): Pair<String, String> {
         val match = GROUP_CHAT_MSG_REGEX.find(rawText)
         if (match != null) {
             val sender = match.groupValues[1]
+            val content = match.groupValues[2]
             lastGroupChatSender[convWxId] = sender
-            return sender
+            return sender to content
         }
-        return lastGroupChatSender[convWxId]
+
+        return lastGroupChatSender[convWxId].run {
+            if (this == null) {
+                return@run convWxId to rawText
+            }
+            this to rawText
+        }
     }
 
     private val MAP_REGEX = Regex("\\[[^]]+]")

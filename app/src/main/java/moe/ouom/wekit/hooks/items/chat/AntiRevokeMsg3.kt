@@ -69,8 +69,8 @@ object AntiRevokeMsg3 : SwitchHookItem(), IDexFind {
 
                         resultMap[typeKey] = null
 
-                        val db = WeDatabaseApi.dbInstance!!
-                        val cursor = WeDatabaseApi.rawQueryMethod!!.invoke(
+                        val db = WeDatabaseApi.dbInstance
+                        val cursor = WeDatabaseApi.rawQueryMethod.invoke(
                             db,
                             "SELECT createTime FROM message WHERE msgSvrId = ?",
                             arrayOf(msgSvrId)

@@ -24,7 +24,7 @@ object WeChatMessageContextMenuApi : ApiHookItem(), IDexFind {
 
     data class MenuItem(
         val id: Int,
-        val text: String, val drawable: Lazy<Drawable>,
+        val text: String, val drawable: Lazy<Drawable?>,
         val shouldShow: (MessageInfo) -> Boolean,
         val onClick: (View, Any, MessageInfo) -> Unit /* 2: ChattingContext */
     )
