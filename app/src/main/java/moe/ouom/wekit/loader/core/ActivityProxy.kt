@@ -21,7 +21,7 @@ import android.os.TestLooperManager
 import android.view.KeyEvent
 import android.view.MotionEvent
 import dev.ujhhgtg.nameof.nameof
-import moe.ouom.wekit.constants.PackageConstants
+import moe.ouom.wekit.constants.PackageNames
 import moe.ouom.wekit.host.HostInfo
 import moe.ouom.wekit.utils.common.ModuleRes
 import moe.ouom.wekit.utils.log.WeLogger
@@ -174,7 +174,7 @@ object ActivityProxy {
         private fun createTokenWrapper(raw: Intent): Intent {
             val token = IntentTokenCache.put(Intent(raw))
             return Intent().apply {
-                component = ComponentName(PackageConstants.PACKAGE_NAME_WECHAT, ActProxyMgr.STUB_DEFAULT_ACTIVITY)
+                component = ComponentName(PackageNames.WECHAT, ActProxyMgr.STUB_DEFAULT_ACTIVITY)
                 flags = raw.flags
                 action = raw.action
                 setDataAndType(raw.data, raw.type)
@@ -302,7 +302,7 @@ object ActivityProxy {
 
         private fun checkAndInjectResources(activity: Activity) {
             if (ActProxyMgr.isModuleProxyActivity(activity.javaClass.name)) {
-                ModuleRes.init(activity, PackageConstants.PACKAGE_NAME_SELF)
+                ModuleRes.init(activity, PackageNames.THIS)
             }
         }
 
@@ -396,12 +396,12 @@ object ActivityProxy {
     object CounterfeitActivityInfoFactory {
         fun makeProxyActivityInfo(className: String) = ActivityInfo().apply {
             name = className
-            packageName = PackageConstants.PACKAGE_NAME_WECHAT
+            packageName = PackageNames.WECHAT
             enabled = true
             exported = false
-            processName = PackageConstants.PACKAGE_NAME_WECHAT
+            processName = PackageNames.WECHAT
             applicationInfo = runCatching { HostInfo.appInfo }.getOrElse {
-                ApplicationInfo().apply { packageName = PackageConstants.PACKAGE_NAME_WECHAT }
+                ApplicationInfo().apply { packageName = PackageNames.WECHAT }
             }
             launchMode = ActivityInfo.LAUNCH_MULTIPLE
         }

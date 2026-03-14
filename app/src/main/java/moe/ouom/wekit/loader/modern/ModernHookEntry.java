@@ -6,7 +6,7 @@ import androidx.annotation.NonNull;
 
 import io.github.libxposed.api.XposedInterface;
 import io.github.libxposed.api.XposedModule;
-import moe.ouom.wekit.constants.PackageConstants;
+import moe.ouom.wekit.constants.PackageNames;
 import moe.ouom.wekit.loader.ModuleLoader;
 import moe.ouom.wekit.loader.startup.StartupInfo;
 import moe.ouom.wekit.utils.log.WeLogger;
@@ -26,7 +26,7 @@ public class ModernHookEntry extends XposedModule {
     public void onPackageLoaded(@NonNull PackageLoadedParam param) {
         var packageName = param.getPackageName();
         var processName = param.getApplicationInfo().processName;
-        if (packageName.equals(PackageConstants.PACKAGE_NAME_WECHAT)) {
+        if (packageName.equals(PackageNames.WECHAT)) {
             if (param.isFirstPackage()) {
                 var modulePath = this.getApplicationInfo().sourceDir;
                 StartupInfo.setModulePath(modulePath);

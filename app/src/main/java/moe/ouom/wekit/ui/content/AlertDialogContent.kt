@@ -1,10 +1,12 @@
 package moe.ouom.wekit.ui.content
 
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.LocalContentColor
 import androidx.compose.material3.LocalTextStyle
@@ -17,7 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 
-// drop-in replacement for AlertDialog that should be used in showComposeDialog(context, true)
+// drop-in replacement for AlertDialog that should be used in showComposeDialog()
 // to avoid creating multiple Windows
 @Composable
 fun AlertDialogContent(
@@ -32,8 +34,9 @@ fun AlertDialogContent(
         shape = MaterialTheme.shapes.extraLarge,
         tonalElevation = 6.dp,
         modifier = modifier
-            .fillMaxWidth()
             .padding(24.dp)
+            .widthIn(min = 280.dp, max = 560.dp)
+            .fillMaxWidth()
     ) {
         Column(
             modifier = Modifier.padding(20.dp),
@@ -44,15 +47,13 @@ fun AlertDialogContent(
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                icon?.let {
-                    CompositionLocalProvider(
-                        LocalContentColor provides
-                                MaterialTheme.colorScheme.primary
-                    ) {
-                        it()
+                if (icon != null) {
+                    Box(Modifier.fillMaxWidth(), contentAlignment = Alignment.Center) {
+                        CompositionLocalProvider(LocalContentColor provides MaterialTheme.colorScheme.primary) {
+                            icon()
+                        }
                     }
                 }
-
                 title?.let {
                     val customStyle = MaterialTheme.typography.headlineSmall.copy(
                         fontWeight = FontWeight.Bold

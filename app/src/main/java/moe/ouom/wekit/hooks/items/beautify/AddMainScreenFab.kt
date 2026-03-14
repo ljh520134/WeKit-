@@ -56,7 +56,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.highcapable.kavaref.KavaRef.Companion.asResolver
 import dev.ujhhgtg.nameof.nameof
-import moe.ouom.wekit.constants.PackageConstants
+import moe.ouom.wekit.constants.PackageNames
 import moe.ouom.wekit.core.model.SwitchHookItem
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import moe.ouom.wekit.hooks.sdk.base.WeConversationApi
@@ -101,7 +101,7 @@ object AddMainScreenFab : SwitchHookItem() {
 
     private fun startActivityByName(context: Context, className: String) {
         val intent = Intent().apply {
-            setClassName(PackageConstants.PACKAGE_NAME_WECHAT, className)
+            setClassName(PackageNames.WECHAT, className)
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
         context.startActivity(intent)

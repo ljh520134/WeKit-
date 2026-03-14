@@ -1,13 +1,11 @@
+
 import com.android.build.api.dsl.ApplicationExtension
 import com.android.build.gradle.internal.api.ApkVariantOutputImpl
 import com.android.build.gradle.internal.cxx.configure.gradleLocalProperties
-import org.gradle.internal.extensions.core.serviceOf
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 import org.jetbrains.kotlin.gradle.tasks.KotlinJvmCompile
-import java.io.ByteArrayOutputStream
 import java.security.MessageDigest
-import java.util.Locale
 
 plugins {
     alias(libs.plugins.android.application)
@@ -189,32 +187,6 @@ androidComponents {
     }
 
     onVariants { variant ->
-        if (!variant.debuggable) return@onVariants
-
-        val vName = variant.name
-        val vCap = vName.capitalizeUS()
-        val installTaskName = "install$vCap"
-
-        val installAndRestart = tasks.register("install${vCap}AndRestartWeChat") {
-            group = "wekit"
-            description = "Installs ${variant.name} and force-stops WeChat"
-
-            dependsOn(installTaskName)
-            finalizedBy(killWeChat)
-
-            onlyIf { hasConnectedDevice() }
-        }
-
-        tasks.matching { it.name == "assemble$vCap" }.configureEach {
-            finalizedBy(installAndRestart)
-        }
-
-        tasks.matching { it.name == installTaskName }.configureEach {
-            onlyIf { hasConnectedDevice() }
-        }
-    }
-
-    onVariants { variant ->
         val buildTypeName = variant.buildType?.uppercase()
         variant.outputs.forEach { output ->
             if (this is ApkVariantOutputImpl) {
@@ -223,12 +195,6 @@ androidComponents {
                 (output as ApkVariantOutputImpl).outputFileName = "WeKit-${buildTypeName}-${versionName}.apk"
             }
         }
-    }
-}
-
-gradle.taskGraph.whenReady {
-    if (!hasConnectedDevice()) {
-        println("⚠️ No device detected — all install tasks will be skipped")
     }
 }
 
@@ -253,34 +219,6 @@ tasks.withType<JavaCompile>().configureEach {
         }
     }
 }
-
-fun hasConnectedDevice(): Boolean {
-    val adbPath = adbProvider.orNull?.asFile?.absolutePath ?: return false
-    return runCatching {
-        val proc = ProcessBuilder(adbPath, "devices").redirectErrorStream(true).start()
-        proc.waitFor(5, TimeUnit.SECONDS)
-        proc.inputStream.bufferedReader().readLines().any { it.trim().endsWith("\tdevice") }
-    }.getOrElse { false }
-}
-
-val killWeChat: TaskProvider<Task> = tasks.register("killWeChat") {
-    group = "wekit"
-    description = "Force-stop WeChat on a connected device; skips gracefully if none."
-    onlyIf { hasConnectedDevice() }
-    val execOperations = project.serviceOf<ExecOperations>()
-    doLast {
-        val adbFile = adbProvider.orNull?.asFile ?: return@doLast
-        execOperations.exec {
-            commandLine(adbFile, "shell", "am", "force-stop", "com.tencent.mm")
-            isIgnoreExitValue = true
-            standardOutput = ByteArrayOutputStream(); errorOutput = ByteArrayOutputStream()
-        }
-
-        logger.lifecycle("✅ killWeChat executed.")
-    }
-}
-
-fun String.capitalizeUS() = replaceFirstChar { if (it.isLowerCase()) it.titlecase(Locale.US) else it.toString() }
 
 // --- tasks ---
 
@@ -390,6 +328,7 @@ dependencies {
     implementation(libs.androidx.compose.runtime)
     implementation(libs.androidx.preference)
     implementation(libs.androidx.biometric)
+    implementation(libs.androidx.browser)
     implementation(libs.accompanist.drawablepainter)
     implementation(libs.aboutlibraries.core)
     implementation(libs.aboutlibraries.compose.m3)

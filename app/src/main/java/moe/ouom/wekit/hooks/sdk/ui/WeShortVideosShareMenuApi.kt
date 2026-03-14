@@ -64,7 +64,7 @@ object WeShortVideosShareMenuApi : ApiHookItem(), IResolvesDex {
                                     .firstMethod {
                                         parameters(Int::class, CharSequence::class, Drawable::class)
                                     }
-                                    .invoke(item.id, item.text, item.drawable)
+                                    .invoke(item.id, item.text, item.drawable.value)
                             }
                         } catch (ex: Exception) {
                             WeLogger.e(

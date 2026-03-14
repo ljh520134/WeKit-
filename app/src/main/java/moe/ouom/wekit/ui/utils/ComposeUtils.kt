@@ -9,7 +9,6 @@ import android.view.Window
 import android.view.WindowManager
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -36,7 +35,8 @@ fun showComposeDialog(
     dismissable: Boolean = true,
     content: @Composable ShowComposeDialogScope.() -> Unit
 ) {
-    val ctx = if (context == null)
+    val ctx =
+        if (context == null)
             HostInfo.application
         else
             CommonContextWrapper.createAppCompatContext(context)
@@ -68,7 +68,7 @@ fun showComposeDialog(
         // setCanceledOnTouchOutside(dismissable)
         setCancelable(dismissable)
 
-        val scope = ShowComposeDialogScope(this, window!!, ::dismiss)
+        val scope = ShowComposeDialogScope(ctx, this, window!!, ::dismiss)
 
         setContentView(
             ComposeView(ctx).apply {
@@ -94,6 +94,7 @@ fun showComposeDialog(
 }
 
 class ShowComposeDialogScope(
+    val context: Context,
     val dialog: Dialog,
     val window: Window,
     val onDismiss: () -> Unit

@@ -4,7 +4,7 @@ import android.app.Application
 import android.content.pm.ApplicationInfo
 import android.content.pm.PackageManager
 import androidx.core.content.pm.PackageInfoCompat
-import moe.ouom.wekit.constants.PackageConstants
+import moe.ouom.wekit.constants.PackageNames
 import moe.ouom.wekit.utils.log.WeLogger
 
 enum class HostSpecies { WeChat, WeKit, Unknown }
@@ -63,8 +63,8 @@ object HostInfo {
             versionCode32 = PackageInfoCompat.getLongVersionCode(packageInfo).toInt(),
             versionName = packageInfo.versionName.orEmpty(),
             hostSpecies = when (packageName) {
-                PackageConstants.PACKAGE_NAME_WECHAT -> HostSpecies.WeChat
-                PackageConstants.PACKAGE_NAME_SELF   -> HostSpecies.WeKit
+                PackageNames.WECHAT -> HostSpecies.WeChat
+                PackageNames.THIS   -> HostSpecies.WeKit
                 else                                 -> HostSpecies.Unknown
             }
         )

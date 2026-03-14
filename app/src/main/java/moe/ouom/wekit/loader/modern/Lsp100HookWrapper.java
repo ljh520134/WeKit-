@@ -35,6 +35,7 @@ public class Lsp100HookWrapper {
     private Lsp100HookWrapper() {
     }
 
+    @SuppressWarnings("unchecked")
     public static UnhookHandle hookAndRegisterMethodCallback(
             final @NonNull Member method,
             final @NonNull IHookBridge.IMemberHookCallback callback,

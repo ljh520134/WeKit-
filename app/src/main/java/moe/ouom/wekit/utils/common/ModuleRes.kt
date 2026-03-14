@@ -17,7 +17,7 @@ object ModuleRes {
     private val TAG = nameof(ModuleRes)
 
     var moduleContext: Context? = null
-    private var resources: Resources? = null
+    var resources: Resources? = null
     private lateinit var packageName: String
 
     /**

@@ -38,17 +38,12 @@ object ExternalSharingEvolved : SwitchHookItem() {
                             "com.tencent.mm.ui.tools.ShareImgUI"
                         )
                     )
-                    .setTextData("hi")
+                    .setType("text/plain")
+                    .putExtra(Intent.EXTRA_TEXT, "Hello")
             )
             .setLongLived(true)
             .build()
 
         sm.addDynamicShortcuts(listOf(shortcut))
-    }
-
-    private fun Intent.setTextData(text: String): Intent {
-        type = "text/plain"
-        putExtra(Intent.EXTRA_TEXT, text)
-        return this
     }
 }

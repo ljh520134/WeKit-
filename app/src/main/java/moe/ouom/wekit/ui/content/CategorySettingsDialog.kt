@@ -49,7 +49,7 @@ class CategorySettingsDialog(
                 val allowed = item.onBeforeToggle(checked, context)
                 if (allowed) {
                     WePrefs.putBool(configKey, checked)
-                    item.isEnabled = checked
+                    item.setIsEnabled(checked)
                 }
                 allowed
             },
@@ -82,7 +82,7 @@ class CategorySettingsDialog(
                 val allowed = item.onBeforeToggle(checked, context)
                 if (allowed) {
                     WePrefs.putBool(configKey, checked)
-                    item.isEnabled = checked
+                    item.setIsEnabled(checked)
                 }
                 allowed
             },

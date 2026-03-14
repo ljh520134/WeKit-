@@ -2,14 +2,18 @@ package moe.ouom.wekit.hooks.items.chat
 
 import android.annotation.SuppressLint
 import android.app.ActivityOptions
+import android.app.PendingIntent
 import android.content.ClipData
 import android.content.ClipboardManager
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.pm.ResolveInfo
+import android.graphics.BitmapFactory
 import android.net.Uri
 import android.os.Build
+import androidx.browser.customtabs.CustomTabsIntent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -22,16 +26,17 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.OpenInNew
 import androidx.compose.material.icons.filled.Language
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import moe.ouom.wekit.ui.content.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.asImageBitmap
 import androidx.compose.ui.unit.dp
@@ -44,7 +49,9 @@ import moe.ouom.wekit.hooks.core.annotation.HookItem
 import moe.ouom.wekit.hooks.sdk.ui.WeStartActivityApi
 import moe.ouom.wekit.host.HostInfo
 import moe.ouom.wekit.ui.content.AlertDialogContent
+import moe.ouom.wekit.ui.content.TextButton
 import moe.ouom.wekit.ui.utils.showComposeDialog
+import moe.ouom.wekit.utils.common.ModuleRes
 import moe.ouom.wekit.utils.common.ToastUtils
 import moe.ouom.wekit.utils.log.WeLogger
 
@@ -82,9 +89,15 @@ object LinkExternalAppJump : SwitchHookItem(),
     ) {
         // prevent loop
         if (intent.getBooleanExtra("skip_link_hook", false)) return
+        // FIXME: doesn't work when opening urls from qr code scanning,
+        //        so we disable this for now
+        if (intent.extras?.run {
+            containsKey("key_scan_qr_code_get_a8key_resp") ||
+                    containsKey("key_scan_qr_code_get_a8key_req")
+        } ?: false) return
 
-        val componentName = intent.component ?: return
-        val shortClassName = componentName.shortClassName ?: return
+        val component = intent.component ?: return
+        val shortClassName = component.shortClassName ?: return
         if (!shortClassName.contains("MMWebViewUI")) return
 
         val rawUrl = intent.getStringExtra("rawUrl") ?: return
@@ -96,7 +109,6 @@ object LinkExternalAppJump : SwitchHookItem(),
         val newIntent = Intent(Intent.ACTION_VIEW)
         newIntent.addCategory(Intent.CATEGORY_BROWSABLE)
         newIntent.data = url
-        newIntent.flags = Intent.FLAG_ACTIVITY_NEW_TASK
 
         val pm = HostInfo.application.packageManager
 
@@ -105,7 +117,8 @@ object LinkExternalAppJump : SwitchHookItem(),
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
                 pm.queryIntentActivities(
                     newIntent,
-                    PackageManager.ResolveInfoFlags.of(PackageManager.MATCH_DEFAULT_ONLY.toLong())
+                    PackageManager.ResolveInfoFlags.of(
+                        PackageManager.MATCH_DEFAULT_ONLY.toLong())
                 )
             } else {
                 @Suppress("DEPRECATION")
@@ -125,6 +138,48 @@ object LinkExternalAppJump : SwitchHookItem(),
                             }
                         }
 
+                        item {
+                            CustomTabsRow {
+                                val forwardBitmap =
+                                    BitmapFactory.decodeResource(ModuleRes.resources,
+                                        ModuleRes.getId("forward_24px", "drawable"))
+                                val pendingIntent = PendingIntent.getActivity(
+                                    context,
+                                    0,
+                                    Intent(Intent.ACTION_SEND)
+                                        .setComponent(
+                                            ComponentName(
+                                                context.packageName,
+                                                // although this activity is called 'ShareImg',
+                                                // it is actually used to handle all types
+                                                "com.tencent.mm.ui.tools.ShareImgUI"
+                                            )
+                                        )
+                                        .setType("text/plain")
+                                        .putExtra(Intent.EXTRA_TEXT, url.toString()),
+                                    PendingIntent.FLAG_IMMUTABLE
+                                )
+
+                                val intent = CustomTabsIntent.Builder()
+                                    .setShowTitle(true)
+                                    .setShareState(CustomTabsIntent.SHARE_STATE_ON)
+                                    .setBookmarksButtonEnabled(true)
+                                    .setDownloadButtonEnabled(true)
+                                    .setColorScheme(CustomTabsIntent.COLOR_SCHEME_SYSTEM)
+                                    .setActionButton(
+                                        forwardBitmap,
+                                        "转发",
+                                        pendingIntent,
+                                        true
+                                    )
+                                    .build()
+
+                                intent.launchUrl(context, url)
+
+                                onDismiss()
+                            }
+                        }
+
                         if (!resolveInfos.isEmpty())
                             item { HorizontalDivider(modifier = Modifier.padding(vertical = 8.dp)) }
 
@@ -134,7 +189,7 @@ object LinkExternalAppJump : SwitchHookItem(),
                                     intent.putExtra("skip_link_hook", true)
                                     context.startActivity(intent)
                                 } catch (e: Exception) {
-                                    WeLogger.e(TAG, "打开内置浏览器失败: ${e.message}")
+                                    WeLogger.e(TAG, "failed to open internal webview", e)
                                 }
                                 onDismiss()
                             }
@@ -162,12 +217,13 @@ object LinkExternalAppJump : SwitchHookItem(),
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .clip(MaterialTheme.shapes.large)
                 .clickable(onClick = onClick)
                 .padding(vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
-                imageVector = Icons.Default.Language,
+                imageVector = Icons.AutoMirrored.Default.OpenInNew,
                 contentDescription = null,
                 modifier = Modifier
                     .size(40.dp)
@@ -189,10 +245,43 @@ object LinkExternalAppJump : SwitchHookItem(),
     }
 
     @Composable
+    private fun CustomTabsRow(onClick: () -> Unit) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(MaterialTheme.shapes.large)
+                .clickable(onClick = onClick)
+                .padding(vertical = 8.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Default.Language,
+                contentDescription = null,
+                modifier = Modifier
+                    .size(40.dp)
+                    .padding(4.dp),
+                tint = MaterialTheme.colorScheme.primary
+            )
+
+            Spacer(modifier = Modifier.width(12.dp))
+
+            Column {
+                Text(text = "系统默认 (Custom Tabs)", style = MaterialTheme.typography.bodyLarge)
+                Text(
+                    text = "使用系统默认浏览器的 Custom Tabs 模式打开",
+                    style = MaterialTheme.typography.labelSmall,
+                    color = Color.Gray
+                )
+            }
+        }
+    }
+
+    @Composable
     private fun AppItemRow(info: ResolveInfo, pm: PackageManager, onClick: () -> Unit) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
+                .clip(MaterialTheme.shapes.large)
                 .clickable(onClick = onClick)
                 .padding(vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically

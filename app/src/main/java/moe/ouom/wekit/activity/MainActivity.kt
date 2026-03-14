@@ -2,6 +2,7 @@ package moe.ouom.wekit.activity
 
 import android.content.ComponentName
 import android.os.Bundle
+import android.os.UserManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -58,7 +59,7 @@ import io.github.libxposed.service.XposedService
 import kotlinx.coroutines.delay
 import moe.ouom.wekit.BuildConfig
 import moe.ouom.wekit.R
-import moe.ouom.wekit.constants.PackageConstants
+import moe.ouom.wekit.constants.PackageNames
 import moe.ouom.wekit.host.HostInfo
 import moe.ouom.wekit.ui.content.Button
 import moe.ouom.wekit.ui.content.IconButton
@@ -69,6 +70,7 @@ import moe.ouom.wekit.utils.formatEpoch
 import moe.ouom.wekit.utils.getEnabled
 import moe.ouom.wekit.utils.hookstatus.HookStatus
 import moe.ouom.wekit.utils.setEnabled
+
 
 class MainActivity : ComponentActivity() {
 
@@ -91,333 +93,340 @@ class MainActivity : ComponentActivity() {
             }
         }
     }
-}
 
-private const val packageName = "com.tencent.mm"
-private const val launchActivity = "com.tencent.mm.ui.LauncherUI"
+    @OptIn(ExperimentalMaterial3Api::class)
+    @Composable
+    fun AppContent(onUrlClick: (String) -> Unit) {
+        val context = LocalContext.current
+        val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
 
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-fun AppContent(onUrlClick: (String) -> Unit) {
-    val context = LocalContext.current
-    val scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+        // 状态管理
+        var showMenu by remember { mutableStateOf(false) }
+        // 关于弹窗的状态
+        var showAboutDialog by remember { mutableStateOf(false) }
 
-    // 状态管理
-    var showMenu by remember { mutableStateOf(false) }
-    // 关于弹窗的状态
-    var showAboutDialog by remember { mutableStateOf(false) }
-
-    var isLauncherIconEnabled by remember {
-        mutableStateOf(
-            ComponentName(
-                context,
-                "moe.ouom.wekit.activity.MainActivityAlias"
-            ).getEnabled(context)
-        )
-    }
-
-    // 激活状态数据类
-    data class ActivationState(
-        val isActivated: Boolean,
-        val title: String,
-        val desc: String,
-        val color: Color
-    )
-
-    fun getActivationState(): ActivationState {
-        val hostAppPackages = setOf(PackageConstants.PACKAGE_NAME_WECHAT)
-        val isHookEnabledByLegacyApi = HookStatus.isModuleEnabled || HostInfo.isHost
-        val xposedService: XposedService? = HookStatus.xposedService.value
-        val isHookEnabledByLibXposedApi = if (xposedService != null) {
-            hostAppPackages.intersect(xposedService.scope.toSet()).isNotEmpty()
-        } else false
-        val isHookEnabled = isHookEnabledByLegacyApi || isHookEnabledByLibXposedApi
-
-        return ActivationState(
-            isActivated = isHookEnabled,
-            title = if (isHookEnabled) "已激活" else "未激活",
-            desc = if (HostInfo.isHost) HostInfo.packageName else (if (isHookEnabledByLibXposedApi) "${xposedService?.frameworkName} ${xposedService?.frameworkVersion} (${xposedService?.frameworkVersionCode}), API ${xposedService?.apiVersion}" else HookStatus.hookProviderNameForLegacyApi),
-            color = if (isHookEnabled) Color(0xFF4CAF50) else Color(0xFFF44336)
-        )
-    }
-
-    var activationState by remember { mutableStateOf(getActivationState()) }
-
-    // 模拟 onResume 和定时刷新
-    LaunchedEffect(Unit) {
-        while (true) {
-            activationState = getActivationState()
-            delay(3000)
-        }
-    }
-
-    Scaffold(
-        modifier = Modifier.fillMaxSize(),
-        topBar = {
-            CenterAlignedTopAppBar(
-                title = {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                        Text(
-                            text = "WeKit",
-                            style = MaterialTheme.typography.titleLarge
-                        )
-                        Text(
-                            text = "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
-                            style = MaterialTheme.typography.labelSmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
-                        )
-                    }
-                },
-                colors = TopAppBarDefaults.topAppBarColors(
-                    scrolledContainerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp)
-                        .copy(alpha = 0.9f)
-                ),
-                actions = {
-                    IconButton(onClick = { showMenu = !showMenu }) {
-                        Icon(Icons.Default.MoreVert, contentDescription = "Menu")
-                    }
-                    DropdownMenu(
-                        expanded = showMenu,
-                        onDismissRequest = { showMenu = false }
-                    ) {
-                        DropdownMenuItem(
-                            text = { Text(if (isLauncherIconEnabled) "隐藏桌面图标" else "显示桌面图标") },
-                            onClick = {
-                                showMenu = false
-                                val componentName = ComponentName(
-                                    context,
-                                    "moe.ouom.wekit.activity.MainActivityAlias"
-                                )
-                                val newState = !isLauncherIconEnabled
-                                componentName.setEnabled(context, newState)
-                                isLauncherIconEnabled = newState
-                            }
-                        )
-                        DropdownMenuItem(
-                            text = { Text("关于") },
-                            onClick = {
-                                showMenu = false
-                                showAboutDialog = true
-                            }
-                        )
-                    }
-                },
-                scrollBehavior = scrollBehavior
+        var isLauncherIconEnabled by remember {
+            mutableStateOf(
+                ComponentName(
+                    context,
+                    "moe.ouom.wekit.activity.MainActivityAlias"
+                ).getEnabled(context)
             )
         }
-    ) { innerPadding ->
-        Box(modifier = Modifier.fillMaxSize()) {
-            // 内容层
-            Column(
-                modifier = Modifier
-                    .padding(innerPadding)
-                    .verticalScroll(rememberScrollState())
-                    .padding(top = 16.dp)
-                    .padding(horizontal = 16.dp),
-                verticalArrangement = Arrangement.spacedBy(12.dp)
-            ) {
-                // Activation Status Card
-                Card(
-                    colors = CardDefaults.cardColors(containerColor = activationState.color),
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Row(
-                        modifier = Modifier.padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = if (activationState.isActivated) Icons.Default.CheckCircle else Icons.Default.Warning,
-                            contentDescription = null,
-                            tint = Color.White,
-                            modifier = Modifier.size(32.dp)
-                        )
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Column {
+
+        // 激活状态数据类
+        data class ActivationState(
+            val isActivated: Boolean,
+            val title: String,
+            val desc: String,
+            val color: Color
+        )
+
+        fun getActivationState(): ActivationState {
+            val hostAppPackages = setOf(PackageNames.WECHAT)
+            val isHookEnabledByLegacyApi = HookStatus.isModuleEnabled || HostInfo.isHost
+            val xposedService: XposedService? = HookStatus.xposedService.value
+            val isHookEnabledByLibXposedApi = if (xposedService != null) {
+                hostAppPackages.intersect(xposedService.scope.toSet()).isNotEmpty()
+            } else false
+            val isHookEnabled = isHookEnabledByLegacyApi || isHookEnabledByLibXposedApi
+
+            return ActivationState(
+                isActivated = isHookEnabled,
+                title = if (isHookEnabled) "已激活" else "未激活",
+                desc = if (HostInfo.isHost) HostInfo.packageName else (if (isHookEnabledByLibXposedApi) "${xposedService?.frameworkName} ${xposedService?.frameworkVersion} (${xposedService?.frameworkVersionCode}), API ${xposedService?.apiVersion}" else HookStatus.hookProviderNameForLegacyApi),
+                color = if (isHookEnabled) Color(0xFF4CAF50) else Color(0xFFF44336)
+            )
+        }
+
+        var activationState by remember { mutableStateOf(getActivationState()) }
+
+        // 模拟 onResume 和定时刷新
+        LaunchedEffect(Unit) {
+            while (true) {
+                activationState = getActivationState()
+                delay(3000)
+            }
+        }
+
+        Scaffold(
+            modifier = Modifier.fillMaxSize(),
+            topBar = {
+                CenterAlignedTopAppBar(
+                    title = {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(
-                                text = activationState.title,
-                                style = MaterialTheme.typography.titleMedium,
-                                color = Color.White
+                                text = "WeKit",
+                                style = MaterialTheme.typography.titleLarge
                             )
                             Text(
-                                text = activationState.desc,
-                                style = MaterialTheme.typography.bodySmall,
-                                color = Color.White.copy(alpha = 0.8f)
+                                text = "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
+                                style = MaterialTheme.typography.labelSmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                            )
+                        }
+                    },
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        scrolledContainerColor = MaterialTheme.colorScheme.surfaceColorAtElevation(3.dp)
+                            .copy(alpha = 0.9f)
+                    ),
+                    actions = {
+                        IconButton(onClick = { showMenu = !showMenu }) {
+                            Icon(Icons.Default.MoreVert, contentDescription = "Menu")
+                        }
+                        DropdownMenu(
+                            expanded = showMenu,
+                            onDismissRequest = { showMenu = false }
+                        ) {
+                            DropdownMenuItem(
+                                text = { Text(if (isLauncherIconEnabled) "隐藏桌面图标" else "显示桌面图标") },
+                                onClick = {
+                                    showMenu = false
+                                    val componentName = ComponentName(
+                                        context,
+                                        "moe.ouom.wekit.activity.MainActivityAlias"
+                                    )
+                                    val newState = !isLauncherIconEnabled
+                                    componentName.setEnabled(context, newState)
+                                    isLauncherIconEnabled = newState
+                                }
+                            )
+                            DropdownMenuItem(
+                                text = { Text("关于") },
+                                onClick = {
+                                    showMenu = false
+                                    showAboutDialog = true
+                                }
+                            )
+                        }
+                    },
+                    scrollBehavior = scrollBehavior
+                )
+            }
+        ) { innerPadding ->
+            Box(modifier = Modifier.fillMaxSize()) {
+                // 内容层
+                Column(
+                    modifier = Modifier
+                        .padding(innerPadding)
+                        .verticalScroll(rememberScrollState())
+                        .padding(top = 16.dp)
+                        .padding(horizontal = 16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    // Activation Status Card
+                    Card(
+                        colors = CardDefaults.cardColors(containerColor = activationState.color),
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = if (activationState.isActivated) Icons.Default.CheckCircle else Icons.Default.Warning,
+                                contentDescription = null,
+                                tint = Color.White,
+                                modifier = Modifier.size(32.dp)
+                            )
+                            Spacer(modifier = Modifier.width(16.dp))
+                            Column {
+                                Text(
+                                    text = activationState.title,
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = Color.White
+                                )
+                                Text(
+                                    text = activationState.desc,
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = Color.White.copy(alpha = 0.8f)
+                                )
+                            }
+                        }
+                    }
+
+                    // Build Info Card
+                    ElevatedCard(
+                        modifier = Modifier.fillMaxWidth(),
+                    ) {
+                        Column(modifier = Modifier.padding(16.dp)) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Icon(
+                                    Icons.Default.Info,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                                Spacer(modifier = Modifier.width(16.dp))
+                                Text("构建信息", style = MaterialTheme.typography.titleMedium)
+                            }
+                            Spacer(modifier = Modifier.height(12.dp))
+
+                            InfoItem("构建 Git 哈希", BuildConfig.GIT_HASH)
+                            Spacer(modifier = Modifier.height(8.dp))
+                            InfoItem(
+                                "构建时间",
+                                formatEpoch(BuildConfig.BUILD_TIMESTAMP, true)
                             )
                         }
                     }
-                }
 
-                // Build Info Card
-                ElevatedCard(
-                    modifier = Modifier.fillMaxWidth(),
-                ) {
-                    Column(modifier = Modifier.padding(16.dp)) {
-                        Row(verticalAlignment = Alignment.CenterVertically) {
+                    var showErrorDialog by remember { mutableStateOf(false) }
+
+                    // Open WeChat Card
+                    ElevatedCard(
+                        onClick = {
+                            val userId = run {
+                                val userManager =
+                                    context.getSystemService(USER_SERVICE) as UserManager
+                                val userHandle = android.os.Process.myUserHandle()
+                                userManager.getSerialNumberForUser(userHandle)
+                            }
+                            Shell.cmd(
+                                "am force-stop --user $userId ${PackageNames.WECHAT}",
+                                "am start --user $userId -n ${PackageNames.WECHAT}/com.tencent.mm.ui.LauncherUI"
+                            ).submit { result ->
+                                if (!result.isSuccess) {
+                                    showErrorDialog = true
+                                }
+                                else {
+                                    finishAndRemoveTask()
+                                }
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.padding(16.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
                             Icon(
-                                Icons.Default.Info,
+                                imageVector = Icons.AutoMirrored.Default.OpenInNew,
                                 contentDescription = null,
+                                modifier = Modifier.size(24.dp),
                                 tint = MaterialTheme.colorScheme.primary
                             )
                             Spacer(modifier = Modifier.width(16.dp))
-                            Text("构建信息", style = MaterialTheme.typography.titleMedium)
-                        }
-                        Spacer(modifier = Modifier.height(12.dp))
-
-                        InfoItem("构建 Git 哈希", BuildConfig.GIT_HASH)
-                        Spacer(modifier = Modifier.height(8.dp))
-                        InfoItem(
-                            "构建时间",
-                            formatEpoch(BuildConfig.BUILD_TIMESTAMP, true)
-                        )
-                    }
-                }
-
-                var showErrorDialog by remember { mutableStateOf(false) }
-
-                // Open WeChat Card
-                ElevatedCard(
-                    onClick = {
-                        Shell.cmd(
-                            "am force-stop $packageName",
-                            "am start -n $packageName/$launchActivity"
-                        ).submit { result ->
-                            if (!result.isSuccess) {
-                                showErrorDialog = true
+                            Column {
+                                Text(
+                                    text = "打开宿主",
+                                    style = MaterialTheme.typography.titleMedium,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                                Text(
+                                    text = "一键强制停止并启动宿主应用",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
                             }
                         }
-                    },
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Row(
-                        modifier = Modifier.padding(16.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Default.OpenInNew,
-                            contentDescription = null,
-                            modifier = Modifier.size(24.dp),
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                        Spacer(modifier = Modifier.width(16.dp))
-                        Column {
-                            Text(
-                                text = "打开宿主",
-                                style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.onSurface
-                            )
-                            Text(
-                                text = "一键强制停止并启动宿主应用",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                        }
                     }
+
+                    if (showErrorDialog) {
+                        AlertDialog(
+                            onDismissRequest = { showErrorDialog = false },
+                            title = { Text("未授予 Root 权限") },
+                            text = { Text("请授予 Root 权限以一键强制停止并启动微信") },
+                            confirmButton = {
+                                Button(onClick = {
+                                    showErrorDialog = false
+                                }) { Text("确定") }
+                            })
+                    }
+
+                    HorizontalDivider(
+                        modifier = Modifier
+                            .padding(vertical = 4.dp)
+                            .alpha(0.1f),
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+
+                    // Link Cards
+                    LinkCard(
+                        iconRes = R.drawable.ic_github,
+                        title = "GitHub",
+                        subtitle = "修改于 Ujhhgtg/WeKit (原始: cwuom/WeKit)",
+                        onClick = { onUrlClick("https://github.com/Ujhhgtg/WeKit") }
+                    )
+                    LinkCard(
+                        iconRes = R.drawable.ic_telegram,
+                        title = "Telegram",
+                        subtitle = "@ouom_pub",
+                        onClick = { onUrlClick("https://t.me/ouom_pub") }
+                    )
                 }
 
-                if (showErrorDialog) {
+                // 关于弹窗逻辑
+                if (showAboutDialog) {
                     AlertDialog(
-                        onDismissRequest = { showErrorDialog = false },
-                        title = { Text("未授予 Root 权限") },
-                        text = { Text("请授予 Root 权限以一键强制停止并启动微信") },
+                        onDismissRequest = { showAboutDialog = false },
+                        title = { Text(text = "关于 WeKit") },
+                        text = {
+                            Column {
+                                Text("WeKit 是一款基于 Xposed 框架的开源免费微信模块")
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text("版本: ${BuildConfig.VERSION_NAME}")
+                                Text("构建版本: ${BuildConfig.VERSION_CODE}")
+                                Text("作者：Ujhhgtg@github, cwuom@github")
+                            }
+                        },
                         confirmButton = {
-                            Button(onClick = {
-                                showErrorDialog = false
-                            }) { Text("确定") }
-                        })
+                            TextButton(onClick = { showAboutDialog = false }) {
+                                Text("确定")
+                            }
+                        },
+                    )
                 }
-
-                HorizontalDivider(
-                    modifier = Modifier
-                        .padding(vertical = 4.dp)
-                        .alpha(0.1f),
-                    color = MaterialTheme.colorScheme.onSurface
-                )
-
-                // Link Cards
-                LinkCard(
-                    iconRes = R.drawable.ic_github,
-                    title = "GitHub",
-                    subtitle = "修改于 Ujhhgtg/WeKit (原始: cwuom/WeKit)",
-                    onClick = { onUrlClick("https://github.com/Ujhhgtg/WeKit") }
-                )
-                LinkCard(
-                    iconRes = R.drawable.ic_telegram,
-                    title = "Telegram",
-                    subtitle = "@ouom_pub",
-                    onClick = { onUrlClick("https://t.me/ouom_pub") }
-                )
-            }
-
-            // 关于弹窗逻辑
-            if (showAboutDialog) {
-                AlertDialog(
-                    onDismissRequest = { showAboutDialog = false },
-                    title = { Text(text = "关于 WeKit") },
-                    text = {
-                        Column {
-                            Text("WeKit 是一款基于 Xposed 框架的开源免费微信模块")
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text("版本: ${BuildConfig.VERSION_NAME}")
-                            Text("构建版本: ${BuildConfig.VERSION_CODE}")
-                            Text("作者：Ujhhgtg@github, cwuom@github")
-                        }
-                    },
-                    confirmButton = {
-                        TextButton(onClick = { showAboutDialog = false }) {
-                            Text("确定")
-                        }
-                    },
-                )
             }
         }
     }
-}
 
-@Composable
-fun InfoItem(label: String, value: String) {
-    Column {
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurface
-        )
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodySmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant
-        )
-    }
-}
-
-@Composable
-fun LinkCard(iconRes: Int, title: String, subtitle: String, onClick: () -> Unit) {
-    ElevatedCard(
-        onClick = onClick,
-        modifier = Modifier.fillMaxWidth()
-    ) {
-        Row(
-            modifier = Modifier.padding(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                painter = painterResource(id = iconRes),
-                contentDescription = null,
-                modifier = Modifier.size(24.dp),
-                tint = MaterialTheme.colorScheme.primary
+    @Composable
+    fun InfoItem(label: String, value: String) {
+        Column {
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurface
             )
-            Spacer(modifier = Modifier.width(16.dp))
-            Column {
-                Text(
-                    text = title,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = MaterialTheme.colorScheme.onSurface
+            Text(
+                text = value,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    }
+
+    @Composable
+    fun LinkCard(iconRes: Int, title: String, subtitle: String, onClick: () -> Unit) {
+        ElevatedCard(
+            onClick = onClick,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Row(
+                modifier = Modifier.padding(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    painter = painterResource(id = iconRes),
+                    contentDescription = null,
+                    modifier = Modifier.size(24.dp),
+                    tint = MaterialTheme.colorScheme.primary
                 )
-                Text(
-                    text = subtitle,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                Spacer(modifier = Modifier.width(16.dp))
+                Column {
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Text(
+                        text = subtitle,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
         }
     }
 }
+

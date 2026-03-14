@@ -8,7 +8,7 @@ import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XposedHelpers
 import dev.ujhhgtg.nameof.nameof
 import moe.ouom.wekit.config.RuntimeConfig
-import moe.ouom.wekit.constants.PackageConstants
+import moe.ouom.wekit.constants.PackageNames
 import moe.ouom.wekit.dexkit.cache.DexCacheManager
 import moe.ouom.wekit.hooks.core.HookItemsLoader
 import moe.ouom.wekit.utils.common.ModuleRes
@@ -20,7 +20,7 @@ object WeLauncher {
     fun init(cl: ClassLoader, context: Context) {
         val processType = SyncUtils.getProcessType()
         val currentProcessName = SyncUtils.getProcessName()
-        WeLogger.i(TAG, "launching in processName=$currentProcessName, type=$processType)")
+        WeLogger.i(TAG, "launching in processName=$currentProcessName, type=$processType")
 
         ParcelableFixer.init(cl, WeLauncher::class.java.classLoader!!)
         WeLogger.i(TAG, "ParcelableFixer installed")
@@ -51,7 +51,7 @@ object WeLauncher {
         XposedHelpers.findAndHookMethod(launcherUiClass, "onResume", object : XC_MethodHook() {
             override fun afterHookedMethod(param: MethodHookParam) {
                 val activity = param.thisObject as Activity
-                ModuleRes.init(activity, PackageConstants.PACKAGE_NAME_SELF)
+                ModuleRes.init(activity, PackageNames.THIS)
             }
         })
 

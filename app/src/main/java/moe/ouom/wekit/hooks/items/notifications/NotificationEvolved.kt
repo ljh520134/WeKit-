@@ -19,7 +19,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import moe.ouom.wekit.constants.PackageConstants
+import moe.ouom.wekit.constants.PackageNames
 import moe.ouom.wekit.core.model.SwitchHookItem
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import moe.ouom.wekit.hooks.sdk.base.WeConversationApi
@@ -47,15 +47,14 @@ object NotificationEvolved : SwitchHookItem() {
 
     private val lastGroupChatSender = LruCache<String, String>()
 
-    private const val ACTION_REPLY = "${PackageConstants.PACKAGE_NAME_WECHAT}.ACTION_WEKIT_REPLY"
+    private const val ACTION_REPLY = "${PackageNames.WECHAT}.ACTION_WEKIT_REPLY"
     private const val ACTION_MARK_READ =
-        "${PackageConstants.PACKAGE_NAME_WECHAT}.ACTION_WEKIT_MARK_READ"
+        "${PackageNames.WECHAT}.ACTION_WEKIT_MARK_READ"
 
     // cache friends to avoid repeating sql queries
     // TODO: build a sql statement to directly query target contact
     private val friends by lazy { WeDatabaseApi.getFriends() }
 
-    // TODO: see if we can retrieve avatar icon from local storage instead of remote
     private lateinit var meAvatarIcon: Icon
 
     private val meAvatarPath = PathUtils.moduleDataPath!!/"me_avatar"
@@ -89,18 +88,9 @@ object NotificationEvolved : SwitchHookItem() {
         }
     }
 
-    fun logStackTrace(tag: String = TAG) {
-        val trace = Thread.currentThread().stackTrace
-            .drop(2) // remove getStackTrace() and logStackTrace() itself
-            .joinToString("\n") { "  at ${it.className}.${it.methodName}(${it.fileName}:${it.lineNumber})" }
-        WeLogger.d(tag, "Stack trace:\n$trace")
-    }
-
-    private val MULTI_MESSAGE_REGEX = Regex("""^\[\d+条].+?: (.*)$""")
+    private val MESSAGE_REGEX = Regex("""^(\[\d+条])?(.+?)?: (.*)$""")
 
     override fun onLoad() {
-        val context = HostInfo.application
-
         CoroutineScope(Dispatchers.IO).launch {
             runCatching {
                 val bitmap: Bitmap
@@ -135,48 +125,60 @@ object NotificationEvolved : SwitchHookItem() {
             addAction(ACTION_MARK_READ)
         }
         ContextCompat.registerReceiver(
-            context, notificationReceiver, filter, ContextCompat.RECEIVER_NOT_EXPORTED
+            HostInfo.application, notificationReceiver, filter,
+            ContextCompat.RECEIVER_NOT_EXPORTED
         )
 
         Notification.Builder::class.asResolver()
             .firstMethod { name = "build" }
             .hookBefore { param ->
-                logStackTrace()
+                val context = HostInfo.application
 
                 val builder = param.thisObject as Notification.Builder
-                val notification = builder.asResolver().firstField { type = Notification::class }
+                val notif = builder.asResolver().firstField { type = Notification::class }
                     .get() as Notification
-                val channelId = notification.channelId
+                val channelId = notif.channelId
 
                 if (channelId != "message_channel_new_id") {
                     return@hookBefore
                 }
 
-                val notifTitle = notification.extras.getString(Notification.EXTRA_TITLE) ?: "Unknown"
-                val rawText =
-                    notification.extras.getCharSequence(Notification.EXTRA_TEXT)?.toString()
-                        ?: ""
-
-                val matchResult = MULTI_MESSAGE_REGEX.find(rawText)
-                var text = if (matchResult != null) {
-                    matchResult.groupValues[1]
-                } else {
-                    rawText
-                }
-
-                text = text
-                    .replaceRichContent()
-                    .replaceEmojis()
+                val notifTitle = notif.extras.getString(Notification.EXTRA_TITLE) ?: "未知对话 (请向模块开发者报告错误)"
+                val notifText =
+                    notif.extras.getCharSequence(Notification.EXTRA_TEXT)?.toString()
+                        ?: "未知内容 (请向模块开发者报告错误)"
 
                 // 1. Resolve exact WXID immediately during notification creation
                 val friend =
                     friends.firstOrNull { it.nickname == notifTitle || it.remarkName == notifTitle }
                 val convWxId = friend?.wxid
-
                 if (convWxId == null) {
                     WeLogger.w(TAG, "could not resolve wxid for $notifTitle, skipping enhancements")
                     return@hookBefore
                 }
+
+                val match = MESSAGE_REGEX.find(notifText)
+
+                var senderName: String
+                var text: String
+                if (match == null) {
+                    WeLogger.w(TAG, "failed to match message regex, using raw sender name & text content")
+                    senderName = notifTitle
+                    text = notifText
+                }
+                else {
+                    senderName = match.groupValues[2].takeIf { it.isNotEmpty() }
+                        ?.also { lastGroupChatSender[convWxId] = it }
+                        ?: lastGroupChatSender[convWxId] ?: run {
+                            WeLogger.w(TAG, "couldn't find sender name in either notification or cache")
+                            notifTitle
+                        }
+                    text = match.groupValues[3]
+                }
+
+                text = text
+                    .replaceRichContent()
+                    .replaceEmojis()
 
                 WeLogger.i(TAG, "enhancing notification for $notifTitle ($convWxId)")
 
@@ -190,12 +192,7 @@ object NotificationEvolved : SwitchHookItem() {
                     .build()
                 val messagingStyle = Notification.MessagingStyle(mePerson)
 
-                val senderName: String
                 if (isGroupChat(convWxId)) {
-                    val result = parseGroupChatMessage(convWxId, text)
-                    senderName = result.first
-                    text = result.second
-
                     messagingStyle.isGroupConversation = true
                     messagingStyle.conversationTitle = notifTitle
                 }
@@ -214,7 +211,7 @@ object NotificationEvolved : SwitchHookItem() {
                     .build()
 
                 val replyIntent = Intent(ACTION_REPLY).apply {
-                    setPackage(PackageConstants.PACKAGE_NAME_WECHAT)
+                    setPackage(PackageNames.WECHAT)
                     putExtra("extra_target_wxid", convWxId)
                 }
                 val replyPendingIntent = PendingIntent.getBroadcast(
@@ -229,7 +226,7 @@ object NotificationEvolved : SwitchHookItem() {
 
                 // 4. Mark as Read Action
                 val readIntent = Intent(ACTION_MARK_READ).apply {
-                    setPackage(PackageConstants.PACKAGE_NAME_WECHAT)
+                    setPackage(PackageNames.WECHAT)
                     putExtra("extra_target_wxid", convWxId)
                 }
                 val readPendingIntent = PendingIntent.getBroadcast(
@@ -247,25 +244,6 @@ object NotificationEvolved : SwitchHookItem() {
             }
     }
 
-    private val GROUP_CHAT_MSG_REGEX = Regex("""^(.+?): (.+)$""")
-
-    private fun parseGroupChatMessage(convWxId: String, rawText: String): Pair<String, String> {
-        val match = GROUP_CHAT_MSG_REGEX.find(rawText)
-        if (match != null) {
-            val sender = match.groupValues[1]
-            val content = match.groupValues[2]
-            lastGroupChatSender[convWxId] = sender
-            return sender to content
-        }
-
-        return lastGroupChatSender[convWxId].run {
-            if (this == null) {
-                return@run convWxId to rawText
-            }
-            this to rawText
-        }
-    }
-
     private val MAP_REGEX = Regex("\\[[^]]+]")
 
     private val RICH_CONTENT_MAP = mapOf(
@@ -275,7 +253,8 @@ object NotificationEvolved : SwitchHookItem() {
         "[语音]" to "\uD83D\uDDE3\uFE0F",
         "[位置]" to "\uD83D\uDDFA\uFE0F",
         "[红包]" to "\uD83E\uDDE7",
-        "[转账]" to "\uD83D\uDCB5"
+        "[转账]" to "\uD83D\uDCB5",
+        "[动画表情]" to "[贴纸表情]"
     )
 
     private fun String.replaceRichContent(): String {

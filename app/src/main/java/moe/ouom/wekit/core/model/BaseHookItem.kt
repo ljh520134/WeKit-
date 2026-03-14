@@ -451,10 +451,10 @@ abstract class BaseHookItem {
     /**
      * 真正执行接口方法的地方，这么写可以很便捷的捕获异常和子类重写
      */
-    protected open fun tryExecute(param: XC_MethodHook.MethodHookParam, hookAction: HookAction) {
+    open fun tryExecute(param: XC_MethodHook.MethodHookParam, hookAction: HookAction) {
         if (isLoad) {
             try {
-                hookAction.call(param)
+                hookAction(param)
             } catch (throwable: Throwable) {
                 ExceptionFactory.add(this, throwable)
             }
@@ -464,10 +464,7 @@ abstract class BaseHookItem {
     /**
      * Hook 动作接口
      */
-    fun interface HookAction {
-        @Throws(Throwable::class)
-        fun call(param: XC_MethodHook.MethodHookParam)
-    }
+    typealias HookAction = (param: XC_MethodHook.MethodHookParam) -> Unit
 
     companion object {
         private fun getParameterClasses(

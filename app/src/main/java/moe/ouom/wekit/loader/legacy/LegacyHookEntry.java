@@ -1,7 +1,7 @@
 package moe.ouom.wekit.loader.legacy;
 
-import static moe.ouom.wekit.constants.PackageConstants.PACKAGE_NAME_SELF;
-import static moe.ouom.wekit.constants.PackageConstants.PACKAGE_NAME_WECHAT;
+import static moe.ouom.wekit.constants.PackageNames.THIS;
+import static moe.ouom.wekit.constants.PackageNames.WECHAT;
 
 import androidx.annotation.Keep;
 
@@ -68,11 +68,11 @@ public class LegacyHookEntry implements IXposedHookLoadPackage, IXposedHookZygot
         sLoadPackageParam = lpparam;
         // check LSPosed dex-obfuscation
         switch (lpparam.packageName) {
-            case PACKAGE_NAME_SELF: {
+            case THIS: {
                 Xp51HookStatusInit.init(lpparam.classLoader);
                 break;
             }
-            case PACKAGE_NAME_WECHAT:
+            case WECHAT:
                 if (sInitZygoteStartupParam == null) {
                     throw new IllegalStateException("handleLoadPackage: sInitZygoteStartupParam is null");
                 }

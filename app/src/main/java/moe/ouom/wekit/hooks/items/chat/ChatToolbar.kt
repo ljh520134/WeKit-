@@ -38,7 +38,7 @@ import moe.ouom.wekit.dexkit.intf.IResolvesDex
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import moe.ouom.wekit.ui.utils.AppTheme
 import moe.ouom.wekit.ui.utils.MainActivityLifecycleOwnerProvider
-import moe.ouom.wekit.ui.utils.findViewByIdStr
+import moe.ouom.wekit.ui.utils.findViewByChildIndexes
 import moe.ouom.wekit.ui.utils.setLifecycleOwner
 import moe.ouom.wekit.utils.log.WeLogger
 import org.luckypray.dexkit.DexKitBridge
@@ -71,9 +71,11 @@ object ChatToolbar : SwitchHookItem(), IResolvesDex {
             }
             .self
             .hookAfter { param ->
-                val frameLayout = param.thisObject as FrameLayout
-                // TODO: might change with WeChat version
-                val linearLayout = frameLayout.findViewByIdStr<LinearLayout>("bl8") // LinearLayout
+                val chatFooter = param.thisObject as FrameLayout
+                val linearLayout = chatFooter.findViewByChildIndexes<LinearLayout>(0, 1) ?: run {
+                    WeLogger.e(TAG, "failed to find footer view")
+                    return@hookAfter
+                }
                 if (linearLayout.findViewWithTag<ComposeView>(VIEW_TAG) != null) return@hookAfter
 
                 val context = linearLayout.context
