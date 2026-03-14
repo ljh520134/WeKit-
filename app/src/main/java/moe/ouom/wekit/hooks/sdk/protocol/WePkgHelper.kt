@@ -63,7 +63,6 @@ object WePkgHelper : ApiHookItem(), IResolvesDex {
     const val TAG = "PkgHelper"
 
     override fun onLoad() {
-        this.classLoader = classLoader
 
         // 映射业务请求类
         cgiReqClassMap[522] = classNewSendMsgReq.clazz
@@ -612,7 +611,8 @@ object WePkgHelper : ApiHookItem(), IResolvesDex {
                         }
                             ?: XposedHelpers.callMethod(yd, "toByteArray") as? ByteArray
                         val json =
-                            if (bytes != null) WeProtoData().also { it.fromBytes(bytes) }.toJsonObject()
+                            if (bytes != null) WeProtoData().also { it.fromBytes(bytes) }
+                                .toJsonObject()
                                 .toString() else "{}"
                         userCallback?.onSuccess(json, bytes)
                     } else {

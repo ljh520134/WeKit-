@@ -125,14 +125,16 @@ object ChatToolbar : SwitchHookItem(), IResolvesDex {
                             val name = (itemView.tag.asResolver()
                                 .firstField { type = TextView::class }
                                 .get()!! as TextView).text.toString()
-                            tools.add(name to MenuItem(
-                                name,
-                                onClickListener,
-                                onLongClickListener,
-                                grid,
-                                itemView,
-                                index
-                            ))
+                            tools.add(
+                                name to MenuItem(
+                                    name,
+                                    onClickListener,
+                                    onLongClickListener,
+                                    grid,
+                                    itemView,
+                                    index
+                                )
+                            )
                         }
                     }
 
@@ -176,7 +178,7 @@ object ChatToolbar : SwitchHookItem(), IResolvesDex {
                                 horizontalArrangement = Arrangement.spacedBy(8.dp),
                                 contentPadding = PaddingValues(horizontal = 8.dp),
                             ) {
-                                // weird WeChat bug where 'Album' doesn't display, so I have to render it manually
+                                // workaroung for weird WeChat bug where 'Album' doesn't display, so I have to render it manually
 
                                 item {
                                     FeatureChip("相册", Icons.Default.PhotoLibrary) {
@@ -248,7 +250,10 @@ object ChatToolbar : SwitchHookItem(), IResolvesDex {
         methodAppPanelOnMeasure.find(dexKit, descriptors) {
             searchPackages("com.tencent.mm.pluginsdk.ui.chat")
             matcher {
-                usingEqStrings("MicroMsg.AppPanel", "onMeasure width: %d, heigth:%d, isMeasured:%b, gridWidth:%d, gridHeight:%d")
+                usingEqStrings(
+                    "MicroMsg.AppPanel",
+                    "onMeasure width: %d, heigth:%d, isMeasured:%b, gridWidth:%d, gridHeight:%d"
+                )
             }
         }
 

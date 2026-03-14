@@ -893,7 +893,7 @@ object JsApiExposer {
                 return WeApi.selfWxId
             }
         })
-        ScriptableObject.putProperty(weObj, "getSelfAlias", object : BaseFunction() {
+        ScriptableObject.putProperty(weObj, "getSelfCustomWxId", object : BaseFunction() {
             override fun call(
                 cx: Context?,
                 scope: Scriptable?,

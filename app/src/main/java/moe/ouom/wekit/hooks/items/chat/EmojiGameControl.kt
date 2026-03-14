@@ -10,14 +10,12 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.rememberScrollState
-import moe.ouom.wekit.ui.content.Button
 import androidx.compose.material3.FilterChip
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
-import moe.ouom.wekit.ui.content.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -38,6 +36,8 @@ import moe.ouom.wekit.core.model.SwitchHookItem
 import moe.ouom.wekit.dexkit.intf.IResolvesDex
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import moe.ouom.wekit.ui.content.AlertDialogContent
+import moe.ouom.wekit.ui.content.Button
+import moe.ouom.wekit.ui.content.TextButton
 import moe.ouom.wekit.ui.utils.showComposeDialog
 import moe.ouom.wekit.utils.common.ToastUtils
 import moe.ouom.wekit.utils.log.WeLogger
@@ -237,7 +237,8 @@ object EmojiGameControl : SwitchHookItem(), IResolvesDex {
             }
         }
 
-        AlertDialogContent(title = { Text(if (isDice) "选择骰子点数" else "选择猜拳结果") },
+        AlertDialogContent(
+            title = { Text(if (isDice) "选择骰子点数" else "选择猜拳结果") },
             text = {
                 Text(
                     "发送模式",
@@ -299,12 +300,14 @@ object EmojiGameControl : SwitchHookItem(), IResolvesDex {
                 TextButton(onClick = { onDismiss() }) { Text("取消") }
                 TextButton(onClick = { onRandom(isSingleMode); onDismiss() }) { Text("随机") }
             },
-            confirmButton = { Button(onClick = {
-                onSend(
-                    isSingleMode,
-                    inputText
-                ); onDismiss()
-            }) { Text("发送") } })
+            confirmButton = {
+                Button(onClick = {
+                    onSend(
+                        isSingleMode,
+                        inputText
+                    ); onDismiss()
+                }) { Text("发送") }
+            })
     }
 
     private fun parseMultipleInput(input: String, isDice: Boolean): List<Int> {

@@ -57,7 +57,7 @@ object NotificationEvolved : SwitchHookItem() {
 
     private lateinit var meAvatarIcon: Icon
 
-    private val meAvatarPath = PathUtils.moduleDataPath!!/"me_avatar"
+    private val meAvatarPath = PathUtils.moduleDataPath!! / "me_avatar"
 
     private val notificationReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {
@@ -96,8 +96,7 @@ object NotificationEvolved : SwitchHookItem() {
                 val bitmap: Bitmap
                 if (meAvatarPath.exists()) {
                     bitmap = BitmapFactory.decodeFile(meAvatarPath.pathString)
-                }
-                else {
+                } else {
                     while (runCatching { WeApi.selfWxId.isEmpty() }
                             .getOrDefault(true)) {
                         delay(2000)
@@ -143,7 +142,8 @@ object NotificationEvolved : SwitchHookItem() {
                     return@hookBefore
                 }
 
-                val notifTitle = notif.extras.getString(Notification.EXTRA_TITLE) ?: "未知对话 (请向模块开发者报告错误)"
+                val notifTitle = notif.extras.getString(Notification.EXTRA_TITLE)
+                    ?: "未知对话 (请向模块开发者报告错误)"
                 val notifText =
                     notif.extras.getCharSequence(Notification.EXTRA_TEXT)?.toString()
                         ?: "未知内容 (请向模块开发者报告错误)"
@@ -162,15 +162,20 @@ object NotificationEvolved : SwitchHookItem() {
                 var senderName: String
                 var text: String
                 if (match == null) {
-                    WeLogger.w(TAG, "failed to match message regex, using raw sender name & text content")
+                    WeLogger.w(
+                        TAG,
+                        "failed to match message regex, using raw sender name & text content"
+                    )
                     senderName = notifTitle
                     text = notifText
-                }
-                else {
+                } else {
                     senderName = match.groupValues[2].takeIf { it.isNotEmpty() }
                         ?.also { lastGroupChatSender[convWxId] = it }
                         ?: lastGroupChatSender[convWxId] ?: run {
-                            WeLogger.w(TAG, "couldn't find sender name in either notification or cache")
+                            WeLogger.w(
+                                TAG,
+                                "couldn't find sender name in either notification or cache"
+                            )
                             notifTitle
                         }
                     text = match.groupValues[3]
@@ -195,8 +200,7 @@ object NotificationEvolved : SwitchHookItem() {
                 if (isGroupChat(convWxId)) {
                     messagingStyle.isGroupConversation = true
                     messagingStyle.conversationTitle = notifTitle
-                }
-                else {
+                } else {
                     senderName = notifTitle
                 }
 

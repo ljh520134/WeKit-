@@ -33,27 +33,29 @@ class MmkvPrefsImpl(name: String) : WePrefs() {
         override fun hashCode(): Int = key.hashCode()
     }
 
-    private val mVirtEntrySet: MutableSet<MutableMap.MutableEntry<String, Any?>> = object : AbstractMutableSet<MutableMap.MutableEntry<String, Any?>>() {
-        override val size: Int get() = mShadowMap.size
-        override fun isEmpty(): Boolean = mShadowMap.isEmpty()
+    private val mVirtEntrySet: MutableSet<MutableMap.MutableEntry<String, Any?>> =
+        object : AbstractMutableSet<MutableMap.MutableEntry<String, Any?>>() {
+            override val size: Int get() = mShadowMap.size
+            override fun isEmpty(): Boolean = mShadowMap.isEmpty()
 
-        override fun contains(element: MutableMap.MutableEntry<String, Any?>): Boolean =
-            any { it == element }
+            override fun contains(element: MutableMap.MutableEntry<String, Any?>): Boolean =
+                any { it == element }
 
-        override fun iterator(): MutableIterator<MutableMap.MutableEntry<String, Any?>> =
-            object : MutableIterator<MutableMap.MutableEntry<String, Any?>> {
-                val iterator = mShadowMap.keys.iterator()
-                override fun hasNext(): Boolean = iterator.hasNext()
-                override fun next(): MutableMap.MutableEntry<String, Any?> {
-                    val key = iterator.next()
-                    return mCacheMap.getOrPut(key) { VirtEntry(key) }
+            override fun iterator(): MutableIterator<MutableMap.MutableEntry<String, Any?>> =
+                object : MutableIterator<MutableMap.MutableEntry<String, Any?>> {
+                    val iterator = mShadowMap.keys.iterator()
+                    override fun hasNext(): Boolean = iterator.hasNext()
+                    override fun next(): MutableMap.MutableEntry<String, Any?> {
+                        val key = iterator.next()
+                        return mCacheMap.getOrPut(key) { VirtEntry(key) }
+                    }
+
+                    override fun remove() = throw UnsupportedOperationException("entry set")
                 }
-                override fun remove() = throw UnsupportedOperationException("entry set")
-            }
 
-        override fun add(element: MutableMap.MutableEntry<String, Any?>): Boolean =
-            throw UnsupportedOperationException("entry set")
-    }
+            override fun add(element: MutableMap.MutableEntry<String, Any?>): Boolean =
+                throw UnsupportedOperationException("entry set")
+        }
 
     private val mVirtValues: MutableCollection<Any?> = object : AbstractMutableCollection<Any?>() {
         override val size: Int get() = mShadowMap.size
@@ -97,7 +99,9 @@ class MmkvPrefsImpl(name: String) : WePrefs() {
             for ((key, value) in from) putObject(key, value!!)
         }
 
-        override fun clear() { mmkvInstance.clear() }
+        override fun clear() {
+            mmkvInstance.clear()
+        }
 
         override val keys: MutableSet<String>
             get() = (mmkvInstance.allKeys()
@@ -113,7 +117,8 @@ class MmkvPrefsImpl(name: String) : WePrefs() {
 
     override fun getString(key: String): String? = mmkvInstance.getString(key, null)
 
-    override fun getString(key: String, defValue: String?): String? = mmkvInstance.getString(key, defValue)
+    override fun getString(key: String, defValue: String?): String? =
+        mmkvInstance.getString(key, defValue)
 
     override fun getStringSet(key: String, defValues: Set<String>?): Set<String>? =
         mmkvInstance.getStringSet(key, defValues)
@@ -122,9 +127,11 @@ class MmkvPrefsImpl(name: String) : WePrefs() {
 
     override fun getLong(key: String, defValue: Long): Long = mmkvInstance.getLong(key, defValue)
 
-    override fun getFloat(key: String, defValue: Float): Float = mmkvInstance.getFloat(key, defValue)
+    override fun getFloat(key: String, defValue: Float): Float =
+        mmkvInstance.getFloat(key, defValue)
 
-    override fun getBoolean(key: String, defValue: Boolean): Boolean = mmkvInstance.getBoolean(key, defValue)
+    override fun getBoolean(key: String, defValue: Boolean): Boolean =
+        mmkvInstance.getBoolean(key, defValue)
 
     override fun contains(key: String): Boolean = mmkvInstance.contains(key)
 
@@ -144,6 +151,7 @@ class MmkvPrefsImpl(name: String) : WePrefs() {
                     ObjectInputStream(ByteArrayInputStream(bytes)).readObject()
                 }.onFailure { WeLogger.e(it) }.getOrNull()
             }
+
             else -> null
         }
     }
@@ -232,7 +240,10 @@ class MmkvPrefsImpl(name: String) : WePrefs() {
         return this
     }
 
-    override fun save() { commit() }
+    override fun save() {
+        commit()
+    }
+
     override fun commit(): Boolean = true
     override fun apply() = Unit
     override val isReadOnly: Boolean = false

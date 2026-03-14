@@ -49,7 +49,10 @@ object StartupAgent {
         val moduleFile = File(modulePath)
         if (moduleFile.canWrite()) {
             Log.w(BuildConfig.TAG, "Module path is writable: $modulePath")
-            Log.w(BuildConfig.TAG, "This may cause issues on Android 15+, please check your Xposed framework")
+            Log.w(
+                BuildConfig.TAG,
+                "This may cause issues on Android 15+, please check your Xposed framework"
+            )
         }
     }
 
@@ -66,6 +69,7 @@ object StartupAgent {
         try {
             @SuppressLint("PrivateApi")
             val activityThreadClz = "android.app.ActivityThread".toClass()
+
             @SuppressLint("DiscouragedPrivateApi")
             val currentAppMethod = activityThreadClz.getDeclaredMethod("currentApplication")
             currentAppMethod.isAccessible = true
@@ -81,7 +85,10 @@ object StartupAgent {
     @SuppressLint("ObsoleteSdkInt")
     private fun ensureHiddenApiAccess() {
         if (!isHiddenApiAccessible()) {
-            Log.w(BuildConfig.TAG, "Hidden API access not accessible, SDK_INT is ${Build.VERSION.SDK_INT}")
+            Log.w(
+                BuildConfig.TAG,
+                "Hidden API access not accessible, SDK_INT is ${Build.VERSION.SDK_INT}"
+            )
             HiddenApiBypass.setHiddenApiExemptions("L")
         }
     }
@@ -97,8 +104,14 @@ object StartupAgent {
         var mActivityToken: Field? = null
         var mToken: Field? = null
 
-        try { mActivityToken = kContextImpl.getDeclaredField("mActivityToken") } catch (_: NoSuchFieldException) {}
-        try { mToken = kContextImpl.getDeclaredField("mToken") } catch (_: NoSuchFieldException) {}
+        try {
+            mActivityToken = kContextImpl.getDeclaredField("mActivityToken")
+        } catch (_: NoSuchFieldException) {
+        }
+        try {
+            mToken = kContextImpl.getDeclaredField("mToken")
+        } catch (_: NoSuchFieldException) {
+        }
 
         return mActivityToken != null || mToken != null
     }

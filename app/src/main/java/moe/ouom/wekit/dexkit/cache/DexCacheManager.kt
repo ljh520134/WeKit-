@@ -35,13 +35,13 @@ object DexCacheManager {
     private var currentHostVersion: String = ""
 
     fun init(hostVersion: String) {
-        cacheDir = PathUtils.moduleDataPath!!/CACHE_DIR_NAME
+        cacheDir = PathUtils.moduleDataPath!! / CACHE_DIR_NAME
         cacheDir.createDirectories()
 
         currentHostVersion = hostVersion
 
         // 检查宿主版本是否变化
-        val versionFile = cacheDir/HOST_VERSION_FILE
+        val versionFile = cacheDir / HOST_VERSION_FILE
         if (versionFile.exists()) {
             val cachedVersion = versionFile.readText().trim()
             if (cachedVersion != hostVersion) {
@@ -247,7 +247,7 @@ object DexCacheManager {
     private fun getCacheFile(path: String): Path {
         // 将路径转换为文件名（替换 / 为 _）
         val fileName = path.replace("/", "_") + CACHE_FILE_SUFFIX
-        return cacheDir/fileName
+        return cacheDir / fileName
     }
 
     fun getOutdatedItems(items: List<IResolvesDex>): List<IResolvesDex> {

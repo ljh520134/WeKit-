@@ -50,9 +50,13 @@ object ActivityProxy {
             // Hook Instrumentation
             val mInstrumentationField = clazzActivityThread.getDeclaredField("mInstrumentation")
                 .also { it.isAccessible = true }
-            val instrumentation = mInstrumentationField.get(currentActivityThread) as Instrumentation
+            val instrumentation =
+                mInstrumentationField.get(currentActivityThread) as Instrumentation
             if (instrumentation !is ProxyInstrumentation) {
-                mInstrumentationField.set(currentActivityThread, ProxyInstrumentation(instrumentation))
+                mInstrumentationField.set(
+                    currentActivityThread,
+                    ProxyInstrumentation(instrumentation)
+                )
             }
 
             // Hook Handler (mH)
@@ -77,11 +81,15 @@ object ActivityProxy {
     @SuppressLint("PrivateApi", "DiscouragedPrivateApi")
     private fun hookIActivityManager() {
         val singletonClass = Class.forName("android.util.Singleton")
-        val instanceField = singletonClass.getDeclaredField("mInstance").also { it.isAccessible = true }
+        val instanceField =
+            singletonClass.getDeclaredField("mInstance").also { it.isAccessible = true }
 
         fun hookSingleton(singleton: Any?, iface: Class<*>) {
             if (singleton == null) return
-            runCatching { singletonClass.getDeclaredMethod("get").also { it.isAccessible = true }.invoke(singleton) }
+            runCatching {
+                singletonClass.getDeclaredMethod("get").also { it.isAccessible = true }
+                    .invoke(singleton)
+            }
             val instance = instanceField.get(singleton) ?: run {
                 WeLogger.e(TAG, "Instance is null for ${iface.simpleName}, aborting hook.")
                 return
@@ -114,7 +122,11 @@ object ActivityProxy {
     }
 
     @SuppressLint("PrivateApi")
-    private fun hookPackageManager(ctx: Context, sCurrentActivityThread: Any, clazzActivityThread: Class<*>) {
+    private fun hookPackageManager(
+        ctx: Context,
+        sCurrentActivityThread: Any,
+        clazzActivityThread: Class<*>
+    ) {
         runCatching {
             val sPackageManagerField = clazzActivityThread.getDeclaredField("sPackageManager")
                 .also { it.isAccessible = true }
@@ -138,7 +150,8 @@ object ActivityProxy {
 
     object ActProxyMgr {
         const val ACTIVITY_PROXY_INTENT_TOKEN = "wekit_target_intent_token"
-        const val STUB_DEFAULT_ACTIVITY = "com.tencent.mm.plugin.facedetect.ui.FaceTransparentStubUI"
+        const val STUB_DEFAULT_ACTIVITY =
+            "com.tencent.mm.plugin.facedetect.ui.FaceTransparentStubUI"
 
         fun isModuleProxyActivity(className: String?): Boolean =
             className?.startsWith("moe.ouom.wekit") == true
@@ -155,7 +168,8 @@ object ActivityProxy {
                             @Suppress("UNCHECKED_CAST")
                             val intents = arg as? Array<Intent?> ?: return@forEachIndexed
                             intents.forEachIndexed { j, intent ->
-                                if (intent != null && shouldProxy(intent)) intents[j] = createTokenWrapper(intent)
+                                if (intent != null && shouldProxy(intent)) intents[j] =
+                                    createTokenWrapper(intent)
                             }
                         }
                     }
@@ -182,7 +196,10 @@ object ActivityProxy {
                 putExtra(ActProxyMgr.ACTIVITY_PROXY_INTENT_TOKEN, token)
                 ParcelableFixer.getHybridClassLoader()?.let { setExtrasClassLoader(it) }
             }.also {
-                WeLogger.d(TAG, "Hijacked startActivity via Token: ${raw.component!!.className} -> ${ActProxyMgr.STUB_DEFAULT_ACTIVITY}")
+                WeLogger.d(
+                    TAG,
+                    "Hijacked startActivity via Token: ${raw.component!!.className} -> ${ActProxyMgr.STUB_DEFAULT_ACTIVITY}"
+                )
             }
         }
     }
@@ -219,7 +236,8 @@ object ActivityProxy {
         private fun handleLaunchActivity(msg: Message) {
             runCatching {
                 val record = msg.obj
-                val intentField = record.javaClass.getDeclaredField("intent").also { it.isAccessible = true }
+                val intentField =
+                    record.javaClass.getDeclaredField("intent").also { it.isAccessible = true }
                 val wrapper = intentField.get(record) as? Intent
                 unwrapIntent(wrapper)?.let { intentField.set(record, it) }
             }.onFailure { WeLogger.e(TAG, "handleLaunchActivity error", it) }
@@ -234,7 +252,8 @@ object ActivityProxy {
 
                 callbacks.forEach { item ->
                     if (item != null && item.javaClass.name.contains("LaunchActivityItem")) {
-                        val intentField = item.javaClass.getDeclaredField("mIntent").also { it.isAccessible = true }
+                        val intentField = item.javaClass.getDeclaredField("mIntent")
+                            .also { it.isAccessible = true }
                         val wrapper = intentField.get(item) as? Intent
                         unwrapIntent(wrapper)?.let { intentField.set(item, it) }
                     }
@@ -263,7 +282,10 @@ object ActivityProxy {
             tryRecoverIntent(intent)?.takeIf { it.component != null }?.let {
                 resolvedIntent = it
                 resolvedClass = it.component!!.className
-                WeLogger.w("ProxyInstrumentation", "Recovered intent in newActivity fallback: $resolvedClass")
+                WeLogger.w(
+                    "ProxyInstrumentation",
+                    "Recovered intent in newActivity fallback: $resolvedClass"
+                )
             }
             return try {
                 base.newActivity(cl, resolvedClass, resolvedIntent)
@@ -275,8 +297,30 @@ object ActivityProxy {
             }
         }
 
-        override fun newActivity(clazz: Class<*>, context: Context, token: IBinder, application: Application, intent: Intent, info: ActivityInfo, title: CharSequence, parent: Activity?, id: String?, lastNonConfigurationInstance: Any?): Activity =
-            base.newActivity(clazz, context, token, application, intent, info, title, parent, id, lastNonConfigurationInstance)
+        override fun newActivity(
+            clazz: Class<*>,
+            context: Context,
+            token: IBinder,
+            application: Application,
+            intent: Intent,
+            info: ActivityInfo,
+            title: CharSequence,
+            parent: Activity?,
+            id: String?,
+            lastNonConfigurationInstance: Any?
+        ): Activity =
+            base.newActivity(
+                clazz,
+                context,
+                token,
+                application,
+                intent,
+                info,
+                title,
+                parent,
+                id,
+                lastNonConfigurationInstance
+            )
 
         override fun callActivityOnCreate(activity: Activity, icicle: Bundle?) {
             if (ActProxyMgr.isModuleProxyActivity(activity.javaClass.name)) {
@@ -295,7 +339,11 @@ object ActivityProxy {
             base.callActivityOnCreate(activity, icicle)
         }
 
-        override fun callActivityOnCreate(activity: Activity, icicle: Bundle?, persistentState: PersistableBundle?) {
+        override fun callActivityOnCreate(
+            activity: Activity,
+            icicle: Bundle?,
+            persistentState: PersistableBundle?
+        ) {
             checkAndInjectResources(activity)
             base.callActivityOnCreate(activity, icicle, persistentState)
         }
@@ -310,7 +358,9 @@ object ActivityProxy {
         override fun start() = base.start()
         override fun onStart() = base.onStart()
         override fun onException(obj: Any?, e: Throwable?) = base.onException(obj, e)
-        override fun sendStatus(resultCode: Int, results: Bundle?) = base.sendStatus(resultCode, results)
+        override fun sendStatus(resultCode: Int, results: Bundle?) =
+            base.sendStatus(resultCode, results)
+
         override fun addResults(results: Bundle?) = base.addResults(results)
         override fun finish(resultCode: Int, results: Bundle?) = base.finish(resultCode, results)
         override fun setAutomaticPerformanceSnapshots() = base.setAutomaticPerformanceSnapshots()
@@ -329,49 +379,118 @@ object ActivityProxy {
         override fun waitForIdleSync() = base.waitForIdleSync()
         override fun runOnMainSync(runner: Runnable?) = base.runOnMainSync(runner)
         override fun startActivitySync(intent: Intent): Activity? = base.startActivitySync(intent)
-        override fun startActivitySync(intent: Intent, options: Bundle?): Activity = base.startActivitySync(intent, options)
+        override fun startActivitySync(intent: Intent, options: Bundle?): Activity =
+            base.startActivitySync(intent, options)
+
         override fun addMonitor(monitor: ActivityMonitor?) = base.addMonitor(monitor)
-        override fun addMonitor(filter: IntentFilter?, result: ActivityResult?, block: Boolean): ActivityMonitor? = base.addMonitor(filter, result, block)
-        override fun addMonitor(cls: String?, result: ActivityResult?, block: Boolean): ActivityMonitor? = base.addMonitor(cls, result, block)
-        override fun checkMonitorHit(monitor: ActivityMonitor?, minHits: Int) = base.checkMonitorHit(monitor, minHits)
-        override fun waitForMonitor(monitor: ActivityMonitor?): Activity? = base.waitForMonitor(monitor)
-        override fun waitForMonitorWithTimeout(monitor: ActivityMonitor?, timeOut: Long): Activity? = base.waitForMonitorWithTimeout(monitor, timeOut)
+        override fun addMonitor(
+            filter: IntentFilter?,
+            result: ActivityResult?,
+            block: Boolean
+        ): ActivityMonitor? = base.addMonitor(filter, result, block)
+
+        override fun addMonitor(
+            cls: String?,
+            result: ActivityResult?,
+            block: Boolean
+        ): ActivityMonitor? = base.addMonitor(cls, result, block)
+
+        override fun checkMonitorHit(monitor: ActivityMonitor?, minHits: Int) =
+            base.checkMonitorHit(monitor, minHits)
+
+        override fun waitForMonitor(monitor: ActivityMonitor?): Activity? =
+            base.waitForMonitor(monitor)
+
+        override fun waitForMonitorWithTimeout(
+            monitor: ActivityMonitor?,
+            timeOut: Long
+        ): Activity? = base.waitForMonitorWithTimeout(monitor, timeOut)
+
         override fun removeMonitor(monitor: ActivityMonitor?) = base.removeMonitor(monitor)
-        override fun invokeMenuActionSync(targetActivity: Activity?, id: Int, flag: Int) = base.invokeMenuActionSync(targetActivity, id, flag)
-        override fun invokeContextMenuAction(targetActivity: Activity?, id: Int, flag: Int) = base.invokeContextMenuAction(targetActivity, id, flag)
+        override fun invokeMenuActionSync(targetActivity: Activity?, id: Int, flag: Int) =
+            base.invokeMenuActionSync(targetActivity, id, flag)
+
+        override fun invokeContextMenuAction(targetActivity: Activity?, id: Int, flag: Int) =
+            base.invokeContextMenuAction(targetActivity, id, flag)
+
         override fun sendStringSync(text: String?) = base.sendStringSync(text)
         override fun sendKeySync(event: KeyEvent?) = base.sendKeySync(event)
         override fun sendKeyDownUpSync(key: Int) = base.sendKeyDownUpSync(key)
         override fun sendCharacterSync(keyCode: Int) = base.sendCharacterSync(keyCode)
         override fun sendPointerSync(event: MotionEvent?) = base.sendPointerSync(event)
-        override fun sendTrackballEventSync(event: MotionEvent?) = base.sendTrackballEventSync(event)
-        override fun newApplication(cl: ClassLoader?, className: String?, context: Context?): Application = base.newApplication(cl, className, context)
+        override fun sendTrackballEventSync(event: MotionEvent?) =
+            base.sendTrackballEventSync(event)
+
+        override fun newApplication(
+            cl: ClassLoader?,
+            className: String?,
+            context: Context?
+        ): Application = base.newApplication(cl, className, context)
+
         override fun callApplicationOnCreate(app: Application?) = base.callApplicationOnCreate(app)
-        override fun callActivityOnDestroy(activity: Activity?) = base.callActivityOnDestroy(activity)
-        override fun callActivityOnRestoreInstanceState(activity: Activity, savedInstanceState: Bundle) = base.callActivityOnRestoreInstanceState(activity, savedInstanceState)
-        override fun callActivityOnRestoreInstanceState(activity: Activity, savedInstanceState: Bundle?, persistentState: PersistableBundle?) = base.callActivityOnRestoreInstanceState(activity, savedInstanceState, persistentState)
-        override fun callActivityOnPostCreate(activity: Activity, savedInstanceState: Bundle?) = base.callActivityOnPostCreate(activity, savedInstanceState)
-        override fun callActivityOnPostCreate(activity: Activity, savedInstanceState: Bundle?, persistentState: PersistableBundle?) = base.callActivityOnPostCreate(activity, savedInstanceState, persistentState)
-        override fun callActivityOnNewIntent(activity: Activity?, intent: Intent?) = base.callActivityOnNewIntent(activity, intent)
+        override fun callActivityOnDestroy(activity: Activity?) =
+            base.callActivityOnDestroy(activity)
+
+        override fun callActivityOnRestoreInstanceState(
+            activity: Activity,
+            savedInstanceState: Bundle
+        ) = base.callActivityOnRestoreInstanceState(activity, savedInstanceState)
+
+        override fun callActivityOnRestoreInstanceState(
+            activity: Activity,
+            savedInstanceState: Bundle?,
+            persistentState: PersistableBundle?
+        ) = base.callActivityOnRestoreInstanceState(activity, savedInstanceState, persistentState)
+
+        override fun callActivityOnPostCreate(activity: Activity, savedInstanceState: Bundle?) =
+            base.callActivityOnPostCreate(activity, savedInstanceState)
+
+        override fun callActivityOnPostCreate(
+            activity: Activity,
+            savedInstanceState: Bundle?,
+            persistentState: PersistableBundle?
+        ) = base.callActivityOnPostCreate(activity, savedInstanceState, persistentState)
+
+        override fun callActivityOnNewIntent(activity: Activity?, intent: Intent?) =
+            base.callActivityOnNewIntent(activity, intent)
+
         override fun callActivityOnStart(activity: Activity?) = base.callActivityOnStart(activity)
-        override fun callActivityOnRestart(activity: Activity?) = base.callActivityOnRestart(activity)
+        override fun callActivityOnRestart(activity: Activity?) =
+            base.callActivityOnRestart(activity)
+
         override fun callActivityOnResume(activity: Activity?) = base.callActivityOnResume(activity)
         override fun callActivityOnStop(activity: Activity?) = base.callActivityOnStop(activity)
-        override fun callActivityOnSaveInstanceState(activity: Activity, outState: Bundle) = base.callActivityOnSaveInstanceState(activity, outState)
-        override fun callActivityOnSaveInstanceState(activity: Activity, outState: Bundle, outPersistentState: PersistableBundle) = base.callActivityOnSaveInstanceState(activity, outState, outPersistentState)
+        override fun callActivityOnSaveInstanceState(activity: Activity, outState: Bundle) =
+            base.callActivityOnSaveInstanceState(activity, outState)
+
+        override fun callActivityOnSaveInstanceState(
+            activity: Activity,
+            outState: Bundle,
+            outPersistentState: PersistableBundle
+        ) = base.callActivityOnSaveInstanceState(activity, outState, outPersistentState)
+
         override fun callActivityOnPause(activity: Activity?) = base.callActivityOnPause(activity)
-        override fun callActivityOnUserLeaving(activity: Activity?) = base.callActivityOnUserLeaving(activity)
-        @Suppress("DEPRECATION") @Deprecated("Deprecated") override fun startAllocCounting() = base.startAllocCounting()
-        @Suppress("DEPRECATION") @Deprecated("Deprecated") override fun stopAllocCounting() = base.stopAllocCounting()
+        override fun callActivityOnUserLeaving(activity: Activity?) =
+            base.callActivityOnUserLeaving(activity)
+
+        @Suppress("DEPRECATION")
+        @Deprecated("Deprecated")
+        override fun startAllocCounting() = base.startAllocCounting()
+        @Suppress("DEPRECATION")
+        @Deprecated("Deprecated")
+        override fun stopAllocCounting() = base.stopAllocCounting()
         override fun getAllocCounts(): Bundle = base.allocCounts
         override fun getBinderCounts(): Bundle = base.binderCounts
         override fun getUiAutomation(): UiAutomation = base.uiAutomation
         override fun getUiAutomation(flags: Int): UiAutomation = base.getUiAutomation(flags)
-        override fun acquireLooperManager(looper: Looper): TestLooperManager = base.acquireLooperManager(looper)
+        override fun acquireLooperManager(looper: Looper): TestLooperManager =
+            base.acquireLooperManager(looper)
     }
 
     class PackageManagerInvocationHandler(private val target: Any?) : InvocationHandler {
-        init { requireNotNull(target) { "IPackageManager is null" } }
+        init {
+            requireNotNull(target) { "IPackageManager is null" }
+        }
 
         override fun invoke(proxy: Any, method: Method, args: Array<Any?>?): Any? {
             if (method.name == "getActivityInfo" && args != null) {
@@ -408,7 +527,10 @@ object ActivityProxy {
     }
 
     private object IntentTokenCache {
-        private data class Entry(val intent: Intent, val timestamp: Long = System.currentTimeMillis())
+        private data class Entry(
+            val intent: Intent,
+            val timestamp: Long = System.currentTimeMillis()
+        )
 
         private val cache = ConcurrentHashMap<String, Entry>()
         private const val EXPIRE_MS = 60_000L

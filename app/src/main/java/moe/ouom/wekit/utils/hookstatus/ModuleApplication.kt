@@ -25,7 +25,9 @@ class ModuleApplication : Application() {
             override fun log(tr: Throwable) = android.util.Log.e("ovom", tr.toString(), tr).let {}
             override fun queryExtension(key: String, vararg args: Any?) = null
             override fun getClassLoaderHelper() = classLoaderHelper
-            override fun setClassLoaderHelper(helper: IClassLoaderHelper?) { classLoaderHelper = helper }
+            override fun setClassLoaderHelper(helper: IClassLoaderHelper?) {
+                classLoaderHelper = helper
+            }
         }
 
         StartupInfo.setModulePath(apkPath)

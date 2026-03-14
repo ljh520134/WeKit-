@@ -28,12 +28,13 @@ object HostInfo {
     @JvmStatic
     val application: Application get() = _info.application
     val appInfo: ApplicationInfo get() = application.applicationInfo
-    val packageName: String      get() = _info.packageName
-    val versionCode32: Int       get() = _info.versionCode32
-    val versionCode: Int         get() = versionCode32
-    val isModule: Boolean        get() = _info.hostSpecies == HostSpecies.WeKit
+    val packageName: String get() = _info.packageName
+    val versionCode32: Int get() = _info.versionCode32
+    val versionCode: Int get() = versionCode32
+    val isModule: Boolean get() = _info.hostSpecies == HostSpecies.WeKit
+
     @JvmStatic
-    val isHost: Boolean          get() = !isModule
+    val isHost: Boolean get() = !isModule
 
     val isHostGooglePlay: Boolean by lazy {
         runCatching {
@@ -64,8 +65,8 @@ object HostInfo {
             versionName = packageInfo.versionName.orEmpty(),
             hostSpecies = when (packageName) {
                 PackageNames.WECHAT -> HostSpecies.WeChat
-                PackageNames.THIS   -> HostSpecies.WeKit
-                else                                 -> HostSpecies.Unknown
+                PackageNames.THIS -> HostSpecies.WeKit
+                else -> HostSpecies.Unknown
             }
         )
     }

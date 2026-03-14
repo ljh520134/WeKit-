@@ -91,7 +91,8 @@ object WeChatFooterApi : ApiHookItem() {
             null
         }
 
-        val toUser = XposedHelpers.getAdditionalInstanceField(chatFooter, KEY_FIELD_TO_USER) as? String
+        val toUser =
+            XposedHelpers.getAdditionalInstanceField(chatFooter, KEY_FIELD_TO_USER) as? String
 
         WeLogger.d(TAG, "content: $content, toUser: $toUser")
 

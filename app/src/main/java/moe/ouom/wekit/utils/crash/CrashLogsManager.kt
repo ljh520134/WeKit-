@@ -77,7 +77,10 @@ class CrashLogsManager {
 
             val fileSize = logFile.fileSize()
             if (fileSize > MAX_LOG_CONTENT_SIZE) {
-                WeLogger.w(TAG, "Crash log file is too large ($fileSize bytes), reading first $MAX_LOG_CONTENT_SIZE bytes")
+                WeLogger.w(
+                    TAG,
+                    "Crash log file is too large ($fileSize bytes), reading first $MAX_LOG_CONTENT_SIZE bytes"
+                )
                 val buffer = ByteArray(MAX_LOG_CONTENT_SIZE)
                 val bytesRead = logFile.inputStream().use { it.read(buffer) }
                 String(buffer, 0, bytesRead, StandardCharsets.UTF_8) +

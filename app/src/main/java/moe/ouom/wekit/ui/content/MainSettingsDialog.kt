@@ -125,7 +125,10 @@ class MainSettingsDialog(context: Context) : BasePrefDialog(context, "WeKit") {
         // 关于 (About)
         // ==========================================
         addCategory("关于")
-        addPreference(title = "版本", summary = "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})")
+        addPreference(
+            title = "版本",
+            summary = "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})"
+        )
         addPreference("构建时间", formatEpoch(BuildConfig.BUILD_TIMESTAMP, true))
         addPreference(
             "提示",

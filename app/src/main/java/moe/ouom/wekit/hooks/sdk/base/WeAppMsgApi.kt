@@ -90,7 +90,7 @@ object WeAppMsgApi : ApiHookItem(), IResolvesDex {
             parseXmlMethod = methodParseXml.method
             sendAppMsgMethod = methodSendAppMsg.method
             appMsgContentClass = classAppMsgContent.clazz
-        }.onFailure {e -> WeLogger.e(TAG, "exception during init", e) }
+        }.onFailure { e -> WeLogger.e(TAG, "exception during init", e) }
     }
 
     /**

@@ -46,14 +46,52 @@ object ParcelableFixer {
 
         runCatching {
             XposedHelpers.findAndHookMethod(Intent::class.java, "getExtras", hook)
-            XposedHelpers.findAndHookMethod(Intent::class.java, "getBundleExtra", String::class.java, hook)
-            XposedHelpers.findAndHookMethod(Intent::class.java, "getParcelableExtra", String::class.java, hook)
-            XposedHelpers.findAndHookMethod(Intent::class.java, "getParcelableArrayListExtra", String::class.java, hook)
-            XposedHelpers.findAndHookMethod(Intent::class.java, "getSerializableExtra", String::class.java, hook)
+            XposedHelpers.findAndHookMethod(
+                Intent::class.java,
+                "getBundleExtra",
+                String::class.java,
+                hook
+            )
+            XposedHelpers.findAndHookMethod(
+                Intent::class.java,
+                "getParcelableExtra",
+                String::class.java,
+                hook
+            )
+            XposedHelpers.findAndHookMethod(
+                Intent::class.java,
+                "getParcelableArrayListExtra",
+                String::class.java,
+                hook
+            )
+            XposedHelpers.findAndHookMethod(
+                Intent::class.java,
+                "getSerializableExtra",
+                String::class.java,
+                hook
+            )
             // Android 13+
-            XposedHelpers.findAndHookMethod(Intent::class.java, "getParcelableExtra", String::class.java, Class::class.java, hook)
-            XposedHelpers.findAndHookMethod(Intent::class.java, "getParcelableArrayListExtra", String::class.java, Class::class.java, hook)
-            XposedHelpers.findAndHookMethod(Intent::class.java, "getSerializableExtra", String::class.java, Class::class.java, hook)
+            XposedHelpers.findAndHookMethod(
+                Intent::class.java,
+                "getParcelableExtra",
+                String::class.java,
+                Class::class.java,
+                hook
+            )
+            XposedHelpers.findAndHookMethod(
+                Intent::class.java,
+                "getParcelableArrayListExtra",
+                String::class.java,
+                Class::class.java,
+                hook
+            )
+            XposedHelpers.findAndHookMethod(
+                Intent::class.java,
+                "getSerializableExtra",
+                String::class.java,
+                Class::class.java,
+                hook
+            )
         }.onFailure { WeLogger.w(TAG, "Failed to hook some Intent methods: ${it.message}") }
     }
 }

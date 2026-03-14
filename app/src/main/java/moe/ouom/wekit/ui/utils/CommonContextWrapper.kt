@@ -46,7 +46,8 @@ class CommonContextWrapper(base: Context?, themeResId: Int) : ContextWrapper(bas
         } else {
             // 尝试自动获取默认 Theme
             val defaultTheme = runCatching {
-                ModuleRes.getId("Theme.WeKit", "style") }.getOrDefault(0)
+                ModuleRes.getId("Theme.WeKit", "style")
+            }.getOrDefault(0)
             if (defaultTheme != 0) {
                 this.mTheme.applyStyle(defaultTheme, true)
             } else {

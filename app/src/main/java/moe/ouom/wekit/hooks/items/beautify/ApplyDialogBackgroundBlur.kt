@@ -5,7 +5,6 @@ import android.content.Context
 import android.os.Build
 import android.view.WindowManager
 import androidx.compose.foundation.layout.Column
-import moe.ouom.wekit.ui.content.Button
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.Slider
@@ -24,6 +23,7 @@ import moe.ouom.wekit.core.model.ClickableHookItem
 import moe.ouom.wekit.dexkit.intf.IResolvesDex
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import moe.ouom.wekit.ui.content.AlertDialogContent
+import moe.ouom.wekit.ui.content.Button
 import moe.ouom.wekit.ui.utils.showComposeDialog
 import moe.ouom.wekit.utils.log.WeLogger
 import org.luckypray.dexkit.DexKitBridge
@@ -102,10 +102,16 @@ object ApplyDialogBackgroundBlur : ClickableHookItem(), IResolvesDex {
 
     override fun onClick(context: Context) {
         showComposeDialog(context) {
-            AlertDialogContent(title = { Text("对话框窗口级背景模糊") },
+            AlertDialogContent(
+                title = { Text("对话框窗口级背景模糊") },
                 text = {
-                    var blurRadius by remember { mutableIntStateOf(WePrefs.getIntOrDef(
-                        KEY_BLUR_RADIUS, DEFAULT_BLUR_RADIUS)) }
+                    var blurRadius by remember {
+                        mutableIntStateOf(
+                            WePrefs.getIntOrDef(
+                                KEY_BLUR_RADIUS, DEFAULT_BLUR_RADIUS
+                            )
+                        )
+                    }
 
                     LaunchedEffect(blurRadius) {
                         WePrefs.putInt(KEY_BLUR_RADIUS, blurRadius)
@@ -120,9 +126,13 @@ object ApplyDialogBackgroundBlur : ClickableHookItem(), IResolvesDex {
                     HorizontalDivider()
                     ListItem(
                         headlineContent = { Text("模糊半径 (即时生效)") },
-                        supportingContent = { IntSlider(blurRadius,
-                            { blurRadius = it },
-                            5..30) }
+                        supportingContent = {
+                            IntSlider(
+                                blurRadius,
+                                { blurRadius = it },
+                                5..30
+                            )
+                        }
                     )
                 },
                 dismissButton = { Button(onDismiss) { Text("关闭") } })

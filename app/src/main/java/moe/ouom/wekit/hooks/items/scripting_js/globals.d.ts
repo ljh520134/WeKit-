@@ -80,7 +80,7 @@ declare namespace http {
     function post(url: string, formData?: Record<string, string | number>, jsonBody?: any, headers?: Record<string, string>): HttpResponse;
     
     /**
-     * 下载文件到宿主缓存目录
+     * 下载文件到宿主缓存目录；下载位置保证可被宿主访问，可直接传入 sendImage(), sendFile() 等
      * @param url 文件的 URL
      * @returns 下载结果，包含文件路径
      * @example
@@ -299,7 +299,7 @@ declare namespace wechat {
 
     declare function getSelfWxId(): string;
 
-    declare function getSelfAlias(): string;
+    declare function getSelfCustomWxId(): string;
 }
 
 // --- 钩子函数定义 ---

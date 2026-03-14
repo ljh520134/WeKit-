@@ -55,14 +55,19 @@ object WeLauncher {
             }
         })
 
-        XposedHelpers.findAndHookMethod(launcherUiClass, "onCreate", Bundle::class.java, object : XC_MethodHook() {
-            override fun afterHookedMethod(param: MethodHookParam) {
-                val activity = param.thisObject as Activity
-                RuntimeConfig.setLauncherUiActivity(activity)
-                val sharedPreferences = activity.getSharedPreferences("com.tencent.mm_preferences", 0)
-                RuntimeConfig.setMmPrefs(sharedPreferences)
-            }
-        })
+        XposedHelpers.findAndHookMethod(
+            launcherUiClass,
+            "onCreate",
+            Bundle::class.java,
+            object : XC_MethodHook() {
+                override fun afterHookedMethod(param: MethodHookParam) {
+                    val activity = param.thisObject as Activity
+                    RuntimeConfig.setLauncherUiActivity(activity)
+                    val sharedPreferences =
+                        activity.getSharedPreferences("com.tencent.mm_preferences", 0)
+                    RuntimeConfig.setMmPrefs(sharedPreferences)
+                }
+            })
     }
 
     private const val LAUNCHER_UI_CLASS_NAME = "com.tencent.mm.ui.LauncherUI"

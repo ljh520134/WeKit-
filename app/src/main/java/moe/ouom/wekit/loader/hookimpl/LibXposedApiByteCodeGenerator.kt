@@ -76,12 +76,18 @@ object LibXposedApiByteCodeGenerator {
         // Constructor
         run {
             val insCtor = ArrayList<Instruction>()
-            insCtor.add(ImmutableInstruction35c(Opcode.INVOKE_DIRECT, 1, 0, 0, 0, 0, 0,
-                referenceMethod("Ljava/lang/Object;", "<init>", "()V")))
+            insCtor.add(
+                ImmutableInstruction35c(
+                    Opcode.INVOKE_DIRECT, 1, 0, 0, 0, 0, 0,
+                    referenceMethod("Ljava/lang/Object;", "<init>", "()V")
+                )
+            )
             insCtor.add(ImmutableInstruction10x(Opcode.RETURN_VOID))
             val ctorMethodImpl = ImmutableMethodImplementation(1, insCtor, null, null)
-            val ctorMethod = ImmutableMethod(typeTargetClass, "<init>", listOf(),
-                "V", Modifier.PUBLIC or ACC_CONSTRUCTOR, null, null, ctorMethodImpl)
+            val ctorMethod = ImmutableMethod(
+                typeTargetClass, "<init>", listOf(),
+                "V", Modifier.PUBLIC or ACC_CONSTRUCTOR, null, null, ctorMethodImpl
+            )
             methods.add(ctorMethod)
         }
 
@@ -94,15 +100,30 @@ object LibXposedApiByteCodeGenerator {
         run {
             val insBefore = ArrayList<Instruction>()
             insBefore.add(ImmutableInstruction31i(Opcode.CONST, 0, tagValue))
-            insBefore.add(ImmutableInstruction35c(Opcode.INVOKE_STATIC, 2, 1, 0, 0, 0, 0,
-                ImmutableMethodReference(typeLsp100HookAgent, "handleBeforeHookedMethod",
-                    listOf(typeBeforeHookCallback, "I"), typeInvocationParamWrapper)))
+            insBefore.add(
+                ImmutableInstruction35c(
+                    Opcode.INVOKE_STATIC, 2, 1, 0, 0, 0, 0,
+                    ImmutableMethodReference(
+                        typeLsp100HookAgent, "handleBeforeHookedMethod",
+                        listOf(typeBeforeHookCallback, "I"), typeInvocationParamWrapper
+                    )
+                )
+            )
             insBefore.add(ImmutableInstruction11x(Opcode.MOVE_RESULT_OBJECT, 0))
             insBefore.add(ImmutableInstruction11x(Opcode.RETURN_OBJECT, 0))
             val beforeMethodImpl = ImmutableMethodImplementation(2, insBefore, null, null)
-            val beforeMethod = ImmutableMethod(typeTargetClass, "before", listOf(
-                ImmutableMethodParameter(typeBeforeHookCallback, null, "c")
-            ), typeInvocationParamWrapper, Modifier.PUBLIC or Modifier.STATIC, null, null, beforeMethodImpl)
+            val beforeMethod = ImmutableMethod(
+                typeTargetClass,
+                "before",
+                listOf(
+                    ImmutableMethodParameter(typeBeforeHookCallback, null, "c")
+                ),
+                typeInvocationParamWrapper,
+                Modifier.PUBLIC or Modifier.STATIC,
+                null,
+                null,
+                beforeMethodImpl
+            )
             methods.add(beforeMethod)
         }
 
@@ -110,15 +131,23 @@ object LibXposedApiByteCodeGenerator {
         run {
             val insAfter = ArrayList<Instruction>()
             insAfter.add(ImmutableInstruction31i(Opcode.CONST, 0, tagValue))
-            insAfter.add(ImmutableInstruction35c(Opcode.INVOKE_STATIC, 3, 1, 2, 0, 0, 0,
-                ImmutableMethodReference(typeLsp100HookAgent, "handleAfterHookedMethod",
-                    listOf(typeAfterHookCallback, typeInvocationParamWrapper, "I"), "V")))
+            insAfter.add(
+                ImmutableInstruction35c(
+                    Opcode.INVOKE_STATIC, 3, 1, 2, 0, 0, 0,
+                    ImmutableMethodReference(
+                        typeLsp100HookAgent, "handleAfterHookedMethod",
+                        listOf(typeAfterHookCallback, typeInvocationParamWrapper, "I"), "V"
+                    )
+                )
+            )
             insAfter.add(ImmutableInstruction10x(Opcode.RETURN_VOID))
             val afterMethodImpl = ImmutableMethodImplementation(3, insAfter, null, null)
-            val afterMethod = ImmutableMethod(typeTargetClass, "after", listOf(
-                ImmutableMethodParameter(typeAfterHookCallback, null, "c"),
-                ImmutableMethodParameter(typeInvocationParamWrapper, null, "p")
-            ), "V", Modifier.PUBLIC or Modifier.STATIC, null, null, afterMethodImpl)
+            val afterMethod = ImmutableMethod(
+                typeTargetClass, "after", listOf(
+                    ImmutableMethodParameter(typeAfterHookCallback, null, "c"),
+                    ImmutableMethodParameter(typeInvocationParamWrapper, null, "p")
+                ), "V", Modifier.PUBLIC or Modifier.STATIC, null, null, afterMethodImpl
+            )
             methods.add(afterMethod)
         }
 
@@ -143,9 +172,18 @@ object LibXposedApiByteCodeGenerator {
         return memoryDataStore.data
     }
 
-    private fun referenceMethod(declaringClass: String, name: String, descriptor: String): ImmutableMethodReference =
+    private fun referenceMethod(
+        declaringClass: String,
+        name: String,
+        descriptor: String
+    ): ImmutableMethodReference =
         referenceMethod(DexMethodDescriptor(declaringClass, name, descriptor))
 
     private fun referenceMethod(md: DexMethodDescriptor): ImmutableMethodReference =
-        ImmutableMethodReference(md.declaringClass, md.name, md.getParameterTypes(), md.getReturnType())
+        ImmutableMethodReference(
+            md.declaringClass,
+            md.name,
+            md.getParameterTypes(),
+            md.getReturnType()
+        )
 }

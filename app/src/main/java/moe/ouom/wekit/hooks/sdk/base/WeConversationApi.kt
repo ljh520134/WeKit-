@@ -63,8 +63,7 @@ object WeConversationApi : ApiHookItem(), IResolvesDex {
             } catch (ex: Exception) {
                 WeLogger.w(TAG, "exception while updating unread count for $convId", ex)
             }
-        }
-        while (cursor.moveToNext())
+        } while (cursor.moveToNext())
         cursor.close()
     }
 

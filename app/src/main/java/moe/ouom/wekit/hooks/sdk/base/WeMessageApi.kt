@@ -573,8 +573,10 @@ object WeMessageApi : ApiHookItem(), IResolvesDex {
             val theUnsafeField = unsafeClass.getDeclaredField("theUnsafe")
             theUnsafeField.isAccessible = true
             unsafeInstance = theUnsafeField.get(null)
-            allocateInstanceMethod = unsafeClass.getMethod("allocateInstance",
-                Class::class.java)
+            allocateInstanceMethod = unsafeClass.getMethod(
+                "allocateInstance",
+                Class::class.java
+            )
             WeLogger.i(TAG, "Unsafe 能力已就绪")
         } catch (e: Exception) {
             WeLogger.e(TAG, "Unsafe 获取失败", e)
@@ -779,10 +781,10 @@ object WeMessageApi : ApiHookItem(), IResolvesDex {
             if (vfsReadMethod == null) throw IllegalStateException("VFS Read Method not found")
             if (vfsCopyMethod == null) throw IllegalStateException("VFS Copy Method not found")
 
-            val input = vfsReadMethod?.invoke(null, sourcePath) as? java.io.InputStream
+            val input = vfsReadMethod?.invoke(null, sourcePath) as? InputStream
                 ?: throw FileNotFoundException("VFS Open Failed for $sourcePath")
 
-            val output = vfsCopyMethod?.invoke(null, destPath, false) as? java.io.OutputStream
+            val output = vfsCopyMethod?.invoke(null, destPath, false) as? OutputStream
                 ?: throw IOException("VFS Create Failed for $destPath")
 
             input.use { i ->

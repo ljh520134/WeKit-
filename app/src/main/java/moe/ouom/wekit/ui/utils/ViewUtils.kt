@@ -102,13 +102,17 @@ fun debugViewTree(view: View, connector: String = "", indent: String = "") {
     val idStr = if (view.id != View.NO_ID) {
         runCatching { view.resources.getResourceEntryName(view.id) }.getOrDefault("?")
     } else "NO_ID"
-    WeLogger.d(nameof(::debugViewTree), "$indent$connector${view::class.simpleName} [$idStr / ${view.id}]")
+    WeLogger.d(
+        nameof(::debugViewTree),
+        "$indent$connector${view::class.simpleName} [$idStr / ${view.id}]"
+    )
     if (view is ViewGroup) {
         val children = (0 until view.childCount).mapNotNull { view.getChildAt(it) }
         children.forEachIndexed { i, child ->
             val isLast = i == children.lastIndex
             val childConnector = if (isLast) "└─ " else "├─ "
-            val childIndent = indent + if (connector.isEmpty()) "" else if (connector.startsWith("└")) "   " else "│  "
+            val childIndent =
+                indent + if (connector.isEmpty()) "" else if (connector.startsWith("└")) "   " else "│  "
             debugViewTree(child, childConnector, childIndent)
         }
     }

@@ -41,8 +41,10 @@ fun showComposeDialog(
         else
             CommonContextWrapper.createAppCompatContext(context)
 
-    val dialog = Dialog(ctx,
-        android.R.style.Theme_DeviceDefault_Light_Dialog_NoActionBar_MinWidth)
+    val dialog = Dialog(
+        ctx,
+        android.R.style.Theme_DeviceDefault_Light_Dialog_NoActionBar_MinWidth
+    )
     val lifecycleOwner = XposedLifecycleOwner().apply { onCreate(); onResume() }
 
     dialog.apply {
@@ -58,7 +60,8 @@ fun showComposeDialog(
                 addFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND)
                 attributes.blurBehindRadius = WePrefs.getIntOrDef(
                     ApplyDialogBackgroundBlur.KEY_BLUR_RADIUS,
-                    ApplyDialogBackgroundBlur.DEFAULT_BLUR_RADIUS)
+                    ApplyDialogBackgroundBlur.DEFAULT_BLUR_RADIUS
+                )
             } else {
                 WeLogger.w(TAG, "sdk < 31, not applying blur behind dialog")
             }

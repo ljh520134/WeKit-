@@ -33,7 +33,8 @@ class WeProtoData {
     }
 
     companion object {
-        fun hasPacketPrefix(b: ByteArray?) = b != null && b.size >= 4 && (b[0].toInt() and 0xFF) == 0
+        fun hasPacketPrefix(b: ByteArray?) =
+            b != null && b.size >= 4 && (b[0].toInt() and 0xFF) == 0
 
         fun getUnpPackage(b: ByteArray?): ByteArray? = when {
             b == null -> null
@@ -141,6 +142,7 @@ class WeProtoData {
                     analyzeLenValue(lv)
                     fields.add(Field(fieldNumber, wireType, lv))
                 }
+
                 5 -> fields.add(Field(fieldNumber, wireType, input.readFixed32()))
             }
         }
@@ -172,11 +174,13 @@ class WeProtoData {
                     ?: ensureUtf8Decoded(lv)?.also { lv.view = LenView.UTF8 }
                     ?: ("hex->" + bytesToHex(lv.raw)).also { lv.view = LenView.HEX }
             }
+
             LenView.UTF8 -> {
                 ensureUtf8Decoded(lv)
                     ?: ensureSubParsedStrong(lv)?.toJsonObject()
                     ?: ("hex->" + bytesToHex(lv.raw))
             }
+
             LenView.HEX -> "hex->" + bytesToHex(lv.raw)
         }
     }
@@ -189,8 +193,12 @@ class WeProtoData {
                 when (f.wireType) {
                     0 -> {
                         val v = f.value as Long
-                        if (v >= 0) out.writeUInt64(f.fieldNumber, v) else out.writeInt64(f.fieldNumber, v)
+                        if (v >= 0) out.writeUInt64(
+                            f.fieldNumber,
+                            v
+                        ) else out.writeInt64(f.fieldNumber, v)
                     }
+
                     1 -> out.writeFixed64(f.fieldNumber, f.value as Long)
                     2 -> {
                         val lv = f.value as LenValue
@@ -203,6 +211,7 @@ class WeProtoData {
                         }
                         out.writeByteArray(f.fieldNumber, lv.raw)
                     }
+
                     5 -> out.writeFixed32(f.fieldNumber, f.value as Int)
                 }
             }
@@ -231,7 +240,8 @@ class WeProtoData {
         return -1
     }
 
-    private fun indicesOf(fieldNumber: Int) = fields.indices.filter { fields[it].fieldNumber == fieldNumber }
+    private fun indicesOf(fieldNumber: Int) =
+        fields.indices.filter { fields[it].fieldNumber == fieldNumber }
 
     private fun removeAllOccurrences(fieldNumber: Int): Int {
         val before = fields.size
@@ -375,7 +385,13 @@ class WeProtoData {
                 val fieldNumber = key.toInt()
                 when (val value = json.get(key)) {
                     is JSONObject -> fields.add(subMessageField(fieldNumber, value))
-                    is JSONArray -> repeat(value.length()) { addJsonValueAsField(fieldNumber, value.get(it)) }
+                    is JSONArray -> repeat(value.length()) {
+                        addJsonValueAsField(
+                            fieldNumber,
+                            value.get(it)
+                        )
+                    }
+
                     else -> addJsonValueAsField(fieldNumber, value)
                 }
             }
@@ -395,12 +411,17 @@ class WeProtoData {
                 is Number -> fields.add(Field(fieldNumber, 0, value.toLong()))
                 is String -> {
                     val lv = if (value.startsWith("hex->")) {
-                        LenValue(hexToBytes(stripNonHex(value.substring(5)))).also { it.view = LenView.HEX }
+                        LenValue(hexToBytes(stripNonHex(value.substring(5)))).also {
+                            it.view = LenView.HEX
+                        }
                     } else {
-                        LenValue(value.toByteArray(StandardCharsets.UTF_8)).also { it.utf8 = value; it.view = LenView.UTF8 }
+                        LenValue(value.toByteArray(StandardCharsets.UTF_8)).also {
+                            it.utf8 = value; it.view = LenView.UTF8
+                        }
                     }
                     fields.add(Field(fieldNumber, 2, lv))
                 }
+
                 null -> Unit
                 else -> WeLogger.w("WeProtoData.fromJSON Unknown type: ${value.javaClass.name}")
             }
@@ -458,6 +479,7 @@ class WeProtoData {
                     }
                     1
                 }
+
                 5 -> {
                     field.value = when (value) {
                         is Number -> value.toInt()
@@ -466,6 +488,7 @@ class WeProtoData {
                     }
                     1
                 }
+
                 2 -> {
                     val lv = field.value as LenValue
                     when (value) {
@@ -478,6 +501,7 @@ class WeProtoData {
                             lv.view = LenView.SUB
                             maxOf(1, c)
                         }
+
                         is String -> {
                             if (value.startsWith("hex->")) {
                                 lv.raw = hexToBytes(stripNonHex(value.substring(5))) ?: ByteArray(0)
@@ -492,9 +516,11 @@ class WeProtoData {
                             }
                             1
                         }
+
                         else -> 0
                     }
                 }
+
                 else -> 0
             }
         }.getOrDefault(0)

@@ -287,8 +287,7 @@ class MainActivity : ComponentActivity() {
                             ).submit { result ->
                                 if (!result.isSuccess) {
                                     showErrorDialog = true
-                                }
-                                else {
+                                } else {
                                     finishAndRemoveTask()
                                 }
                             }

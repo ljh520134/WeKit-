@@ -21,6 +21,7 @@ object ExceptionFactory {
         XposedBridge.log(throwable)
         try {
             LogUtils.addError("item_${item.itemName}", throwable)
-        } catch (_: NoClassDefFoundError) {}
+        } catch (_: NoClassDefFoundError) {
+        }
     }
 }

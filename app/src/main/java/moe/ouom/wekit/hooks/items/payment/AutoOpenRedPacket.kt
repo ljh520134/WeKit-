@@ -5,7 +5,6 @@ import android.content.ContentValues
 import android.content.Context
 import android.text.InputType
 import androidx.compose.material3.Text
-import moe.ouom.wekit.ui.content.TextButton
 import androidx.core.net.toUri
 import de.robv.android.xposed.XposedHelpers
 import dev.ujhhgtg.nameof.nameof
@@ -22,6 +21,7 @@ import moe.ouom.wekit.hooks.sdk.base.model.MessageType
 import moe.ouom.wekit.ui.content.AlertDialogContent
 import moe.ouom.wekit.ui.content.BasePrefDialog
 import moe.ouom.wekit.ui.content.Button
+import moe.ouom.wekit.ui.content.TextButton
 import moe.ouom.wekit.ui.utils.showComposeDialog
 import moe.ouom.wekit.utils.common.ToastUtils
 import moe.ouom.wekit.utils.log.WeLogger

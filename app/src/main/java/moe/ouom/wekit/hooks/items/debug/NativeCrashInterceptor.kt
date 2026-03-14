@@ -35,6 +35,7 @@ object NativeCrashInterceptor : SwitchHookItem() {
     private var crashLogsManager: CrashLogsManager? = null
     private var appContext: Context? = null
     private var hasPendingCrashToShow = false
+
     @SuppressLint("StaticFieldLeak")
     private var pendingDialog: MaterialDialog? = null
 

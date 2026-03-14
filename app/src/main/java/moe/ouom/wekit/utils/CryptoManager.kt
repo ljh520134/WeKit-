@@ -26,7 +26,8 @@ class CryptoManager {
         val keyStore = KeyStore.getInstance(KEYSTORE_PROVIDER).also { it.load(null) }
         keyStore.getKey(KEY_ALIAS, null)?.let { return it as SecretKey }
 
-        val keyGenerator = KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, KEYSTORE_PROVIDER)
+        val keyGenerator =
+            KeyGenerator.getInstance(KeyProperties.KEY_ALGORITHM_AES, KEYSTORE_PROVIDER)
         keyGenerator.init(
             KeyGenParameterSpec.Builder(
                 KEY_ALIAS,

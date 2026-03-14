@@ -122,59 +122,59 @@ object SwipeToQuote : SwitchHookItem(), IResolvesDex,
             name = "onTouchEvent"
             superclass()
         }
-        .hookAfter { param ->
-            val v = param.thisObject as View
-            if (v !== messageView) return@hookAfter
+            .hookAfter { param ->
+                val v = param.thisObject as View
+                if (v !== messageView) return@hookAfter
 
-            val event = param.args[0] as MotionEvent
+                val event = param.args[0] as MotionEvent
 
-            when (event.action) {
-                MotionEvent.ACTION_MOVE -> {
-                    if (isDragging) {
-                        val rawDx = event.x - startX
-                        val dx = rawDx.coerceIn(-triggerThreshold, 0f)
-                        v.translationX = dx
+                when (event.action) {
+                    MotionEvent.ACTION_MOVE -> {
+                        if (isDragging) {
+                            val rawDx = event.x - startX
+                            val dx = rawDx.coerceIn(-triggerThreshold, 0f)
+                            v.translationX = dx
 
-                        if (!triggered && rawDx < -triggerThreshold) {
-                            triggered = true
-                            v.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+                            if (!triggered && rawDx < -triggerThreshold) {
+                                triggered = true
+                                v.performHapticFeedback(HapticFeedbackConstants.LONG_PRESS)
+                            }
+
+                            param.result = true
                         }
-
-                        param.result = true
                     }
-                }
 
-                MotionEvent.ACTION_UP -> {
-                    if (isDragging) {
-                        v.animate()
-                            .translationX(0f)
-                            .setDuration(250)
-                            .setInterpolator(SpringInterpolator())
-                            .start()
+                    MotionEvent.ACTION_UP -> {
+                        if (isDragging) {
+                            v.animate()
+                                .translationX(0f)
+                                .setDuration(250)
+                                .setInterpolator(SpringInterpolator())
+                                .start()
 
-                        if (triggered) onSwipeLeft(chattingContext, msgInfo)
+                            if (triggered) onSwipeLeft(chattingContext, msgInfo)
 
-                        v.parent?.requestDisallowInterceptTouchEvent(false)
-                        isDragging = false
+                            v.parent?.requestDisallowInterceptTouchEvent(false)
+                            isDragging = false
 
-                        param.result = true
+                            param.result = true
+                        }
                     }
-                }
 
-                MotionEvent.ACTION_CANCEL -> {
-                    if (isDragging) {
-                        v.animate()
-                            .translationX(0f)
-                            .setDuration(150)
-                            .start()
+                    MotionEvent.ACTION_CANCEL -> {
+                        if (isDragging) {
+                            v.animate()
+                                .translationX(0f)
+                                .setDuration(150)
+                                .start()
 
-                        v.parent?.requestDisallowInterceptTouchEvent(false)
+                            v.parent?.requestDisallowInterceptTouchEvent(false)
 
-                        isDragging = false
+                            isDragging = false
+                        }
                     }
                 }
             }
-        }
 
         cache[msgInfo.talker to msgInfo.id] = true
     }

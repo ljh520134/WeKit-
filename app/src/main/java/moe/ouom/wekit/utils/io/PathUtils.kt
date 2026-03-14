@@ -14,7 +14,8 @@ object PathUtils {
     val moduleDataPath: Path?
         get() {
             try {
-                val directory = storageDirectory/"Android"/"data"/HostInfo.packageName/"files"/"WeKit"
+                val directory =
+                    storageDirectory / "Android" / "data" / HostInfo.packageName / "files" / "WeKit"
                 directory.createDirectories()
                 return directory
             } catch (_: Exception) {

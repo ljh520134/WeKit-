@@ -55,7 +55,9 @@ enum class MessageType(val code: Int) {
         fun isFile(code: Int) = code == FILE.code
         fun isApp(code: Int) = code == APP.code
         fun isLink(code: Int) = code == LINK.code || code == MUSIC.code || code == PRODUCT.code
-        fun isRedPacket(code: Int) = code == RED_PACKET.code || code == YEAR_RED_PACKET.code || code == EXCLUSIVE_RED_PACKET.code
+        fun isRedPacket(code: Int) =
+            code == RED_PACKET.code || code == YEAR_RED_PACKET.code || code == EXCLUSIVE_RED_PACKET.code
+
         fun isSystem(code: Int) = code == SYSTEM.code || code == SYSTEM_NOTICE.code
         fun isEmoji(code: Int) = code == STICKER.code || code == SO_GOU_EMOJI.code
         fun isLocation(code: Int) = code == LOCATION.code || code == SYSTEM_LOCATION.code

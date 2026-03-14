@@ -21,6 +21,7 @@ import moe.ouom.wekit.utils.log.WeLogger
 object TestCrash : ClickableHookItem() {
 
     private var appContext: Context? = null
+
     @SuppressLint("StaticFieldLeak")
     private var nativeCrashHandler: NativeCrashHandler? = null
 

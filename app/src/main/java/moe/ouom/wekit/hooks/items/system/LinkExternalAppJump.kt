@@ -1,4 +1,4 @@
-package moe.ouom.wekit.hooks.items.chat
+package moe.ouom.wekit.hooks.items.system
 
 import android.annotation.SuppressLint
 import android.app.ActivityOptions
@@ -56,7 +56,7 @@ import moe.ouom.wekit.utils.common.ToastUtils
 import moe.ouom.wekit.utils.log.WeLogger
 
 @HookItem(
-    path = "聊天/链接跳转系统打开方式",
+    path = "系统与隐私/链接跳转系统打开方式",
     desc = "打开链接或卡片链接时显示对话框, 可直接使用系统打开方式打开\n若要跳转到第三方应用, 需先在对应应用设置中启用 '在此应用中打开支持的网页链接'"
 )
 object LinkExternalAppJump : SwitchHookItem(),
@@ -92,9 +92,9 @@ object LinkExternalAppJump : SwitchHookItem(),
         // FIXME: doesn't work when opening urls from qr code scanning,
         //        so we disable this for now
         if (intent.extras?.run {
-            containsKey("key_scan_qr_code_get_a8key_resp") ||
-                    containsKey("key_scan_qr_code_get_a8key_req")
-        } ?: false) return
+                containsKey("key_scan_qr_code_get_a8key_resp") ||
+                        containsKey("key_scan_qr_code_get_a8key_req")
+            } ?: false) return
 
         val component = intent.component ?: return
         val shortClassName = component.shortClassName ?: return
@@ -118,7 +118,8 @@ object LinkExternalAppJump : SwitchHookItem(),
                 pm.queryIntentActivities(
                     newIntent,
                     PackageManager.ResolveInfoFlags.of(
-                        PackageManager.MATCH_DEFAULT_ONLY.toLong())
+                        PackageManager.MATCH_DEFAULT_ONLY.toLong()
+                    )
                 )
             } else {
                 @Suppress("DEPRECATION")
@@ -141,8 +142,10 @@ object LinkExternalAppJump : SwitchHookItem(),
                         item {
                             CustomTabsRow {
                                 val forwardBitmap =
-                                    BitmapFactory.decodeResource(ModuleRes.resources,
-                                        ModuleRes.getId("forward_24px", "drawable"))
+                                    BitmapFactory.decodeResource(
+                                        ModuleRes.resources,
+                                        ModuleRes.getId("forward_24px", "drawable")
+                                    )
                                 val pendingIntent = PendingIntent.getActivity(
                                     context,
                                     0,
@@ -213,7 +216,7 @@ object LinkExternalAppJump : SwitchHookItem(),
     }
 
     @Composable
-    private fun InternalWebViewRow(onClick: () -> Unit) {
+    private fun CustomTabsRow(onClick: () -> Unit) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -234,9 +237,9 @@ object LinkExternalAppJump : SwitchHookItem(),
             Spacer(modifier = Modifier.width(12.dp))
 
             Column {
-                Text(text = "微信", style = MaterialTheme.typography.bodyLarge)
+                Text(text = "系统默认 (Custom Tabs)", style = MaterialTheme.typography.bodyLarge)
                 Text(
-                    text = "不改变打开方式, 仍使用微信内置 WebView 打开",
+                    text = "使用系统默认浏览器的 Custom Tabs 模式打开",
                     style = MaterialTheme.typography.labelSmall,
                     color = Color.Gray
                 )
@@ -245,7 +248,7 @@ object LinkExternalAppJump : SwitchHookItem(),
     }
 
     @Composable
-    private fun CustomTabsRow(onClick: () -> Unit) {
+    private fun InternalWebViewRow(onClick: () -> Unit) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
@@ -266,9 +269,9 @@ object LinkExternalAppJump : SwitchHookItem(),
             Spacer(modifier = Modifier.width(12.dp))
 
             Column {
-                Text(text = "系统默认 (Custom Tabs)", style = MaterialTheme.typography.bodyLarge)
+                Text(text = "微信", style = MaterialTheme.typography.bodyLarge)
                 Text(
-                    text = "使用系统默认浏览器的 Custom Tabs 模式打开",
+                    text = "不改变打开方式, 仍使用微信内置 WebView 打开",
                     style = MaterialTheme.typography.labelSmall,
                     color = Color.Gray
                 )

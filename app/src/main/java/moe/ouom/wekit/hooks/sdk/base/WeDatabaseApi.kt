@@ -258,9 +258,9 @@ object WeDatabaseApi : ApiHookItem(), IResolvesDex {
 
             return true
         }
-        .onSuccess { WeLogger.i(TAG, "db init success") }
-        .onFailure { e -> WeLogger.e("exception during db init", e) }
-        .getOrDefault(false)
+            .onSuccess { WeLogger.i(TAG, "db init success") }
+            .onFailure { e -> WeLogger.e("exception during db init", e) }
+            .getOrDefault(false)
     }
 
     fun executeQuery(sql: String, args: Array<Any>? = null): List<Map<String, Any?>> {

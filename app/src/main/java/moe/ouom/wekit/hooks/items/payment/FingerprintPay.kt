@@ -46,8 +46,8 @@ object FingerprintPay : ClickableHookItem() {
                 name = "beginTransaction"
                 superclass()
             }
-            .invoke() as FragmentTransaction)
-            .add(fragment, TAG).commitNow()
+                .invoke() as FragmentTransaction)
+                .add(fragment, TAG).commitNow()
         }
         return fragment
     }
@@ -73,17 +73,22 @@ object FingerprintPay : ClickableHookItem() {
     ): BiometricPrompt {
         val fragment = getOrCreateFragment(activity)
         val executor = ContextCompat.getMainExecutor(activity)
-        return BiometricPrompt(fragment, executor, object : BiometricPrompt.AuthenticationCallback() {
-            override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
-                onSuccess(result)
-            }
-            override fun onAuthenticationError(code: Int, msg: CharSequence) {
-                ToastUtils.showToast("指纹验证失败! 错误码: $code, 错因: $msg")
-            }
-            override fun onAuthenticationFailed() {
-                ToastUtils.showToast("指纹不匹配!")
-            }
-        })
+        return BiometricPrompt(
+            fragment,
+            executor,
+            object : BiometricPrompt.AuthenticationCallback() {
+                override fun onAuthenticationSucceeded(result: BiometricPrompt.AuthenticationResult) {
+                    onSuccess(result)
+                }
+
+                override fun onAuthenticationError(code: Int, msg: CharSequence) {
+                    ToastUtils.showToast("指纹验证失败! 错误码: $code, 错因: $msg")
+                }
+
+                override fun onAuthenticationFailed() {
+                    ToastUtils.showToast("指纹不匹配!")
+                }
+            })
     }
 
     private val cryptoManager = CryptoManager()

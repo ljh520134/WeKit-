@@ -29,6 +29,7 @@ public class InMemoryClassLoaderHelper implements IClassLoaderHelper {
     private Field pathListField;
     private Constructor<?> elementConstructor1;
     private Constructor<?> elementConstructor4;
+
     private InMemoryClassLoaderHelper() {
     }
 

@@ -3,7 +3,6 @@ package moe.ouom.wekit.hooks.items.chat
 import android.content.Context
 import android.view.MenuItem
 import androidx.compose.material3.Text
-import moe.ouom.wekit.ui.content.TextButton
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -16,6 +15,7 @@ import moe.ouom.wekit.core.model.ClickableHookItem
 import moe.ouom.wekit.dexkit.intf.IResolvesDex
 import moe.ouom.wekit.hooks.core.annotation.HookItem
 import moe.ouom.wekit.ui.content.AlertDialogContent
+import moe.ouom.wekit.ui.content.TextButton
 import moe.ouom.wekit.ui.utils.showComposeDialog
 import org.luckypray.dexkit.DexKitBridge
 
