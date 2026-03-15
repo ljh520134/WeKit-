@@ -25,4 +25,5 @@ local.properties
 /app/src/main/java/moe/ouom/wekit/hooks/sdk/api/debug/
 /app/nul
 /.idea/deploymentTargetSelector.xml
-app/src/main/jniLibs/*/
+/app/src/main/jniLibs/*/
+/build-logic/convention/build/
