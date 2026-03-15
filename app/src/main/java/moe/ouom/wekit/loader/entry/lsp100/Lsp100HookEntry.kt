@@ -22,7 +22,7 @@ class Lsp100HookEntry(private val self: XposedModule) :
     @XposedApiExact(100)
     override fun onPackageLoaded(param: PackageLoadedParam) {
         val packageName = param.getPackageName()
-        if (packageName == PackageNames.WECHAT) {
+        if (packageName.startsWith(PackageNames.WECHAT)) {
             if (param.isFirstPackage()) {
                 val modulePath = self.applicationInfo.sourceDir
                 handleLoadHostPackage(

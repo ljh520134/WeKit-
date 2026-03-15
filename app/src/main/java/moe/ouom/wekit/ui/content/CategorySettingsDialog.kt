@@ -1,10 +1,10 @@
 package moe.ouom.wekit.ui.content
 
 import android.content.Context
-import moe.ouom.wekit.preferences.WePrefs
 import moe.ouom.wekit.core.model.ClickableHookItem
 import moe.ouom.wekit.core.model.SwitchHookItem
 import moe.ouom.wekit.hooks.utils.HookItemFactory
+import moe.ouom.wekit.preferences.WePrefs
 
 class CategorySettingsDialog(
     context: Context,
@@ -25,8 +25,8 @@ class CategorySettingsDialog(
             val desc = item.description
 
             when (item) {
-                is SwitchHookItem -> addSwitchItem(item, displayName, desc)
                 is ClickableHookItem -> addClickableItem(item, displayName, desc)
+                is SwitchHookItem -> addSwitchItem(item, displayName, desc)
             }
         }
     }

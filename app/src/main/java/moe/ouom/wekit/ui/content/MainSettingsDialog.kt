@@ -31,11 +31,18 @@ import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import com.mikepenz.aboutlibraries.entity.Library
 import com.mikepenz.aboutlibraries.ui.compose.android.produceLibraries
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 import moe.ouom.wekit.BuildConfig
 import moe.ouom.wekit.R
 import moe.ouom.wekit.constants.PreferenceKeys
 import moe.ouom.wekit.ui.utils.showComposeDialog
+import moe.ouom.wekit.utils.ToastUtils
 import moe.ouom.wekit.utils.formatEpoch
+import moe.ouom.wekit.utils.logging.WeLogger
+import moe.ouom.wekit.utils.updates.UpdateChecker
+import moe.ouom.wekit.utils.updates.UpdateDownloader
 
 class MainSettingsDialog(context: Context) : BasePrefDialog(context, BuildConfig.TAG) {
 
@@ -133,8 +140,53 @@ class MainSettingsDialog(context: Context) : BasePrefDialog(context, BuildConfig
         // ==========================================
         addCategory("关于")
         addPreference(
-            title = "版本",
-            summary = "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})"
+            title = "版本 (点击检查更新)",
+            summary = "${BuildConfig.VERSION_NAME} (${BuildConfig.VERSION_CODE})",
+            onClick = {
+                ToastUtils.showToast(context, "正在检查更新...")
+                CoroutineScope(Dispatchers.Main).launch {
+                    val update = runCatching { UpdateChecker.checkForUpdate() }.getOrElse { e ->
+                        WeLogger.e("UpdateChecker", "failed to check for updates", e)
+                        showComposeDialog(context) {
+                            AlertDialogContent(
+                                title = { Text("检查更新失败") },
+                                text = { Text(
+                                    "错误信息: ${e.message}\n" +
+                                    "是否尝试直接下载并安装最新版本?") },
+                                dismissButton = { TextButton(onDismiss) { Text("取消") } },
+                                confirmButton = { Button(onClick = {
+                                    onDismiss()
+                                    CoroutineScope(Dispatchers.Main).launch {
+                                        UpdateDownloader.downloadAndInstall(context, UpdateChecker.DOWNLOAD_URL)
+                                    }
+                                }) { Text("确定") } }
+                            )
+                        }
+                        return@launch
+                    }
+                    if (update == null) {
+                        ToastUtils.showToast(context, "已是最新版本")
+                        return@launch
+                    }
+                    showComposeDialog(context) {
+                        AlertDialogContent(
+                            title = { Text("检测到新版本") },
+                            text = { Text(
+                                "当前版本: ${BuildConfig.GIT_HASH} → 新版本: ${update.latestSha}\n" +
+                                "提交消息:\n" +
+                                "${update.commitMessage.prependIndent("  ")}\n" +
+                                "是否下载并安装?") },
+                            dismissButton = { TextButton(onDismiss) { Text("取消") } },
+                            confirmButton = { Button(onClick = {
+                                onDismiss()
+                                CoroutineScope(Dispatchers.Main).launch {
+                                    UpdateDownloader.downloadAndInstall(context, update.downloadUrl)
+                                }
+                            }) { Text("确定") } }
+                        )
+                    }
+                }
+            }
         )
         addPreference("构建时间", formatEpoch(BuildConfig.BUILD_TIMESTAMP, true))
         addPreference(

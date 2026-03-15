@@ -25,6 +25,13 @@ object PathUtils {
 
     val moduleCachePath: Path?
         get() {
-            return moduleDataPath?.resolve("cache")?.apply { createDirectories() }
+            try {
+                val directory =
+                    storageDirectory / "Android" / "data" / HostInfo.packageName / "cache" / BuildConfig.TAG
+                directory.createDirectories()
+                return directory
+            } catch (_: Exception) {
+                return null
+            }
         }
 }

@@ -4,12 +4,21 @@ import android.annotation.SuppressLint
 import android.content.Context
 import android.os.Handler
 import android.os.Looper
-import com.afollestad.materialdialogs.MaterialDialog
-import com.afollestad.materialdialogs.list.listItems
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Column
+import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.ListItemDefaults
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Text
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.unit.dp
 import com.highcapable.kavaref.extension.toClass
 import moe.ouom.wekit.core.model.ClickableHookItem
 import moe.ouom.wekit.hooks.utils.annotation.HookItem
-import moe.ouom.wekit.ui.utils.CommonContextWrapper
+import moe.ouom.wekit.ui.content.AlertDialogContent
+import moe.ouom.wekit.ui.content.TextButton
+import moe.ouom.wekit.ui.utils.showComposeDialog
 import moe.ouom.wekit.utils.ToastUtils.showToast
 import moe.ouom.wekit.utils.crash.NativeCrashHandler
 import moe.ouom.wekit.utils.logging.WeLogger
@@ -28,7 +37,6 @@ object TestCrash : ClickableHookItem() {
     override fun onEnable() {
         WeLogger.i("TestCrash", "=== TestCrash entry() called ===")
         try {
-            // 获取 Application Context
             val activityThreadClass = "android.app.ActivityThread".toClass()
             val currentApplicationMethod = activityThreadClass.getMethod("currentApplication")
             appContext = currentApplicationMethod.invoke(null) as? Context
@@ -37,19 +45,14 @@ object TestCrash : ClickableHookItem() {
             WeLogger.i("TestCrash", "Context class: ${appContext?.javaClass?.name}")
 
             if (appContext != null) {
-                // 初始化 Native 崩溃处理器（用于测试）
                 WeLogger.i("TestCrash", "Creating NativeCrashHandler...")
                 nativeCrashHandler = NativeCrashHandler()
                 WeLogger.i("TestCrash", "NativeCrashHandler created")
 
-                // 安装 Native 崩溃拦截器（确保测试时能够拦截崩溃）
                 WeLogger.i("TestCrash", "Installing native crash handler...")
                 val installed = nativeCrashHandler?.install() ?: false
                 if (installed) {
-                    WeLogger.i(
-                        "TestCrash",
-                        "✓ Native crash handler installed successfully for testing"
-                    )
+                    WeLogger.i("TestCrash", "✓ Native crash handler installed successfully for testing")
                 } else {
                     WeLogger.e("TestCrash", "✗ Failed to install native crash handler for testing")
                 }
@@ -67,137 +70,127 @@ object TestCrash : ClickableHookItem() {
         showCrashCategoryDialog(context)
     }
 
-    /**
-     * 显示崩溃类别选择对话框
-     */
     private fun showCrashCategoryDialog(context: Context) {
-        Handler(Looper.getMainLooper()).post {
-            try {
-                val categories = listOf(
-                    "Java 层崩溃",
-                    "Native 层崩溃"
-                )
+        val categories = listOf("Java 层崩溃", "Native 层崩溃")
+        showCrashTypeListDialog(
+            context = context,
+            title = "选择崩溃类别",
+            items = categories,
+            onBack = null,
+            onSelect = { index ->
+                when (index) {
+                    0 -> showJavaCrashTypeDialog(context)
+                    1 -> showNativeCrashTypeDialog(context)
+                }
+            }
+        )
+    }
 
-                // 使用 CommonContextWrapper 包装 Context
-                val wrappedContext = CommonContextWrapper.createAppCompatContext(context)
+    private fun showJavaCrashTypeDialog(context: Context) {
+        val crashTypes = listOf(
+            "空指针异常 (NullPointerException)",
+            "数组越界 (ArrayIndexOutOfBoundsException)",
+            "类型转换异常 (ClassCastException)",
+            "算术异常 (ArithmeticException)",
+            "栈溢出 (StackOverflowError)"
+        )
+        showCrashTypeListDialog(
+            context = context,
+            title = "选择 Java 崩溃类型",
+            items = crashTypes,
+            onBack = { showCrashCategoryDialog(context) },
+            onSelect = { index -> confirmTriggerCrash(context, "Java", index) }
+        )
+    }
 
-                MaterialDialog(wrappedContext)
-                    .title(text = "选择崩溃类别")
-                    .listItems(items = categories) { dialog, index, _ ->
-                        dialog.dismiss()
-                        when (index) {
-                            0 -> showJavaCrashTypeDialog(context)
-                            1 -> showNativeCrashTypeDialog(context)
+    private fun showNativeCrashTypeDialog(context: Context) {
+        val crashTypes = listOf(
+            "段错误 (SIGSEGV - 空指针访问)",
+            "异常终止 (SIGABRT - abort)",
+            "浮点异常 (SIGFPE - 除零错误)",
+            "非法指令 (SIGILL)",
+            "总线错误 (SIGBUS - 未对齐访问)"
+        )
+        showCrashTypeListDialog(
+            context = context,
+            title = "选择 Native 崩溃类型",
+            items = crashTypes,
+            onBack = { showCrashCategoryDialog(context) },
+            onSelect = { index -> confirmTriggerCrash(context, "Native", index) }
+        )
+    }
+
+    /**
+     * Shared composable list dialog for crash type selection.
+     */
+    private fun showCrashTypeListDialog(
+        context: Context,
+        title: String,
+        items: List<String>,
+        onBack: (() -> Unit)?,
+        onSelect: (Int) -> Unit,
+    ) {
+        showComposeDialog(context) {
+            AlertDialogContent(
+                title = { Text(title) },
+                text = {
+                    Column {
+                        items.forEachIndexed { index, item ->
+                            ListItem(
+                                headlineContent = {
+                                    Text(
+                                        text = item,
+                                        style = MaterialTheme.typography.bodyMedium
+                                    )
+                                },
+                                colors = ListItemDefaults.colors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+                                ),
+                                modifier = Modifier.clickable {
+                                    onDismiss()
+                                    onSelect(index)
+                                }
+                            )
+                            if (index < items.lastIndex) HorizontalDivider(thickness = 0.5.dp)
                         }
                     }
-                    .negativeButton(text = "取消")
-                    .show()
-            } catch (e: Throwable) {
-                WeLogger.e("[TestCrash] Failed to show crash category dialog", e)
-            }
+                },
+                confirmButton = {
+                    if (onBack != null) {
+                        TextButton(onClick = { onDismiss(); onBack() }) { Text("返回") }
+                    } else {
+                        TextButton(onClick = onDismiss) { Text("取消") }
+                    }
+                }
+            )
         }
     }
 
-    /**
-     * 显示 Java 崩溃类型选择对话框
-     */
-    private fun showJavaCrashTypeDialog(context: Context) {
-        Handler(Looper.getMainLooper()).post {
-            try {
-                val crashTypes = listOf(
-                    "空指针异常 (NullPointerException)",
-                    "数组越界 (ArrayIndexOutOfBoundsException)",
-                    "类型转换异常 (ClassCastException)",
-                    "算术异常 (ArithmeticException)",
-                    "栈溢出 (StackOverflowError)"
-                )
-
-                // 使用 CommonContextWrapper 包装 Context
-                val wrappedContext = CommonContextWrapper.createAppCompatContext(context)
-
-                MaterialDialog(wrappedContext)
-                    .title(text = "选择 Java 崩溃类型")
-                    .listItems(items = crashTypes) { dialog, index, _ ->
-                        dialog.dismiss()
-                        confirmTriggerCrash(context, "Java", index)
-                    }
-                    .negativeButton(text = "返回") {
-                        showCrashCategoryDialog(context)
-                    }
-                    .show()
-            } catch (e: Throwable) {
-                WeLogger.e("[TestCrash] Failed to show Java crash type dialog", e)
-            }
-        }
-    }
-
-    /**
-     * 显示 Native 崩溃类型选择对话框
-     */
-    private fun showNativeCrashTypeDialog(context: Context) {
-        Handler(Looper.getMainLooper()).post {
-            try {
-                val crashTypes = listOf(
-                    "段错误 (SIGSEGV - 空指针访问)",
-                    "异常终止 (SIGABRT - abort)",
-                    "浮点异常 (SIGFPE - 除零错误)",
-                    "非法指令 (SIGILL)",
-                    "总线错误 (SIGBUS - 未对齐访问)"
-                )
-
-                // 使用 CommonContextWrapper 包装 Context
-                val wrappedContext = CommonContextWrapper.createAppCompatContext(context)
-
-                MaterialDialog(wrappedContext)
-                    .title(text = "选择 Native 崩溃类型")
-                    .listItems(items = crashTypes) { dialog, index, _ ->
-                        dialog.dismiss()
-                        confirmTriggerCrash(context, "Native", index)
-                    }
-                    .negativeButton(text = "返回") {
-                        showCrashCategoryDialog(context)
-                    }
-                    .show()
-            } catch (e: Throwable) {
-                WeLogger.e("[TestCrash] Failed to show Native crash type dialog", e)
-            }
-        }
-    }
-
-    /**
-     * 确认触发崩溃
-     */
     private fun confirmTriggerCrash(context: Context, category: String, crashType: Int) {
-        Handler(Looper.getMainLooper()).post {
-            try {
-                // 使用 CommonContextWrapper 包装 Context
-                val wrappedContext = CommonContextWrapper.createAppCompatContext(context)
-
-                MaterialDialog(wrappedContext)
-                    .title(text = "确认触发崩溃")
-                    .message(text = "确定要触发 $category 测试崩溃吗?\n\n这可能会导致微信数据丢失")
-                    .positiveButton(text = "确定") { dialog ->
-                        dialog.dismiss()
+        showComposeDialog(context) {
+            AlertDialogContent(
+                title = { Text("确认触发崩溃") },
+                text = { Text("确定要触发 $category 测试崩溃吗?\n这可能会导致微信数据丢失") },
+                confirmButton = {
+                    TextButton(onClick = {
+                        onDismiss()
                         when (category) {
                             "Java" -> triggerJavaCrash(crashType)
                             "Native" -> triggerNativeCrash(crashType)
                         }
+                    }) {
+                        Text("确定", color = MaterialTheme.colorScheme.error)
                     }
-                    .negativeButton(text = "取消")
-                    .show()
-            } catch (e: Throwable) {
-                WeLogger.e("[TestCrash] Failed to show confirmation dialog", e)
-            }
+                },
+                dismissButton = {
+                    TextButton(onClick = onDismiss) { Text("取消") }
+                }
+            )
         }
     }
 
-    /**
-     * 触发 Java 崩溃
-     */
     private fun triggerJavaCrash(crashType: Int) {
         WeLogger.w("TestCrash", "Triggering Java test crash, type: $crashType")
-
-        // 延迟触发,确保对话框已关闭
         Handler(Looper.getMainLooper()).postDelayed({
             when (crashType) {
                 0 -> triggerNullPointerException()
@@ -210,24 +203,17 @@ object TestCrash : ClickableHookItem() {
         }, 500)
     }
 
-    /**
-     * 触发 Native 崩溃
-     */
     @SuppressLint("PrivateApi")
     private fun triggerNativeCrash(crashType: Int) {
         WeLogger.w("TestCrash", "Triggering Native test crash, type: $crashType")
 
-        // 检查 Native 崩溃处理器是否已安装
         if (nativeCrashHandler == null) {
             WeLogger.w("TestCrash", "Native crash handler is null, attempting to initialize...")
 
-            // 尝试重新初始化
             if (appContext == null) {
                 try {
-                    // 重新获取 Application Context
                     val activityThreadClass = Class.forName("android.app.ActivityThread")
-                    val currentApplicationMethod =
-                        activityThreadClass.getMethod("currentApplication")
+                    val currentApplicationMethod = activityThreadClass.getMethod("currentApplication")
                     appContext = currentApplicationMethod.invoke(null) as? Context
                     WeLogger.i("TestCrash", "Application context obtained: ${appContext != null}")
                 } catch (e: Throwable) {
@@ -262,7 +248,6 @@ object TestCrash : ClickableHookItem() {
             WeLogger.i("TestCrash", "Native crash handler installed successfully")
         }
 
-        // 延迟触发,确保对话框已关闭
         Handler(Looper.getMainLooper()).postDelayed({
             try {
                 WeLogger.i("TestCrash", "About to trigger native crash type: $crashType")
@@ -275,59 +260,36 @@ object TestCrash : ClickableHookItem() {
         }, 500)
     }
 
-    /**
-     * 触发空指针异常
-     */
     private fun triggerNullPointerException() {
         val obj: String? = null
         @Suppress("KotlinConstantConditions")
-        obj!!.length // 触发 NullPointerException
+        obj!!.length
     }
 
-    /**
-     * 触发数组越界异常
-     */
     private fun triggerArrayIndexOutOfBoundsException() {
         val array = arrayOf(1, 2, 3)
-
         @Suppress("UNUSED_VARIABLE", "unused")
-        val value = array[10] // 触发 ArrayIndexOutOfBoundsException
+        val value = array[10]
     }
 
-    /**
-     * 触发类型转换异常
-     */
     private fun triggerClassCastException() {
         val obj: Any = "String"
-
         @Suppress("UNUSED_VARIABLE", "UNCHECKED_CAST", "unused", "KotlinConstantConditions")
-        val number = obj as Int // 触发 ClassCastException
+        val number = obj as Int
     }
 
-    /**
-     * 触发算术异常
-     */
     private fun triggerArithmeticException() {
         @Suppress("UNUSED_VARIABLE", "DIVISION_BY_ZERO", "unused")
-        val result = 10 / 0 // 触发 ArithmeticException
+        val result = 10 / 0
     }
 
-    /**
-     * 触发栈溢出错误
-     */
     private fun triggerStackOverflowError() {
-        recursiveMethod() // 触发 StackOverflowError
+        recursiveMethod()
     }
 
-    /**
-     * 递归方法,用于触发栈溢出
-     */
     private fun recursiveMethod() {
         recursiveMethod()
     }
 
-    /**
-     * 隐藏开关控件
-     */
     override fun noSwitchWidget(): Boolean = true
 }

@@ -60,7 +60,7 @@ object AntiMomentsDelete : SwitchHookItem(), WeDatabaseListenerApi.IUpdateListen
 
                 if (appendWatermark(proto, 5)) {
                     values.put("content", proto.toMessageBytes())
-                    WeLogger.i(TAG, ">> 拦截成功：[$kindName] 已注入标记")
+                    WeLogger.i(TAG, "拦截成功：[$kindName] 已注入标记")
                 }
             } catch (e: Exception) {
                 WeLogger.e(TAG, "朋友圈 Protobuf 处理失败", e)

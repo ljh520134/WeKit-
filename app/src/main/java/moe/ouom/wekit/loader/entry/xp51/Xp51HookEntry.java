@@ -17,22 +17,15 @@ public class Xp51HookEntry implements IXposedHookLoadPackage, IXposedHookZygoteI
     @Override
     public void handleLoadPackage(final XC_LoadPackage.LoadPackageParam lpparam) throws ReflectiveOperationException {
         sLoadPackageParam = lpparam;
-        switch (lpparam.packageName) {
-            case PackageNames.THIS: {
-                Xp51HookStatusInit.init(lpparam.classLoader);
-                break;
+        if (lpparam.packageName.equals(PackageNames.THIS)) {
+            Xp51HookStatusInit.init(lpparam.classLoader);
+        } else if (lpparam.packageName.startsWith(PackageNames.WECHAT)) {
+            if (sInitZygoteStartupParam == null) {
+                throw new IllegalStateException("handleLoadPackage: sInitZygoteStartupParam is null");
             }
-            case PackageNames.WECHAT: {
-                if (sInitZygoteStartupParam == null) {
-                    throw new IllegalStateException("handleLoadPackage: sInitZygoteStartupParam is null");
-                }
-                sCurrentPackageName = lpparam.packageName;
-                ModuleLoader.initialize(lpparam.appInfo.dataDir, lpparam.classLoader,
-                        Xp51HookImpl.INSTANCE, Xp51HookImpl.INSTANCE, getModulePath(), true);
-                break;
-            }
-            default:
-                break;
+            sCurrentPackageName = lpparam.packageName;
+            ModuleLoader.initialize(lpparam.appInfo.dataDir, lpparam.classLoader,
+                    Xp51HookImpl.INSTANCE, Xp51HookImpl.INSTANCE, getModulePath(), true);
         }
     }
 

@@ -38,11 +38,11 @@ class DexMethodHookBuilder(
             return true
         }
 
-        if (hookItem is SwitchHookItem) {
+        if (hookItem is ClickableHookItem) {
             return hookItem.isEnabled
         }
 
-        if (hookItem is ClickableHookItem) {
+        if (hookItem is SwitchHookItem) {
             return hookItem.isEnabled
         }
 

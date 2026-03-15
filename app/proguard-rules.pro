@@ -9,7 +9,8 @@
 -keep class moe.ouom.wekit.core.model.ApiHookItem { *; }
 -keep class moe.ouom.wekit.core.model.BaseHookItem { *; }
 -keep class moe.ouom.wekit.hooks.items.scripting_kts.** { *; }
--keep class moe.ouom.wekit.loader.** { *; }
+-adaptresourcefilecontents src/main/assets/xposed_init
+-adaptresourcefilecontents src/main/resources/META-INF/xposed/java_init.list
 
 # Attributes
 -keepattributes Signature,RuntimeVisibleAnnotations,AnnotationDefault,LineNumberTable,SourceFile,*Annotation*
