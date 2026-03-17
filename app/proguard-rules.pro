@@ -31,16 +31,6 @@
     @com.google.gson.annotations.SerializedName <fields>;
 }
 
-# MMKV
--keep class com.tencent.mmkv.MMKV {
-    public long decodeLong(java.lang.String, long);
-    public static com.tencent.mmkv.MMKV defaultMMKV();
-}
-
-# Ktor
--keep class io.ktor.** { *; }
--keep class io.netty.** { *; }
-
 # Suppress warnings
 -dontwarn java.lang.reflect.AnnotatedType
 -dontwarn java.beans.**
@@ -50,3 +40,13 @@
 -dontwarn org.apache.logging.log4j.**
 -dontwarn java.lang.management.**
 -dontwarn reactor.blockhound.**
+-dontwarn com.aayushatharva.brotli4j.**
+-dontwarn com.github.luben.zstd.**
+-dontwarn com.jcraft.jzlib.**
+-dontwarn com.ning.compress.**
+-dontwarn lzma.sdk.**
+-dontwarn net.jpountz.**
+-dontwarn com.oracle.svm.core.annotate.**
+-dontwarn io.netty.pkitesting.**
+-dontwarn com.sun.nio.file.SensitivityWatchEventModifier
+-dontwarn org.osgi.annotation.**

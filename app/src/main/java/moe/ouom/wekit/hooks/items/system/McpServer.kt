@@ -77,8 +77,6 @@ object McpServer : ClickableHookItem() {
     // groupId: String, Map<wxId: String, displayName: String>
     private val groupMembers = LruCache<String, Map<String, String>>()
 
-    private val contacts by lazy { WeDatabaseApi.getContacts() }
-
     private val mcpServer by lazy {
         val server = Server(
             serverInfo = Implementation(
