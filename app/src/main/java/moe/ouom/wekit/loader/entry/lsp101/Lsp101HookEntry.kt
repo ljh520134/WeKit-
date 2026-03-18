@@ -16,6 +16,7 @@ import moe.ouom.wekit.loader.entry.lsp10x.Lsp10xHookEntryHandler
 class Lsp101HookEntry(private val self: XposedModule) : Lsp10xHookEntryHandler {
 
     fun onModuleLoaded(param: XposedModuleInterface.ModuleLoadedParam) {
+        Lsp101HookImpl.init(self)
     }
 
     override fun onPackageLoaded(param: PackageLoadedParam) {
@@ -39,7 +40,7 @@ class Lsp101HookEntry(private val self: XposedModule) : Lsp10xHookEntryHandler {
         val dataDir = ai.dataDir
         Log.d(
             BuildConfig.TAG,
-            "Lsp101HookEntry.handleLoadHostPackage: dataDir=$dataDir, modulePath=$modulePath"
+            "Lsp101HookEntry: handleLoadHostPackage: dataDir=$dataDir, modulePath=$modulePath"
         )
         ModuleLoader.initialize(
             dataDir,
