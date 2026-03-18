@@ -1,6 +1,7 @@
 package moe.ouom.wekit.utils
 
 import android.os.Environment
+import android.util.Log
 import moe.ouom.wekit.BuildConfig
 import java.nio.file.Path
 import kotlin.io.path.Path
@@ -19,7 +20,8 @@ object ModulePaths {
                     sysStorage / "Android" / "data" / HostInfo.packageName / "files" / BuildConfig.TAG
                 directory.createDirectories()
                 return directory
-            } catch (_: Exception) {
+            } catch (e: Exception) {
+                Log.e("ModulePaths", "ModulePaths.data threw", e)
                 return null
             }
         }

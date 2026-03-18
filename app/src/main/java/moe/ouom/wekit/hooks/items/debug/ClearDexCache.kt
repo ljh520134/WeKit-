@@ -18,7 +18,7 @@ object ClearDexCache : ClickableHookItem() {
                 text = {
                     Text(
                         "这将删除所有的 DEX 适配信息，宿主重启后需要重新适配。\n" +
-                                "确定清除吗？"
+                        "确定清除吗？"
                     )
                 },
                 dismissButton = { TextButton(onClick = dismiss) { Text("取消") } },

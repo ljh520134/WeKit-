@@ -4,25 +4,31 @@ import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
 import android.view.MenuItem
+import com.android.dx.stock.ProxyBuilder
 import com.highcapable.kavaref.KavaRef.Companion.asResolver
+import com.highcapable.kavaref.extension.ClassLoaderProvider
 import com.highcapable.kavaref.extension.createInstance
 import com.highcapable.kavaref.extension.toClass
 import com.highcapable.kavaref.extension.toClassOrNull
-import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XposedHelpers
 import dev.ujhhgtg.nameof.nameof
 import moe.ouom.wekit.BuildConfig
+import moe.ouom.wekit.core.dsl.dexClass
 import moe.ouom.wekit.core.dsl.dexMethod
 import moe.ouom.wekit.core.model.ApiHookItem
 import moe.ouom.wekit.dexkit.DexMethodDescriptor
 import moe.ouom.wekit.dexkit.abc.IResolvesDex
 import moe.ouom.wekit.hooks.utils.annotation.HookItem
 import moe.ouom.wekit.ui.content.MainSettingsDialog
+import moe.ouom.wekit.utils.ModulePaths
 import moe.ouom.wekit.utils.logging.WeLogger
 import org.luckypray.dexkit.DexKitBridge
+import org.luckypray.dexkit.query.enums.StringMatchType
+import java.lang.reflect.InvocationHandler
 import java.lang.reflect.Modifier
+import java.nio.file.Path
 
-@SuppressLint("DiscouragedApi")
+@SuppressLint("DiscouragedApi", "StaticFieldLeak")
 @HookItem(path = "API/设置模块入口")
 object WeSettingsInjector : ApiHookItem(), IResolvesDex {
 
@@ -30,6 +36,12 @@ object WeSettingsInjector : ApiHookItem(), IResolvesDex {
     private val methodSetTitle by dexMethod()
     private val methodGetKey by dexMethod()
     private val methodAddPref by dexMethod()
+
+    // method 3
+    private val methodSettingGroupPluginOnClick by dexMethod()
+    private val classSettingItemClassesProvider by dexClass()
+    private val classBaseSettingItem by dexClass()
+    private val classSettingLocation by dexClass()
 
     private val TAG = nameof(WeSettingsInjector)
 
@@ -82,20 +94,14 @@ object WeSettingsInjector : ApiHookItem(), IResolvesDex {
         }
 
         // 查找 getKey 方法
-        WeLogger.d("WeSettingInjector", "Searching for getKey method in ${prefClass.name}")
         val getKeyCandidates = prefClass.findMethod {
             matcher {
                 paramCount = 0
                 returnType = "java.lang.String"
             }
         }
-        WeLogger.d(
-            "WeSettingInjector",
-            "found ${getKeyCandidates.size} String methods with 0 params: ${getKeyCandidates.map { it.name }}"
-        )
 
         val targetGetKey = getKeyCandidates.firstOrNull { it.name != "toString" }
-        WeLogger.d("WeSettingInjector", "Selected getKey method: ${targetGetKey?.name}")
 
         if (targetGetKey != null) {
             methodGetKey.setDescriptor(
@@ -107,10 +113,7 @@ object WeSettingsInjector : ApiHookItem(), IResolvesDex {
             )
             methodGetKey.getDescriptorString()?.let {
                 descriptors[methodGetKey.key] = it
-                WeLogger.d("WeSettingInjector", "Successfully saved getKey descriptor: $it")
             }
-        } else {
-            WeLogger.e("WeSettingInjector", "Failed to find getKey method!")
         }
 
         // 查找 Adapter 类和 addPreference 方法
@@ -143,6 +146,44 @@ object WeSettingsInjector : ApiHookItem(), IResolvesDex {
             }
         }
 
+        methodSettingGroupPluginOnClick.find(dexKit, descriptors) {
+            matcher {
+                declaredClass = "com.tencent.mm.plugin.setting.ui.setting_new.settings.other.SettingGroupPlugin"
+                usingEqStrings("MicroMsg.SettingGroupPlugin", "openLiteApp query:%s")
+            }
+        }
+
+        classSettingItemClassesProvider.find(dexKit, descriptors) {
+            matcher {
+                usingEqStrings("Repairer_Setting")
+
+                superClass {
+                    usingEqStrings("type")
+                }
+            }
+        }
+
+        classBaseSettingItem.find(dexKit, descriptors) {
+            matcher {
+                usingEqStrings("", "activity", "context", "intent")
+
+                addMethod {
+                    name = "<init>"
+                    paramTypes("androidx.appcompat.app.AppCompatActivity")
+                }
+
+                addInterface {
+                    className("com.tencent.mm.plugin.newtips.model", StringMatchType.StartsWith)
+                }
+            }
+        }
+
+        classSettingLocation.find(dexKit, descriptors) {
+            matcher {
+                usingEqStrings("SettingLocation(parentGroup=", ", frontItem=")
+            }
+        }
+
         return descriptors
     }
 
@@ -151,10 +192,9 @@ object WeSettingsInjector : ApiHookItem(), IResolvesDex {
         tryHookLegacySettings()
 
         // 尝试 Hook 新版 UI (8.0.67+)
-        // tryHookNewSettingsMethod1(classLoader)
-
-        // 尝试 Hook 新版 UI (8.0.67+), WAuxiliary 方法
-        tryHookNewSettings()
+        tryHookNewSettingsMethod1()
+        tryHookNewSettingsMethod2()
+        // tryHookNewSettingsMethod3()
     }
 
     /**
@@ -170,12 +210,10 @@ object WeSettingsInjector : ApiHookItem(), IResolvesDex {
         val getKeyMethod = methodGetKey.method
         val addPrefMethod = methodAddPref.method
 
-        val mInitView = clsSettingsUi.asResolver().firstMethod {
+        clsSettingsUi.asResolver().firstMethod {
             name = "initView"
             parameterCount = 0
-        }
-
-        mInitView.hookAfter { param: XC_MethodHook.MethodHookParam ->
+        }.hookAfter { param ->
             val activity = param.thisObject as Activity
             val context = activity as Context
 
@@ -214,39 +252,123 @@ object WeSettingsInjector : ApiHookItem(), IResolvesDex {
         }
     }
 
-    private fun tryHookNewSettings() {
+    private fun tryHookNewSettingsMethod1() {
         val newSettingsCls =
             "com.tencent.mm.plugin.setting.ui.setting_new.base.BaseSettingPrefUI"
                 .toClassOrNull() ?: return
 
         newSettingsCls.asResolver().firstMethod { name = "onCreate" }.hookAfter { param ->
             if (param.thisObject.javaClass.name
-                == "com.tencent.mm.plugin.setting.ui.setting_new.MainSettingsUI"
-            ) {
-                val activity = param.thisObject as Activity
-                activity.asResolver()
-                    .firstMethod {
-                        name = "addTextOptionMenu"
-                        parameters(
-                            Int::class,
-                            String::class,
-                            MenuItem.OnMenuItemClickListener::class
-                        )
-                        superclass()
-                    }
-                    .invoke(0, BuildConfig.TAG, SettingsMenuItemClickListener(activity))
-            }
+                != "com.tencent.mm.plugin.setting.ui.setting_new.MainSettingsUI"
+            ) return@hookAfter
+
+            val activity = param.thisObject as Activity
+            activity.asResolver()
+                .firstMethod {
+                    name = "addTextOptionMenu"
+                    parameters(
+                        Int::class,
+                        String::class,
+                        MenuItem.OnMenuItemClickListener::class
+                    )
+                    superclass()
+                }
+                .invoke(0, BuildConfig.TAG, SettingsMenuItemClickListener(activity))
         }
     }
 
-    private fun openSettingsDialog(activity: Activity) {
-        MainSettingsDialog(activity).show()
+    private fun createSettingItemClass(
+        cacheDir: Path
+    ): Class<*> {
+        val baseClass = classBaseSettingItem.clazz
+        val classSettingGroupMain = "com.tencent.mm.plugin.setting.ui.setting_new.settings.SettingGroupMain".toClass()
+
+        val handler = InvocationHandler { proxy, method, args ->
+            when (method.name) {
+                "C6" -> return@InvocationHandler classSettingGroupMain
+                "K6" -> return@InvocationHandler 1
+                "Q6" -> { openSettingsDialog(args[0] as Context) }
+                // header name string resource
+//                "u6" -> return@InvocationHandler 0x7f1067e8
+                "w6" -> return@InvocationHandler "SettingGroup_Main_Other_WeKit"
+                "x6" -> return@InvocationHandler classSettingLocation.clazz.createInstance(
+                    classSettingGroupMain,
+                    "com.tencent.mm.plugin.setting.ui.setting_new.settings.SettingAdditionHeaderSearch".toClass()
+                )
+                "z6" -> return@InvocationHandler 0x7f1067e8
+                else -> return@InvocationHandler ProxyBuilder.callSuper(proxy, method, *args)
+            }
+        }
+
+        return ProxyBuilder.forClass(baseClass)
+            .dexCache(cacheDir.toFile())
+            .parentClassLoader(ClassLoaderProvider.classLoader!!)
+            .constructorArgTypes("androidx.appcompat.app.AppCompatActivity".toClass())
+            .handler(handler)
+            .buildProxyClass()
+            .also {
+                // if generating a proxy class with buildProxyClass(), instances do not automatically have a handler set
+                it.asResolver().firstConstructor().hookAfter { param ->
+                    ProxyBuilder.setInvocationHandler(param.thisObject, handler)
+                }
+            }
     }
 
-    private class SettingsMenuItemClickListener(val activity: Activity) :
+    private fun tryHookNewSettingsMethod2() {
+        val customSettingItemClass = createSettingItemClass(ModulePaths.cache)
+
+        // create dependency chain
+        "com.tencent.mm.plugin.setting.ui.setting_new.settings.SettingGroupPersonalInfo".toClass().asResolver()
+            .firstMethod {
+                returnType = classSettingLocation.clazz
+            }
+            .hookBefore { param ->
+                param.result = classSettingLocation.clazz.createInstance(
+                    "com.tencent.mm.plugin.setting.ui.setting_new.settings.SettingGroupMain".toClass(),
+                    customSettingItemClass
+                )
+            }
+
+        classSettingItemClassesProvider.clazz.asResolver().firstMethod()
+            .hookAfter { param ->
+                val map = param.result as? Map<*, *>? ?: return@hookAfter
+                val originalSet = map.values.first() as LinkedHashSet<*>
+                val newSet = originalSet + customSettingItemClass
+                WeLogger.i(TAG, "injected setting item class into setting classes map; originalSet.size=${originalSet.size}, newSet.size=${newSet.size}")
+                param.result = mapOf(map.keys.first() to newSet)
+            }
+
+        val newSettingsCls =
+            "com.tencent.mm.plugin.setting.ui.setting_new.base.BaseSettingPrefUI"
+                .toClassOrNull() ?: return
+
+        newSettingsCls.asResolver().firstMethod { name = "superImportUIComponents" }.hookAfter { param ->
+            if (param.thisObject.javaClass.name
+                != "com.tencent.mm.plugin.setting.ui.setting_new.MainSettingsUI"
+            ) return@hookAfter
+
+            @Suppress("UNCHECKED_CAST")
+            val settingItemClasses = param.args[0] as HashSet<Class<*>>
+            settingItemClasses.add(customSettingItemClass)
+        }
+    }
+
+//    private fun tryHookNewSettingsMethod3() {
+//        methodSettingGroupPluginOnClick.hookBefore { param ->
+//            val context = param.args[0] as Context
+//            openSettingsDialog(context)
+//            param.result = null
+//        }
+//    }
+
+    private fun openSettingsDialog(context: Context) {
+        MainSettingsDialog(context).show()
+    }
+
+    private class SettingsMenuItemClickListener(val context: Context) :
         MenuItem.OnMenuItemClickListener {
         override fun onMenuItemClick(p0: MenuItem): Boolean {
-            openSettingsDialog(activity)
+            openSettingsDialog(context)
             return true
         }
     }

@@ -183,7 +183,7 @@ object CrashInterceptor : SwitchHookItem() {
 
             val summary = extractCrashSummary(crashInfo)
 
-            WeLogger.e(TAG, "crashLogFile: $crashLogFile")
+            WeLogger.i(TAG, "crashLogFile: $crashLogFile")
 
             Handler(Looper.getMainLooper()).post {
                 try {

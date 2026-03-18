@@ -69,7 +69,7 @@ class Lsp101HookImpl private constructor() : IHookBridge, ILoaderService {
 
     override val hookedMethods: Set<Member?> = Lsp101HookWrapper.hookedMethodsRaw
 
-    override val entryPointName: String = nameof(Lsp101HookImpl)
+    override val entryPointName: String = nameof(Lsp101HookImpl::class)
 
     override val loaderVersionCode: Int = BuildConfig.VERSION_CODE
 

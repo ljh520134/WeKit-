@@ -38,6 +38,11 @@ dependencyResolutionManagement {
         }
         mavenCentral()
         maven("https://raw.githubusercontent.com/HighCapable/maven-repository/main/repository/releases")
+        maven("https://oss.sonatype.org/content/repositories/snapshots/") {
+            content {
+                includeGroup("com.linkedin.dexmaker")
+            }
+        }
     }
 
     versionCatalogs {

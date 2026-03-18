@@ -349,6 +349,7 @@ dependencies {
     implementation(libs.kavaref.core)
     implementation(libs.kavaref.extension)
     implementation(libs.libsu.core)
+    implementation(libs.dexmaker)
     implementation(project(":libs:common:annotation-scanner"))
     ksp(project(":libs:common:annotation-scanner"))
 

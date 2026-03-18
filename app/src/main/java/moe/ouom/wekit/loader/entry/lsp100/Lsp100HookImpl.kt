@@ -25,7 +25,7 @@ class Lsp100HookImpl private constructor() : IHookBridge, ILoaderService {
     override val hookCounter: Long get() = Lsp100HookWrapper.getHookCounter()
     override val hookedMethods: Set<Member> get() = Lsp100HookWrapper.getHookedMethodsRaw()
 
-    override val entryPointName: String get() = nameof(Lsp100HookImpl)
+    override val entryPointName: String get() = nameof(Lsp100HookImpl::class)
     override val loaderVersionName: String get() = BuildConfig.VERSION_NAME
     override val loaderVersionCode: Int get() = BuildConfig.VERSION_CODE
     override val mainModulePath: String get() = self!!.applicationInfo.sourceDir
