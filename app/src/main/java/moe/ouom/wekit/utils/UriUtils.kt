@@ -7,11 +7,10 @@ import android.content.Intent
 import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.browser.customtabs.CustomTabsIntent
-import moe.ouom.wekit.preferences.WePrefs
 
 fun Uri.openInSystem(
     context: Context,
-    useCustomTabs: Boolean = WePrefs.getBoolOrFalse("use_custom_tabs")) {
+    useCustomTabs: Boolean = false) {
     if (useCustomTabs) {
         val forwardBitmap =
             BitmapFactory.decodeResource(

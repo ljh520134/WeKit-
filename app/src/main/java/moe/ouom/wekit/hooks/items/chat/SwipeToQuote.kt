@@ -11,15 +11,14 @@ import android.widget.FrameLayout
 import android.widget.LinearLayout
 import com.highcapable.kavaref.KavaRef.Companion.asResolver
 import de.robv.android.xposed.XC_MethodHook
-import dev.ujhhgtg.nameof.nameof
 import moe.ouom.wekit.core.dsl.dexClass
 import moe.ouom.wekit.core.model.SwitchHookItem
 import moe.ouom.wekit.dexkit.abc.IResolvesDex
-import moe.ouom.wekit.hooks.utils.annotation.HookItem
 import moe.ouom.wekit.hooks.api.core.WeMessageApi
 import moe.ouom.wekit.hooks.api.core.WeServiceApi
 import moe.ouom.wekit.hooks.api.core.model.MessageInfo
 import moe.ouom.wekit.hooks.api.ui.WeChatMessageViewApi
+import moe.ouom.wekit.hooks.utils.annotation.HookItem
 import moe.ouom.wekit.ui.utils.findViewWhich
 import moe.ouom.wekit.utils.LruCache
 import org.luckypray.dexkit.DexKitBridge
@@ -32,8 +31,6 @@ import kotlin.math.exp
 @HookItem(path = "聊天/左划引用消息", desc = "在消息上左划以引用")
 object SwipeToQuote : SwitchHookItem(), IResolvesDex,
     WeChatMessageViewApi.ICreateViewListener {
-
-    private val TAG = nameof(SwipeToQuote)
 
     private val cache = LruCache<Pair<String, Long>, Boolean>()
 

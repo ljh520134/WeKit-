@@ -137,7 +137,7 @@ object LinkExternalAppJump : SwitchHookItem(),
 
                         item {
                             CustomTabsRow {
-                                url.openInSystem(context)
+                                url.openInSystem(context, true)
                                 dismiss()
                             }
                         }
