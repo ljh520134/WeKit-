@@ -57,13 +57,11 @@ object FingerprintPay : ClickableHookItem() {
     private const val KEY_ENCRYPTED_DATA = "payment_pswd_encdata"
 
     private const val SPLIT_CHAR = ':'
-
     @Volatile
     private var isVerificationOngoing = false
 
     override fun onEnable() {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
-            ToastUtils.showToast("Android 版本过低 (< Android 11), 无法使用指纹验证!")
             return
         }
 

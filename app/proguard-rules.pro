@@ -4,11 +4,6 @@
 -keep class * implements moe.ouom.wekit.dexkit.abc.IResolvesDex {
     public void resolveDex(...);
 }
--keep class moe.ouom.wekit.core.model.SwitchHookItem { *; }
--keep class moe.ouom.wekit.core.model.ClickableHookItem { *; }
--keep class moe.ouom.wekit.core.model.ApiHookItem { *; }
--keep class moe.ouom.wekit.core.model.BaseHookItem { *; }
--keep class moe.ouom.wekit.hooks.items.scripting_kts.** { *; }
 -keep class moe.ouom.wekit.loader.entry.lsp10x.Lsp10xUnifiedHookEntry { *; }
 -keep class moe.ouom.wekit.loader.entry.xp51.Xp51HookEntry { *; }
 -keep class moe.ouom.wekit.loader.entry.frida.FridaInjectEntry { *; }
