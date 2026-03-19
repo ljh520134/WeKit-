@@ -46,6 +46,7 @@ import moe.ouom.wekit.utils.createDirectoriesNoThrow
 import moe.ouom.wekit.utils.logging.WeLogger
 import moe.ouom.wekit.utils.polyfills.convToList
 import org.luckypray.dexkit.DexKitBridge
+import java.lang.reflect.Modifier
 import java.nio.file.Files
 import java.nio.file.Path
 import kotlin.io.path.absolutePathString
@@ -125,7 +126,7 @@ object StickersSync : ClickableHookItem(), IResolvesDex {
                 val packs = packDirs.map { packDir ->
                     async {
                         semaphore.withPermit {
-                            val packId = packDir.name
+                            val packDirName = packDir.name
                             val stickers = mutableListOf<Any>()
 
                             val hashCache = loadHashCache(packDir)
@@ -166,12 +167,12 @@ object StickersSync : ClickableHookItem(), IResolvesDex {
                             if (stickers.isNotEmpty()) {
                                 WeLogger.i(
                                     TAG,
-                                    "loaded pack '$packId' with ${stickers.size} stickers"
+                                    "loaded pack '$packDirName' with ${stickers.size} stickers"
                                 )
                                 StickerPack(
-                                    appPackId = "$STICKER_PACK_ID_PREFIX.$packId",
-                                    packId = packId,
-                                    packName = packId,
+                                    appPackId = "$STICKER_PACK_ID_PREFIX.$packDirName",
+                                    packId = packDirName,
+                                    packName = packDirName,
                                     stickers = stickers
                                 )
                             } else null
@@ -213,13 +214,12 @@ object StickersSync : ClickableHookItem(), IResolvesDex {
 
     private val methodGetEmojiGroupInfo by dexMethod()
     private val methodAddAllGroupItems by dexMethod()
-
-    // this module doesn't provide a builtin dexConstructor, so I have to use dexClass, and then use .createInstance()
     private val ctorGroupItemInfo by dexConstructor()
     private val classEmojiMgrImpl by dexClass()
     private val classEmojiStorageMgr by dexClass()
     private val classEmojiInfoStorage by dexClass()
     private val methodSaveEmojiThumb by dexMethod()
+    private val ctorResourceLoadOptions by dexConstructor()
 
     private val stickersDir: Path by lazy { (KnownPaths.modulePata / "stickers")
         .createDirectoriesNoThrow() }
@@ -242,7 +242,7 @@ object StickersSync : ClickableHookItem(), IResolvesDex {
             .invoke(context, path) as String
     }
 
-    private val emojiInfoStorage: Any by lazy {
+    private val emojiInfoStorage by lazy {
         val emojiStorageMgr = classEmojiStorageMgr.asResolver()
             .firstMethod {
                 modifiers(Modifiers.STATIC)
@@ -257,14 +257,16 @@ object StickersSync : ClickableHookItem(), IResolvesDex {
     }
 
     fun getEmojiInfoByMd5(md5: String): Any {
-        val emojiThumb = emojiInfoStorage.asResolver()
+        return emojiInfoStorage.asResolver()
             .firstMethod {
                 parameters(String::class)
                 returnType = "com.tencent.mm.storage.emotion.EmojiInfo"
             }
             .invoke(md5)!!
-        return emojiThumb
     }
+
+    private const val PLACEHOLDER_PACK_URL = "https://avatars.githubusercontent.com/Ujhhgtg"
+    private const val SEPERATOR = ":"
 
     override fun onEnable() {
         val emojiGroupInfoCls = "com.tencent.mm.storage.emotion.EmojiGroupInfo".toClass()
@@ -281,11 +283,11 @@ object StickersSync : ClickableHookItem(), IResolvesDex {
                 val stickersPackData = ContentValues()
                 stickersPackData.put(
                     "packGrayIconUrl",
-                    "https://avatars.githubusercontent.com/Ujhhgtg"
+                    "$PLACEHOLDER_PACK_URL$SEPERATOR${pack.packName}"
                 )
                 stickersPackData.put(
                     "packIconUrl",
-                    "https://avatars.githubusercontent.com/Ujhhgtg"
+                    "$PLACEHOLDER_PACK_URL$SEPERATOR${pack.packName}"
                 )
                 stickersPackData.put("packName", pack.packName)
                 stickersPackData.put("packStatus", 1)
@@ -344,6 +346,22 @@ object StickersSync : ClickableHookItem(), IResolvesDex {
                 stickerList.addAll(matchingPack.stickers)
             }
         }
+
+//        ctorResourceLoadOptions.hookAfter { param ->
+//            val url = param.args[0] as String
+//            if (url.startsWith(PLACEHOLDER_PACK_URL)) {
+//                val fResSource = param.thisObject.asResolver()
+//                    .firstField {
+//                        type { it isSubclassOf Enum::class }
+//                    }
+//                val newResSource = enumValueOfClass(fResSource.get()!!.javaClass, "LOCAL_PATH")
+//                fResSource.set(newResSource)
+//                param.thisObject.asResolver()
+//                    .firstField { type = Any::class }
+//                    .set((stickersDir / url.substringAfter(SEPERATOR)).absolutePathString())
+//                WeLogger.d(TAG, "intercepted")
+//            }
+//        }
     }
 
     override fun resolveDex(dexKit: DexKitBridge): Map<String, String> {
@@ -412,6 +430,23 @@ object StickersSync : ClickableHookItem(), IResolvesDex {
             }
         }
 
+        ctorResourceLoadOptions.find(dexKit, descriptors) {
+            matcher {
+                declaredClass {
+                    modifiers = Modifier.FINAL
+                    addFieldForType(Any::class.java)
+                    addField {
+                        type {
+                            superClass("java.lang.Enum")
+                        }
+                    }
+                    usingEqStrings("")
+                }
+
+                paramTypes(String::class.java)
+            }
+        }
+
         return descriptors
     }
 
@@ -426,7 +461,6 @@ object StickersSync : ClickableHookItem(), IResolvesDex {
                             modifier = androidx.compose.ui.Modifier
                                 .fillMaxWidth()
                                 .clickable {
-                                    var deletedCount = 0
                                     stickerPacks.forEach { pack ->
                                         WeDatabaseApi.dbInstance.asResolver()
                                             .firstMethod {
@@ -442,9 +476,8 @@ object StickersSync : ClickableHookItem(), IResolvesDex {
                                                 "productID = ?",
                                                 arrayOf(pack.appPackId)
                                             )
-                                        deletedCount++
                                     }
-                                    ToastUtils.showToast("已清除 $deletedCount 个贴纸包缓存!")
+                                    ToastUtils.showToast("已清除 ${stickerPacks.size} 个贴纸包缓存!")
                                 }
                                 .padding(vertical = 12.dp, horizontal = 8.dp),
                             verticalAlignment = Alignment.CenterVertically,
