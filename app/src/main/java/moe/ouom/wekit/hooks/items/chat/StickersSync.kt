@@ -58,6 +58,8 @@ import kotlin.io.path.nameWithoutExtension
 import kotlin.io.path.readText
 import kotlin.io.path.walk
 import kotlin.io.path.writeText
+import com.highcapable.kavaref.extension.isSubclassOf
+import moe.ouom.wekit.utils.enumValueOfClass
 
 @HookItem(
     path = "聊天/贴纸包同步",
