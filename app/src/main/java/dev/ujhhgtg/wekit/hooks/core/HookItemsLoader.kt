@@ -117,7 +117,8 @@ object HookItemsLoader {
                         brokenItems,
                         appInfo,
                         CoroutineScope(Dispatchers.Main + SupervisorJob()),
-                        onDismiss = dismiss
+                        dialog,
+                        dismiss
                     )
                 }
             }

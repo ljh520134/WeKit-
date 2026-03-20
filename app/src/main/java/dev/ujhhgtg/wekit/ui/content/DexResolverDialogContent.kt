@@ -1,5 +1,6 @@
 package dev.ujhhgtg.wekit.ui.content
 
+import android.app.Dialog
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
@@ -33,6 +34,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import dev.ujhhgtg.nameof.nameof
+import dev.ujhhgtg.wekit.dexkit.abc.IResolvesDex
+import dev.ujhhgtg.wekit.dexkit.cache.DexCacheManager
+import dev.ujhhgtg.wekit.hooks.core.BaseHookItem
+import dev.ujhhgtg.wekit.utils.logging.WeLogger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -43,10 +48,6 @@ import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.toList
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import dev.ujhhgtg.wekit.hooks.core.BaseHookItem
-import dev.ujhhgtg.wekit.dexkit.abc.IResolvesDex
-import dev.ujhhgtg.wekit.dexkit.cache.DexCacheManager
-import dev.ujhhgtg.wekit.utils.logging.WeLogger
 import org.luckypray.dexkit.DexKitBridge
 import java.io.PrintWriter
 import java.io.StringWriter
@@ -77,7 +78,8 @@ fun DexResolverDialogContent(
     outdatedItems: List<IResolvesDex>,
     appInfo: ApplicationInfo,
     scope: CoroutineScope,
-    onDismiss: () -> Unit
+    dialog: Dialog,
+    dismiss: () -> Unit
 ) {
     var phase by remember { mutableStateOf<DialogPhase>(DialogPhase.Idle) }
     var currentTask by remember { mutableStateOf("") }
@@ -132,6 +134,7 @@ fun DexResolverDialogContent(
 
     fun startScanning() {
         phase = DialogPhase.Scanning
+        dialog.setCancelable(false)
         scope.launch {
             try {
                 val dexKit = withContext(Dispatchers.IO) { DexKitBridge.create(appInfo.sourceDir) }
@@ -162,6 +165,7 @@ fun DexResolverDialogContent(
 
                     val failed = results.filterIsInstance<ScanResult.Failed>()
                     phase = DialogPhase.Done(failed)
+                    dialog.setCancelable(true)
                 }
             } catch (e: Exception) {
                 WeLogger.e(TAG, "Scanning failed", e)
@@ -276,14 +280,14 @@ fun DexResolverDialogContent(
                 horizontalArrangement = Arrangement.spacedBy(8.dp, Alignment.End)
             ) {
                 if (phase !is DialogPhase.Scanning) {
-                    TextButton(onClick = onDismiss) { Text("关闭") }
+                    TextButton(onClick = dismiss) { Text("关闭") }
                 }
                 if (phase is DialogPhase.Idle) {
                     Button(onClick = ::startScanning) { Text("开始适配") }
                 }
                 if (phase is DialogPhase.Done || phase is DialogPhase.Error) {
                     Button(onClick = {
-                        onDismiss()
+                        dismiss()
                         Process.killProcess(Process.myPid())
                     }) { Text("重启应用") }
                 }
