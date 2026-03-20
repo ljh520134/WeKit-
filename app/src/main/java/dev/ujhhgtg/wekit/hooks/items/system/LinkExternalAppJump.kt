@@ -40,9 +40,9 @@ import androidx.core.graphics.drawable.toBitmap
 import androidx.core.net.toUri
 import de.robv.android.xposed.XC_MethodHook
 import dev.ujhhgtg.nameof.nameof
-import dev.ujhhgtg.wekit.core.model.SwitchHookItem
+import dev.ujhhgtg.wekit.hooks.core.SwitchHookItem
 import dev.ujhhgtg.wekit.hooks.api.ui.WeStartActivityApi
-import dev.ujhhgtg.wekit.hooks.utils.annotation.HookItem
+import dev.ujhhgtg.wekit.hooks.core.HookItem
 import dev.ujhhgtg.wekit.ui.content.AlertDialogContent
 import dev.ujhhgtg.wekit.ui.content.TextButton
 import dev.ujhhgtg.wekit.ui.utils.showComposeDialog

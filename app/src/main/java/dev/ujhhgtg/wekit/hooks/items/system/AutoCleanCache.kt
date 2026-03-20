@@ -11,8 +11,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import dev.ujhhgtg.wekit.core.model.ClickableHookItem
-import dev.ujhhgtg.wekit.hooks.utils.annotation.HookItem
+import dev.ujhhgtg.wekit.hooks.core.ClickableHookItem
+import dev.ujhhgtg.wekit.hooks.core.HookItem
 import dev.ujhhgtg.wekit.utils.HostInfo
 import dev.ujhhgtg.wekit.utils.formatBytesSize
 import dev.ujhhgtg.wekit.utils.formatEpoch

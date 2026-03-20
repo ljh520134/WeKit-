@@ -1,8 +1,8 @@
 package dev.ujhhgtg.wekit.hooks.items.debug
 
 import dev.ujhhgtg.nameof.nameof
-import dev.ujhhgtg.wekit.core.model.SwitchHookItem
-import dev.ujhhgtg.wekit.hooks.utils.annotation.HookItem
+import dev.ujhhgtg.wekit.hooks.core.SwitchHookItem
+import dev.ujhhgtg.wekit.hooks.core.HookItem
 import dev.ujhhgtg.wekit.utils.HostInfo
 import dev.ujhhgtg.wekit.utils.RuntimeConfig
 import dev.ujhhgtg.wekit.utils.ToastUtils

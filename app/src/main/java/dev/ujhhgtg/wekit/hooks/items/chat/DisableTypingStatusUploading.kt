@@ -1,10 +1,9 @@
 package dev.ujhhgtg.wekit.hooks.items.chat
 
-import com.highcapable.kavaref.KavaRef.Companion.asResolver
-import dev.ujhhgtg.wekit.core.dsl.dexClass
-import dev.ujhhgtg.wekit.core.model.SwitchHookItem
+import dev.ujhhgtg.wekit.dexkit.dsl.dexClass
+import dev.ujhhgtg.wekit.hooks.core.SwitchHookItem
 import dev.ujhhgtg.wekit.dexkit.abc.IResolvesDex
-import dev.ujhhgtg.wekit.hooks.utils.annotation.HookItem
+import dev.ujhhgtg.wekit.hooks.core.HookItem
 import org.luckypray.dexkit.DexKitBridge
 
 @HookItem(path = "聊天/禁止上传正在输入状态", desc = "禁止应用上传「对方正在输入」状态")

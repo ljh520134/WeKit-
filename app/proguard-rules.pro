@@ -4,14 +4,11 @@
 -keep class * implements dev.ujhhgtg.wekit.dexkit.abc.IResolvesDex {
     public void resolveDex(...);
 }
--keep class dev.ujhhgtg.wekit.core.model.SwitchHookItem { *; }
--keep class dev.ujhhgtg.wekit.core.model.ClickableHookItem { *; }
--keep class dev.ujhhgtg.wekit.core.model.ApiHookItem { *; }
--keep class dev.ujhhgtg.wekit.core.model.BaseHookItem { *; }
 -keep class dev.ujhhgtg.wekit.loader.entry.lsp10x.Lsp10xUnifiedHookEntry { *; }
 -keep class dev.ujhhgtg.wekit.loader.entry.xp51.Xp51HookEntry { *; }
 -keep class dev.ujhhgtg.wekit.loader.entry.frida.FridaInjectEntry { *; }
 -keep class io.github.libxposed.** { *; }
+-keep class de.robv.** { *; }
 
 # Attributes
 -keepattributes Signature,RuntimeVisibleAnnotations,AnnotationDefault,LineNumberTable,SourceFile,*Annotation*
@@ -19,11 +16,6 @@
 # Natives
 -keepclasseswithmembernames class * {
     native <methods>;
-}
-
-# Android
--keep class * implements android.os.Parcelable {
-  public static final android.os.Parcelable$Creator *;
 }
 
 # Suppress warnings

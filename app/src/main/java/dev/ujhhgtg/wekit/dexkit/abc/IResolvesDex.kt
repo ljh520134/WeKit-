@@ -1,8 +1,8 @@
 package dev.ujhhgtg.wekit.dexkit.abc
 
-import dev.ujhhgtg.wekit.core.dsl.DexClassDelegate
-import dev.ujhhgtg.wekit.core.dsl.DexConstructorDelegate
-import dev.ujhhgtg.wekit.core.dsl.DexMethodDelegate
+import dev.ujhhgtg.wekit.dexkit.dsl.DexClassDelegate
+import dev.ujhhgtg.wekit.dexkit.dsl.DexConstructorDelegate
+import dev.ujhhgtg.wekit.dexkit.dsl.DexMethodDelegate
 import org.luckypray.dexkit.DexKitBridge
 
 /**

@@ -3,8 +3,8 @@ package dev.ujhhgtg.wekit.hooks.items.system
 import android.annotation.SuppressLint
 import com.highcapable.kavaref.KavaRef.Companion.asResolver
 import com.highcapable.kavaref.extension.toClass
-import dev.ujhhgtg.wekit.core.model.SwitchHookItem
-import dev.ujhhgtg.wekit.hooks.utils.annotation.HookItem
+import dev.ujhhgtg.wekit.hooks.core.SwitchHookItem
+import dev.ujhhgtg.wekit.hooks.core.HookItem
 import dev.ujhhgtg.wekit.utils.HostInfo
 import java.nio.file.FileSystemException
 import kotlin.io.path.ExperimentalPathApi

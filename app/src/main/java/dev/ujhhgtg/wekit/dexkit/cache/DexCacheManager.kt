@@ -2,7 +2,7 @@ package dev.ujhhgtg.wekit.dexkit.cache
 
 import dev.ujhhgtg.nameof.nameof
 import dev.ujhhgtg.wekit.constants.PreferenceKeys
-import dev.ujhhgtg.wekit.core.model.BaseHookItem
+import dev.ujhhgtg.wekit.hooks.core.BaseHookItem
 import dev.ujhhgtg.wekit.dexkit.abc.IResolvesDex
 import dev.ujhhgtg.wekit.preferences.WePrefs
 import dev.ujhhgtg.wekit.utils.KnownPaths

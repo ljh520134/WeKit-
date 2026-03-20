@@ -5,8 +5,8 @@ import android.content.ComponentName
 import android.content.Intent
 import android.content.pm.ShortcutInfo
 import android.content.pm.ShortcutManager
-import dev.ujhhgtg.wekit.core.model.SwitchHookItem
-import dev.ujhhgtg.wekit.hooks.utils.annotation.HookItem
+import dev.ujhhgtg.wekit.hooks.core.SwitchHookItem
+import dev.ujhhgtg.wekit.hooks.core.HookItem
 import dev.ujhhgtg.wekit.utils.HostInfo
 
 @HookItem(path = "聊天/分享进化", desc = "让应用的系统分享菜单更易用")

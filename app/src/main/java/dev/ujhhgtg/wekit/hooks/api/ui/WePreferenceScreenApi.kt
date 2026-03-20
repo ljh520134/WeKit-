@@ -8,7 +8,7 @@
 //import com.highcapable.kavaref.extension.createInstance
 //import com.highcapable.kavaref.extension.toClass
 //import dev.ujhhgtg.wekit.core.dsl.dexMethod
-//import dev.ujhhgtg.wekit.core.model.ApiHookItem
+//import dev.ujhhgtg.wekit.hooks.core.ApiHookItem
 //import dev.ujhhgtg.wekit.dexkit.DexMethodDescriptor
 //import dev.ujhhgtg.wekit.dexkit.intf.IDexFind
 //import dev.ujhhgtg.wekit.hooks.core.annotation.HookItem

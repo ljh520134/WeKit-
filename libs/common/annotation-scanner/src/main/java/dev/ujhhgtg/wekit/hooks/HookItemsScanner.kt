@@ -1,0 +1,138 @@
+package dev.ujhhgtg.wekit.hooks
+
+import com.google.devtools.ksp.KspExperimental
+import com.google.devtools.ksp.getAnnotationsByType
+import com.google.devtools.ksp.processing.CodeGenerator
+import com.google.devtools.ksp.processing.Dependencies
+import com.google.devtools.ksp.processing.KSPLogger
+import com.google.devtools.ksp.processing.Resolver
+import com.google.devtools.ksp.processing.SymbolProcessor
+import com.google.devtools.ksp.processing.SymbolProcessorEnvironment
+import com.google.devtools.ksp.processing.SymbolProcessorProvider
+import com.google.devtools.ksp.symbol.KSAnnotated
+import com.google.devtools.ksp.symbol.KSClassDeclaration
+import com.squareup.kotlinpoet.ClassName
+import com.squareup.kotlinpoet.CodeBlock
+import com.squareup.kotlinpoet.FileSpec
+import com.squareup.kotlinpoet.ParameterizedTypeName.Companion.parameterizedBy
+import com.squareup.kotlinpoet.PropertySpec
+import com.squareup.kotlinpoet.TypeSpec
+import com.squareup.kotlinpoet.ksp.toClassName
+import com.squareup.kotlinpoet.ksp.writeTo
+import dev.ujhhgtg.wekit.hooks.core.HookItem
+
+private const val PACKAGE_NAME = "dev.ujhhgtg.wekit"
+private const val HOOKS_CORE_PACKAGE = "$PACKAGE_NAME.hooks.core"
+private const val BASE_HOOK_ITEM = "BaseHookItem"
+
+class HookItemsKspProvider : SymbolProcessorProvider {
+    override fun create(environment: SymbolProcessorEnvironment): SymbolProcessor {
+        return HookItemsScanner(environment.codeGenerator, environment.logger)
+    }
+}
+
+class HookItemsScanner(
+    private val codeGenerator: CodeGenerator,
+    private val logger: KSPLogger,
+) : SymbolProcessor {
+
+    // Guard against being called multiple times (KSP can call process() more than once)
+    private var generated = false
+
+    @OptIn(KspExperimental::class)
+    override fun process(resolver: Resolver): List<KSAnnotated> {
+        if (generated) return emptyList()
+        generated = true
+
+        val symbols = resolver
+            .getSymbolsWithAnnotation("$HOOKS_CORE_PACKAGE.HookItem")
+            .filterIsInstance<KSClassDeclaration>()
+            .toList()
+
+        if (symbols.isEmpty()) return emptyList()
+
+        // Validate: every annotated symbol must be an `object`
+        symbols.forEach { symbol ->
+            if (symbol.classKind != com.google.devtools.ksp.symbol.ClassKind.OBJECT) {
+                logger.error(
+                    "${symbol.qualifiedName?.asString()} is annotated with @HookItem but is not an `object`. " +
+                            "Only Kotlin objects are supported.",
+                    symbol
+                )
+            }
+        }
+
+        val sortedSymbols = symbols.sortedWith(
+            compareBy(
+                // SwitchHookItem first, ClickableHookItem second, others last
+                { symbol ->
+                    val superTypes = symbol.superTypes
+                        .map { it.resolve().declaration.qualifiedName?.asString() }
+                        .toSet()
+                    when {
+                        superTypes.contains("$HOOKS_CORE_PACKAGE.SwitchHookItem") -> 0
+                        superTypes.contains("$HOOKS_CORE_PACKAGE.ClickableHookItem") -> 1
+                        else -> 2
+                    }
+                },
+                // Then alphabetically by the last path segment (item name)
+                { symbol ->
+                    val hookItem = symbol.getAnnotationsByType(HookItem::class).firstOrNull()
+                    val path = hookItem?.path.orEmpty()
+                    path.substringAfterLast("/", path)
+                }
+            )
+        )
+
+        val baseHookItemClass = ClassName(HOOKS_CORE_PACKAGE, BASE_HOOK_ITEM)
+        val listType = ClassName("kotlin.collections", "List")
+            .parameterizedBy(baseHookItemClass)
+
+        // Build the list initializer as a CodeBlock
+        val initializerBlock = CodeBlock.builder().apply {
+            addStatement("listOf(")
+            indent()
+            for (symbol in sortedSymbols) {
+                val hookItem = symbol.getAnnotationsByType(HookItem::class).first()
+                val typeName = symbol.toClassName()
+
+                // Inline apply{} so path/description are set on construction,
+                // making the generated list a clean one-liner per entry.
+                addStatement(
+                    "%T.apply·{ path·=·%S; description·=·%S },",
+                    typeName,
+                    hookItem.path,
+                    hookItem.desc,
+                )
+            }
+            unindent()
+            add(")")
+        }.build()
+
+        // `val ALL_HOOK_ITEMS: List<BaseHookItem> = listOf(...)`
+        val property = PropertySpec.builder("ALL_HOOK_ITEMS", listType)
+            .initializer(initializerBlock)
+            .build()
+
+        val objectSpec = TypeSpec.objectBuilder("HookItemsProvider")
+            .addProperty(property)
+            .addKdoc(
+                "Auto-generated by [HookItemsScanner]. Do not edit manually.\n" +
+                        "Contains all classes annotated with [%T].\n",
+                ClassName(HOOKS_CORE_PACKAGE, "HookItem"),
+            )
+            .build()
+
+        val dependencies = Dependencies(
+            aggregating = true,
+            *symbols.map { it.containingFile!! }.toTypedArray()
+        )
+
+        FileSpec.builder(HOOKS_CORE_PACKAGE, "HookItemsProvider")
+            .addType(objectSpec)
+            .build()
+            .writeTo(codeGenerator, dependencies)
+
+        return emptyList()
+    }
+}

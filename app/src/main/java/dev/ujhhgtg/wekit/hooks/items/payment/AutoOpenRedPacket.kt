@@ -3,24 +3,34 @@ package dev.ujhhgtg.wekit.hooks.items.payment
 import android.annotation.SuppressLint
 import android.content.ContentValues
 import android.content.Context
-import android.text.InputType
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material3.ListItem
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.core.net.toUri
 import de.robv.android.xposed.XposedHelpers
 import dev.ujhhgtg.nameof.nameof
-import dev.ujhhgtg.wekit.core.dsl.dexClass
-import dev.ujhhgtg.wekit.core.dsl.dexMethod
-import dev.ujhhgtg.wekit.core.model.ClickableHookItem
 import dev.ujhhgtg.wekit.dexkit.abc.IResolvesDex
+import dev.ujhhgtg.wekit.dexkit.dsl.dexClass
+import dev.ujhhgtg.wekit.dexkit.dsl.dexMethod
 import dev.ujhhgtg.wekit.hooks.api.core.WeDatabaseApi
 import dev.ujhhgtg.wekit.hooks.api.core.WeDatabaseListenerApi
 import dev.ujhhgtg.wekit.hooks.api.core.WeNetworkApi
 import dev.ujhhgtg.wekit.hooks.api.core.model.MessageType
-import dev.ujhhgtg.wekit.hooks.utils.annotation.HookItem
+import dev.ujhhgtg.wekit.hooks.core.ClickableHookItem
+import dev.ujhhgtg.wekit.hooks.core.HookItem
 import dev.ujhhgtg.wekit.preferences.WePrefs
 import dev.ujhhgtg.wekit.ui.content.AlertDialogContent
-import dev.ujhhgtg.wekit.ui.content.BasePrefDialog
 import dev.ujhhgtg.wekit.ui.content.Button
+import dev.ujhhgtg.wekit.ui.content.DefaultColumn
 import dev.ujhhgtg.wekit.ui.content.TextButton
 import dev.ujhhgtg.wekit.ui.utils.showComposeDialog
 import dev.ujhhgtg.wekit.utils.ToastUtils
@@ -115,7 +125,7 @@ object AutoOpenRedPacket : ClickableHookItem(), WeDatabaseListenerApi.IInsertLis
 
             val delayTime = if (isRandomDelay) {
                 val baseDelay = if (customDelay > 0) customDelay else 1000L
-                val randomOffset = Random.nextLong(-500, 500)
+                val randomOffset = Random.nextLong(-300, 300)
                 val finalDelay = (baseDelay + randomOffset).coerceAtLeast(0)
                 WeLogger.i(
                     TAG,
@@ -231,44 +241,56 @@ object AutoOpenRedPacket : ClickableHookItem(), WeDatabaseListenerApi.IInsertLis
         WeLogger.i(TAG, "removed db listener and cleared red packet map")
     }
 
-    private class ConfigDialog(context: Context) : BasePrefDialog(context, "自动抢红包") {
+    override fun onClick(context: Context) {
+        showComposeDialog(context) {
+            var notification by remember { mutableStateOf(WePrefs.getBoolOrFalse("red_packet_notification")) }
+            var self by remember { mutableStateOf(WePrefs.getBoolOrFalse("red_packet_self")) }
+            var delayInput by remember { mutableStateOf(WePrefs.getStringOrDef("red_packet_delay_custom", "500")) }
+            var useRandomDelay by remember { mutableStateOf(WePrefs.getBoolOrFalse("red_packet_delay_random")) }
 
-        override fun initPreferences() {
-            addSwitchPreference(
-                key = "red_packet_notification",
-                title = "抢到后通知",
-                summary = "使用 Toast 显示抢到的金额"
-            )
-
-            addSwitchPreference(
-                key = "red_packet_self",
-                title = "抢自己的红包",
-                summary = "默认情况下不抢自己发出的红包"
-            )
-
-            addEditTextPreference(
-                key = "red_packet_delay_custom",
-                title = "基础延迟",
-                summary = "延迟时间",
-                defaultValue = "500",
-                hint = "请输入延迟时间 (毫秒)",
-                inputType = InputType.TYPE_CLASS_NUMBER,
-                maxLength = 5,
-                summaryFormatter = { value ->
-                    if (value.isEmpty()) "0 ms" else "$value ms"
-                }
-            )
-
-            addSwitchPreference(
-                key = "red_packet_delay_random",
-                title = "随机延时",
-                summary = "在基础延迟上增加 ±500ms 随机偏移, 防止风控"
+            AlertDialogContent(
+                title = { Text("自动抢红包") },
+                text = {
+                    DefaultColumn {
+                        ListItem(
+                            headlineContent = { Text("抢到后通知") },
+                            supportingContent = { Text("使用 Toast 显示抢到的金额") },
+                            trailingContent = { Switch(checked = notification, onCheckedChange = { notification = it }) },
+                            modifier = Modifier.clickable { notification = !notification }
+                        )
+                        ListItem(
+                            headlineContent = { Text("抢自己的红包") },
+                            supportingContent = { Text("默认情况下不抢自己发出的红包") },
+                            trailingContent = { Switch(checked = self, onCheckedChange = { self = it }) },
+                            modifier = Modifier.clickable { self = !self }
+                        )
+                        TextField(
+                            value = delayInput,
+                            onValueChange = { delayInput = it.take(5) },
+                            label = { Text("基础延迟 (毫秒)") },
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                            singleLine = true,
+                        )
+                        ListItem(
+                            headlineContent = { Text("随机延时") },
+                            supportingContent = { Text("在基础延迟上增加 ±300ms 随机偏移, 防止风控") },
+                            trailingContent = { Switch(checked = useRandomDelay, onCheckedChange = { useRandomDelay = it }) },
+                            modifier = Modifier.clickable { useRandomDelay = !useRandomDelay }
+                        )
+                    }
+                },
+                confirmButton = {
+                    Button(onClick = {
+                        WePrefs.putBool("red_packet_notification", notification)
+                        WePrefs.putBool("red_packet_self", self)
+                        WePrefs.putBool("red_packet_delay_random", useRandomDelay)
+                        WePrefs.putString("red_packet_delay_custom", delayInput.ifBlank { "500" })
+                        dismiss()
+                    }) { Text("确定") }
+                },
+                dismissButton = { TextButton(onClick = dismiss) { Text("取消") } }
             )
         }
-    }
-
-    override fun onClick(context: Context) {
-        ConfigDialog(context).show()
     }
 
     override fun resolveDex(dexKit: DexKitBridge): Map<String, String> {

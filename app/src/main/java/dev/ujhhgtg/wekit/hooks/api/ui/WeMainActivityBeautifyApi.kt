@@ -1,9 +1,9 @@
 package dev.ujhhgtg.wekit.hooks.api.ui
 
-import dev.ujhhgtg.wekit.core.dsl.dexMethod
-import dev.ujhhgtg.wekit.core.model.ApiHookItem
+import dev.ujhhgtg.wekit.dexkit.dsl.dexMethod
+import dev.ujhhgtg.wekit.hooks.core.ApiHookItem
 import dev.ujhhgtg.wekit.dexkit.abc.IResolvesDex
-import dev.ujhhgtg.wekit.hooks.utils.annotation.HookItem
+import dev.ujhhgtg.wekit.hooks.core.HookItem
 import org.luckypray.dexkit.DexKitBridge
 
 @HookItem(path = "API/微信主屏幕美化服务", desc = "为其他功能提供美化微信主屏幕的能力")

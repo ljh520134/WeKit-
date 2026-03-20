@@ -2,9 +2,9 @@ package dev.ujhhgtg.wekit.hooks.items.profile
 
 import android.content.Context
 import androidx.compose.material3.Text
-import dev.ujhhgtg.wekit.core.model.ClickableHookItem
+import dev.ujhhgtg.wekit.hooks.core.ClickableHookItem
 import dev.ujhhgtg.wekit.hooks.api.net.WePacketHelper
-import dev.ujhhgtg.wekit.hooks.utils.annotation.HookItem
+import dev.ujhhgtg.wekit.hooks.core.HookItem
 import dev.ujhhgtg.wekit.ui.content.AlertDialogContent
 import dev.ujhhgtg.wekit.ui.content.TextButton
 import dev.ujhhgtg.wekit.ui.utils.showComposeDialog

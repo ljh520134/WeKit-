@@ -2,8 +2,8 @@ package dev.ujhhgtg.wekit.hooks.api.ui
 
 import android.app.Activity
 import com.highcapable.kavaref.KavaRef.Companion.asResolver
-import dev.ujhhgtg.wekit.core.model.ApiHookItem
-import dev.ujhhgtg.wekit.hooks.utils.annotation.HookItem
+import dev.ujhhgtg.wekit.hooks.core.ApiHookItem
+import dev.ujhhgtg.wekit.hooks.core.HookItem
 import dev.ujhhgtg.wekit.ui.utils.LifecycleOwnerProvider
 import dev.ujhhgtg.wekit.ui.utils.rootView
 import dev.ujhhgtg.wekit.ui.utils.setLifecycleOwner

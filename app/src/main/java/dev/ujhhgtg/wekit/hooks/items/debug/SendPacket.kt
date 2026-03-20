@@ -1,7 +1,6 @@
 package dev.ujhhgtg.wekit.hooks.items.debug
 
 import android.content.Context
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.Text
@@ -13,10 +12,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import dev.ujhhgtg.nameof.nameof
-import dev.ujhhgtg.wekit.core.model.ClickableHookItem
 import dev.ujhhgtg.wekit.hooks.api.net.WePacketHelper
-import dev.ujhhgtg.wekit.hooks.utils.annotation.HookItem
+import dev.ujhhgtg.wekit.hooks.core.ClickableHookItem
+import dev.ujhhgtg.wekit.hooks.core.HookItem
 import dev.ujhhgtg.wekit.ui.content.AlertDialogContent
+import dev.ujhhgtg.wekit.ui.content.DefaultColumn
 import dev.ujhhgtg.wekit.ui.content.TextButton
 import dev.ujhhgtg.wekit.ui.utils.showComposeDialog
 import dev.ujhhgtg.wekit.utils.ToastUtils
@@ -37,23 +37,19 @@ object SendPacket : ClickableHookItem() {
             AlertDialogContent(
                 title = { Text("发包调试") },
                 text = {
-                    Column {
+                    DefaultColumn {
                         TextField(
                             uri, onValueChange = { uri = it },
                             label = { Text("CGI 路径 (str)") })
-                        Spacer(Modifier.height(8.dp))
                         TextField(
                             cmdIdStr, onValueChange = { cmdIdStr = it },
                             label = { Text("cmdId (int)") })
-                        Spacer(Modifier.height(8.dp))
                         TextField(
                             funcIdStr, onValueChange = { funcIdStr = it },
                             label = { Text("funcId (int)") })
-                        Spacer(Modifier.height(8.dp))
                         TextField(
                             routeIdStr, onValueChange = { routeIdStr = it },
                             label = { Text("routeId (int)") })
-                        Spacer(Modifier.height(8.dp))
                         TextField(
                             jsonPayloadStr,
                             onValueChange = { jsonPayloadStr = it },

@@ -1,4 +1,4 @@
-package dev.ujhhgtg.wekit.core.model
+package dev.ujhhgtg.wekit.hooks.core
 
 import android.content.Context
 import dev.ujhhgtg.wekit.preferences.WePrefs

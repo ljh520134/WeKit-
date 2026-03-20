@@ -3,8 +3,8 @@ package dev.ujhhgtg.wekit.hooks.items.chat
 import android.app.Activity
 import com.highcapable.kavaref.KavaRef.Companion.asResolver
 import com.highcapable.kavaref.extension.toClass
-import dev.ujhhgtg.wekit.core.model.SwitchHookItem
-import dev.ujhhgtg.wekit.hooks.utils.annotation.HookItem
+import dev.ujhhgtg.wekit.hooks.core.SwitchHookItem
+import dev.ujhhgtg.wekit.hooks.core.HookItem
 
 @HookItem(path = "聊天/移除媒体发送数量限制", desc = "移除发送媒体的数量限制")
 object RemoveSendMediaCountLimit : SwitchHookItem() {

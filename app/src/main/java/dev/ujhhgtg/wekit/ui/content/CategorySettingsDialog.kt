@@ -1,9 +1,9 @@
 package dev.ujhhgtg.wekit.ui.content
 
 import android.content.Context
-import dev.ujhhgtg.wekit.core.model.ClickableHookItem
-import dev.ujhhgtg.wekit.core.model.SwitchHookItem
-import dev.ujhhgtg.wekit.hooks.utils.HookItemsFactory
+import dev.ujhhgtg.wekit.hooks.core.ClickableHookItem
+import dev.ujhhgtg.wekit.hooks.core.HookItemsProvider
+import dev.ujhhgtg.wekit.hooks.core.SwitchHookItem
 import dev.ujhhgtg.wekit.preferences.WePrefs
 
 class CategorySettingsDialog(
@@ -12,9 +12,7 @@ class CategorySettingsDialog(
 ) : BaseSettingsDialog(context, categoryName) {
 
     override fun initList() {
-        val allItems = HookItemsFactory.getItems()
-
-        val targetItems = allItems.filter { item ->
+        val targetItems = HookItemsProvider.ALL_HOOK_ITEMS.filter { item ->
             item.path.startsWith("$categoryName/")
         }
 

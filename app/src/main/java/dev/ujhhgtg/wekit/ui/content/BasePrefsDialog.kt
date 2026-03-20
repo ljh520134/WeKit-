@@ -114,7 +114,7 @@ private data class DepInfo(
 //  Abstract base class – public API is identical to the original
 // ---------------------------------------------------------------------------
 
-abstract class BasePrefDialog(
+abstract class BasePrefsDialog(
     protected val context: Context,
     private val title: String,
 ) {

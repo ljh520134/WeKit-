@@ -19,13 +19,14 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import dev.ujhhgtg.nameof.nameof
-import dev.ujhhgtg.wekit.core.model.ClickableHookItem
 import dev.ujhhgtg.wekit.hooks.api.core.WeApi
 import dev.ujhhgtg.wekit.hooks.api.core.WeDatabaseApi
 import dev.ujhhgtg.wekit.hooks.api.net.WePacketHelper
-import dev.ujhhgtg.wekit.hooks.utils.annotation.HookItem
+import dev.ujhhgtg.wekit.hooks.core.ClickableHookItem
+import dev.ujhhgtg.wekit.hooks.core.HookItem
 import dev.ujhhgtg.wekit.ui.content.AlertDialogContent
 import dev.ujhhgtg.wekit.ui.content.Button
+import dev.ujhhgtg.wekit.ui.content.DefaultColumn
 import dev.ujhhgtg.wekit.ui.content.TextButton
 import dev.ujhhgtg.wekit.ui.utils.showComposeDialog
 import dev.ujhhgtg.wekit.utils.logging.WeLogger
@@ -70,7 +71,7 @@ object DetectDeletedFriends : ClickableHookItem() {
         val selfWxId = WeApi.selfWxId
         val friends = WeDatabaseApi.getFriends().filter { c ->
             c.type != 2051 && c.type != 2049 && c.wxId.startsWith("wxid_") && c.wxId != selfWxId
-        }
+        }.take(10)
 
         showComposeDialog(context) {
             var phase by phaseState
@@ -126,9 +127,11 @@ object DetectDeletedFriends : ClickableHookItem() {
                         is DialogPhase.Scanning -> {
                             val completed by (phase as DialogPhase.Scanning).completed
                             val total = (phase as DialogPhase.Scanning).total
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Text("正在扫描, 请稍等...\n已完成: $completed/$total")
-                            LinearWavyProgressIndicator(progress = { completed.toFloat() / total })
+                            DefaultColumn {
+                                Spacer(modifier = Modifier.height(8.dp))
+                                Text("正在扫描, 请稍等...\n已完成: $completed/$total")
+                                LinearWavyProgressIndicator(progress = { completed.toFloat() / total })
+                            }
                         }
 
                         is DialogPhase.Done -> {

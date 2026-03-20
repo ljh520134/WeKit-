@@ -2,11 +2,11 @@ package dev.ujhhgtg.wekit.hooks.items.scripting_js
 
 import android.content.ContentValues
 import dev.ujhhgtg.nameof.nameof
-import dev.ujhhgtg.wekit.core.model.SwitchHookItem
 import dev.ujhhgtg.wekit.hooks.api.core.WeDatabaseListenerApi
 import dev.ujhhgtg.wekit.hooks.api.net.WeProtoData
 import dev.ujhhgtg.wekit.hooks.api.net.abc.IWePacketInterceptor
-import dev.ujhhgtg.wekit.hooks.utils.annotation.HookItem
+import dev.ujhhgtg.wekit.hooks.core.HookItem
+import dev.ujhhgtg.wekit.hooks.core.SwitchHookItem
 import dev.ujhhgtg.wekit.utils.KnownPaths
 import dev.ujhhgtg.wekit.utils.logging.WeLogger
 import java.util.concurrent.ConcurrentHashMap
@@ -15,7 +15,7 @@ import kotlin.io.path.listDirectoryEntries
 import kotlin.io.path.name
 import kotlin.io.path.readText
 
-@HookItem(path = "脚本/脚本引擎", desc = "点击管理脚本")
+@HookItem(path = "脚本/脚本引擎", desc = "执行 JavaScript 脚本")
 object JsScriptingHook : SwitchHookItem(),
     WeDatabaseListenerApi.IInsertListener, IWePacketInterceptor {
 

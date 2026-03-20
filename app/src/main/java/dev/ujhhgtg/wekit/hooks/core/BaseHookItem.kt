@@ -1,12 +1,12 @@
-package dev.ujhhgtg.wekit.core.model
+package dev.ujhhgtg.wekit.hooks.core
 
 import com.highcapable.kavaref.resolver.ConstructorResolver
 import com.highcapable.kavaref.resolver.MethodResolver
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XposedBridge
 import dev.ujhhgtg.wekit.constants.PreferenceKeys
-import dev.ujhhgtg.wekit.core.dsl.DexConstructorDelegate
-import dev.ujhhgtg.wekit.core.dsl.DexMethodDelegate
+import dev.ujhhgtg.wekit.dexkit.dsl.DexConstructorDelegate
+import dev.ujhhgtg.wekit.dexkit.dsl.DexMethodDelegate
 import dev.ujhhgtg.wekit.preferences.WePrefs
 import dev.ujhhgtg.wekit.utils.HookAction
 import dev.ujhhgtg.wekit.utils.TargetProcesses

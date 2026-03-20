@@ -1,9 +1,9 @@
-package dev.ujhhgtg.wekit.core.dsl
+package dev.ujhhgtg.wekit.dexkit.dsl
 
 import com.highcapable.kavaref.KavaRef.Companion.asResolver
 import com.highcapable.kavaref.extension.ClassLoaderProvider
 import com.highcapable.kavaref.extension.toClassOrNull
-import dev.ujhhgtg.wekit.core.model.BaseHookItem
+import dev.ujhhgtg.wekit.hooks.core.BaseHookItem
 import dev.ujhhgtg.wekit.dexkit.DexMethodDescriptor
 import org.luckypray.dexkit.DexKitBridge
 import org.luckypray.dexkit.query.FindClass

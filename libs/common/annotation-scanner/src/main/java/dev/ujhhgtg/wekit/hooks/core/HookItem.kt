@@ -1,4 +1,4 @@
-package dev.ujhhgtg.wekit.hooks.utils.annotation
+package dev.ujhhgtg.wekit.hooks.core
 
 // 声明某个类是 hook 项目 等待被扫描自动编译添加
 @Target(AnnotationTarget.CLASS)

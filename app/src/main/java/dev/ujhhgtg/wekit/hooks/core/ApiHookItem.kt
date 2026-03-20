@@ -1,3 +1,3 @@
-package dev.ujhhgtg.wekit.core.model
+package dev.ujhhgtg.wekit.hooks.core
 
 abstract class ApiHookItem : BaseHookItem()

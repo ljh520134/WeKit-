@@ -17,6 +17,7 @@ import android.text.style.StyleSpan
 import android.util.TypedValue
 import android.view.View
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
@@ -34,6 +35,18 @@ import androidx.core.graphics.withTranslation
 import com.highcapable.kavaref.KavaRef.Companion.asResolver
 import com.highcapable.kavaref.extension.toClass
 import dev.ujhhgtg.nameof.nameof
+import dev.ujhhgtg.wekit.dexkit.abc.IResolvesDex
+import dev.ujhhgtg.wekit.dexkit.dsl.dexClass
+import dev.ujhhgtg.wekit.hooks.api.core.WeMessageApi
+import dev.ujhhgtg.wekit.hooks.api.core.model.MessageInfo
+import dev.ujhhgtg.wekit.hooks.core.ClickableHookItem
+import dev.ujhhgtg.wekit.hooks.core.HookItem
+import dev.ujhhgtg.wekit.preferences.WePrefs
+import dev.ujhhgtg.wekit.ui.content.AlertDialogContent
+import dev.ujhhgtg.wekit.ui.content.TextButton
+import dev.ujhhgtg.wekit.ui.utils.showComposeDialog
+import dev.ujhhgtg.wekit.utils.logging.WeLogger
+import dev.ujhhgtg.wekit.utils.replaceEmojis
 import io.noties.markwon.AbstractMarkwonPlugin
 import io.noties.markwon.Markwon
 import io.noties.markwon.MarkwonSpansFactory
@@ -42,18 +55,6 @@ import io.noties.markwon.ext.strikethrough.StrikethroughPlugin
 import io.noties.markwon.ext.tables.TablePlugin
 import io.noties.markwon.ext.tasklist.TaskListPlugin
 import io.noties.markwon.image.ImagesPlugin
-import dev.ujhhgtg.wekit.core.dsl.dexClass
-import dev.ujhhgtg.wekit.core.model.ClickableHookItem
-import dev.ujhhgtg.wekit.dexkit.abc.IResolvesDex
-import dev.ujhhgtg.wekit.hooks.api.core.WeMessageApi
-import dev.ujhhgtg.wekit.hooks.api.core.model.MessageInfo
-import dev.ujhhgtg.wekit.hooks.utils.annotation.HookItem
-import dev.ujhhgtg.wekit.preferences.WePrefs
-import dev.ujhhgtg.wekit.ui.content.AlertDialogContent
-import dev.ujhhgtg.wekit.ui.content.TextButton
-import dev.ujhhgtg.wekit.ui.utils.showComposeDialog
-import dev.ujhhgtg.wekit.utils.logging.WeLogger
-import dev.ujhhgtg.wekit.utils.replaceEmojis
 import org.commonmark.node.BlockQuote
 import org.commonmark.node.BulletList
 import org.commonmark.node.Heading
@@ -305,65 +306,66 @@ object MarkdownRendering : ClickableHookItem(), IResolvesDex {
             AlertDialogContent(
                 title = { Text("Markdown 渲染") },
                 text = {
-                    var useMarkwon by
-                    remember { mutableStateOf(WePrefs.getBoolOrFalse(KEY_USE_MARKWON)) }
+                    Column {
+                        var useMarkwon by remember { mutableStateOf(WePrefs.getBoolOrFalse(KEY_USE_MARKWON)) }
 
-                    Text(
-                        "解析与渲染引擎",
-                        color = MaterialTheme.colorScheme.primary,
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    ListItem(
-                        modifier = Modifier.clickable {
-                            useMarkwon = false
-                            WePrefs.putBool(KEY_USE_MARKWON, false)
-                        },
-                        headlineContent = { Text("markdown-rs + Html") },
-                        supportingContent = { Text("使用 Rust crate 解析并转换为 HTML, 再使用 android.text.HTML 渲染") },
-                        trailingContent = { RadioButton(!useMarkwon, null) })
-                    ListItem(
-                        modifier = Modifier.clickable {
-                            useMarkwon = true
-                            WePrefs.putBool(KEY_USE_MARKWON, true)
-                        },
-                        headlineContent = { Text("Markwon") },
-                        supportingContent = { Text("使用 Markwon Java 库直接渲染 Markdown") },
-                        trailingContent = { RadioButton(useMarkwon, null) })
+                        Text(
+                            "解析与渲染引擎",
+                            color = MaterialTheme.colorScheme.primary,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        ListItem(
+                            modifier = Modifier.clickable {
+                                useMarkwon = false
+                                WePrefs.putBool(KEY_USE_MARKWON, false)
+                            },
+                            headlineContent = { Text("markdown-rs + Html") },
+                            supportingContent = { Text("使用 Rust crate 解析并转换为 HTML, 再使用 android.text.HTML 渲染") },
+                            trailingContent = { RadioButton(!useMarkwon, null) })
+                        ListItem(
+                            modifier = Modifier.clickable {
+                                useMarkwon = true
+                                WePrefs.putBool(KEY_USE_MARKWON, true)
+                            },
+                            headlineContent = { Text("Markwon") },
+                            supportingContent = { Text("使用 Markwon Java 库直接渲染 Markdown") },
+                            trailingContent = { RadioButton(useMarkwon, null) })
 
-                    var noTextSizing by
-                    remember { mutableStateOf(WePrefs.getBoolOrFalse(KEY_NO_TEXT_SIZING)) }
-                    Text(
-                        "通用引擎设定",
-                        color = MaterialTheme.colorScheme.primary,
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    ListItem(
-                        modifier = Modifier.clickable {
-                            noTextSizing = !noTextSizing
-                            WePrefs.putBool(KEY_NO_TEXT_SIZING, noTextSizing)
-                        },
-                        headlineContent = { Text("禁止改变字体大小") },
-                        supportingContent = { Text("不对 Headers, Subheaders 等组件改变字体大小") },
-                        trailingContent = { Switch(noTextSizing, null) })
+                        var noTextSizing by
+                        remember { mutableStateOf(WePrefs.getBoolOrFalse(KEY_NO_TEXT_SIZING)) }
+                        Text(
+                            "通用引擎设定",
+                            color = MaterialTheme.colorScheme.primary,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        ListItem(
+                            modifier = Modifier.clickable {
+                                noTextSizing = !noTextSizing
+                                WePrefs.putBool(KEY_NO_TEXT_SIZING, noTextSizing)
+                            },
+                            headlineContent = { Text("禁止改变字体大小") },
+                            supportingContent = { Text("不对 Headers, Subheaders 等组件改变字体大小") },
+                            trailingContent = { Switch(noTextSizing, null) })
 
-                    var compactHtml by
-                    remember { mutableStateOf(WePrefs.getBoolOrFalse(KEY_COMPACT_HTML)) }
-                    Text(
-                        "markdown-rs + Html 引擎设定",
-                        color = MaterialTheme.colorScheme.primary,
-                        fontSize = 13.sp,
-                        fontWeight = FontWeight.SemiBold
-                    )
-                    ListItem(
-                        modifier = Modifier.clickable {
-                            compactHtml = !compactHtml
-                            WePrefs.putBool(KEY_COMPACT_HTML, compactHtml)
-                        },
-                        headlineContent = { Text("使用紧凑 HTML 渲染") },
-                        supportingContent = { Text("使用一个而非两个换行来分段") },
-                        trailingContent = { Switch(compactHtml, null) })
+                        var compactHtml by
+                        remember { mutableStateOf(WePrefs.getBoolOrFalse(KEY_COMPACT_HTML)) }
+                        Text(
+                            "markdown-rs + Html 引擎设定",
+                            color = MaterialTheme.colorScheme.primary,
+                            fontSize = 13.sp,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                        ListItem(
+                            modifier = Modifier.clickable {
+                                compactHtml = !compactHtml
+                                WePrefs.putBool(KEY_COMPACT_HTML, compactHtml)
+                            },
+                            headlineContent = { Text("使用紧凑 HTML 渲染") },
+                            supportingContent = { Text("使用一个而非两个换行来分段") },
+                            trailingContent = { Switch(compactHtml, null) })
+                    }
                 },
                 confirmButton = { TextButton(dismiss) { Text("关闭") } }
             )

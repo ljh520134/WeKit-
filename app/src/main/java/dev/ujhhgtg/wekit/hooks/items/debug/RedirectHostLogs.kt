@@ -14,12 +14,13 @@ import com.highcapable.kavaref.KavaRef.Companion.asResolver
 import com.highcapable.kavaref.condition.type.Modifiers
 import com.highcapable.kavaref.extension.toClass
 import dev.ujhhgtg.nameof.nameof
-import dev.ujhhgtg.wekit.core.model.ClickableHookItem
-import dev.ujhhgtg.wekit.hooks.utils.annotation.HookItem
+import dev.ujhhgtg.wekit.hooks.core.ClickableHookItem
+import dev.ujhhgtg.wekit.hooks.core.HookItem
 import dev.ujhhgtg.wekit.preferences.WePrefs
 import dev.ujhhgtg.wekit.preferences.WePrefs.Companion.getBoolOrFalse
 import dev.ujhhgtg.wekit.ui.content.AlertDialogContent
 import dev.ujhhgtg.wekit.ui.content.Button
+import dev.ujhhgtg.wekit.ui.content.DefaultColumn
 import dev.ujhhgtg.wekit.ui.utils.showComposeDialog
 import dev.ujhhgtg.wekit.utils.logging.WeLogger
 
@@ -109,52 +110,49 @@ object RedirectHostLogs : ClickableHookItem() {
             AlertDialogContent(
                 title = { Text("重定向宿主日志") },
                 text = {
-                    var v by
-                    remember { mutableStateOf(getBoolOrFalse("${KEY_PREFIX}v")) }
-                    var d by
-                    remember { mutableStateOf(getBoolOrFalse("${KEY_PREFIX}d")) }
-                    var i by
-                    remember { mutableStateOf(getBoolOrFalse("${KEY_PREFIX}i")) }
-                    var w by
-                    remember { mutableStateOf(getBoolOrFalse("${KEY_PREFIX}w")) }
-                    var e by
-                    remember { mutableStateOf(getBoolOrFalse("${KEY_PREFIX}e")) }
+                    var v by remember { mutableStateOf(getBoolOrFalse("${KEY_PREFIX}v")) }
+                    var d by remember { mutableStateOf(getBoolOrFalse("${KEY_PREFIX}d")) }
+                    var i by remember { mutableStateOf(getBoolOrFalse("${KEY_PREFIX}i")) }
+                    var w by remember { mutableStateOf(getBoolOrFalse("${KEY_PREFIX}w")) }
+                    var e by remember { mutableStateOf(getBoolOrFalse("${KEY_PREFIX}e")) }
 
-                    ListItem(
-                        modifier = Modifier.clickable {
-                            v = !v
-                            WePrefs.putBool("${KEY_PREFIX}v", v)
-                        },
-                        headlineContent = { Text("Verbose") },
-                        trailingContent = { Switch(v, null) })
-                    ListItem(
-                        modifier = Modifier.clickable {
-                            d = !d
-                            WePrefs.putBool("${KEY_PREFIX}d", d)
-                        },
-                        headlineContent = { Text("Debug") },
-                        trailingContent = { Switch(d, null) })
-                    ListItem(
-                        modifier = Modifier.clickable {
-                            i = !i
-                            WePrefs.putBool("${KEY_PREFIX}i", i)
-                        },
-                        headlineContent = { Text("Info") },
-                        trailingContent = { Switch(i, null) })
-                    ListItem(
-                        modifier = Modifier.clickable {
-                            w = !w
-                            WePrefs.putBool("${KEY_PREFIX}w", w)
-                        },
-                        headlineContent = { Text("Warning") },
-                        trailingContent = { Switch(w, null) })
-                    ListItem(
-                        modifier = Modifier.clickable {
-                            e = !e
-                            WePrefs.putBool("${KEY_PREFIX}e", e)
-                        },
-                        headlineContent = { Text("Error") },
-                        trailingContent = { Switch(e, null) })
+                    DefaultColumn {
+                        ListItem(
+                            modifier = Modifier.clickable {
+                                v = !v
+                                WePrefs.putBool("${KEY_PREFIX}v", v)
+                            },
+                            headlineContent = { Text("Verbose") },
+                            trailingContent = { Switch(v, null) })
+                        ListItem(
+                            modifier = Modifier.clickable {
+                                d = !d
+                                WePrefs.putBool("${KEY_PREFIX}d", d)
+                            },
+                            headlineContent = { Text("Debug") },
+                            trailingContent = { Switch(d, null) })
+                        ListItem(
+                            modifier = Modifier.clickable {
+                                i = !i
+                                WePrefs.putBool("${KEY_PREFIX}i", i)
+                            },
+                            headlineContent = { Text("Info") },
+                            trailingContent = { Switch(i, null) })
+                        ListItem(
+                            modifier = Modifier.clickable {
+                                w = !w
+                                WePrefs.putBool("${KEY_PREFIX}w", w)
+                            },
+                            headlineContent = { Text("Warning") },
+                            trailingContent = { Switch(w, null) })
+                        ListItem(
+                            modifier = Modifier.clickable {
+                                e = !e
+                                WePrefs.putBool("${KEY_PREFIX}e", e)
+                            },
+                            headlineContent = { Text("Error") },
+                            trailingContent = { Switch(e, null) })
+                    }
                 },
                 confirmButton = {
                     Button(dismiss) { Text("确定") }

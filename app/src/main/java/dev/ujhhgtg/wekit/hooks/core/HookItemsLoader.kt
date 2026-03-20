@@ -1,19 +1,8 @@
-package dev.ujhhgtg.wekit.hooks.utils
+package dev.ujhhgtg.wekit.hooks.core
 
 import android.content.pm.ApplicationInfo
 import dev.ujhhgtg.nameof.nameof
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.SupervisorJob
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
-import kotlinx.coroutines.withTimeoutOrNull
 import dev.ujhhgtg.wekit.constants.PreferenceKeys.NO_DEX_RESOLVE
-import dev.ujhhgtg.wekit.core.model.ApiHookItem
-import dev.ujhhgtg.wekit.core.model.BaseHookItem
-import dev.ujhhgtg.wekit.core.model.ClickableHookItem
-import dev.ujhhgtg.wekit.core.model.SwitchHookItem
 import dev.ujhhgtg.wekit.dexkit.abc.IResolvesDex
 import dev.ujhhgtg.wekit.dexkit.cache.DexCacheManager
 import dev.ujhhgtg.wekit.preferences.WePrefs
@@ -23,6 +12,13 @@ import dev.ujhhgtg.wekit.utils.HostInfo
 import dev.ujhhgtg.wekit.utils.RuntimeConfig
 import dev.ujhhgtg.wekit.utils.TargetProcesses
 import dev.ujhhgtg.wekit.utils.logging.WeLogger
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import kotlinx.coroutines.withTimeoutOrNull
 import kotlin.time.Duration.Companion.milliseconds
 import kotlin.time.measureTime
 
@@ -39,7 +35,7 @@ object HookItemsLoader {
         process: Int,
         appInfo: ApplicationInfo
     ) {
-        val allHookItems = HookItemsFactory.getItems()
+        val allHookItems = HookItemsProvider.ALL_HOOK_ITEMS
         val allDexResolvingItems = allHookItems.filterIsInstance<IResolvesDex>()
         val outdatedItems = DexCacheManager.getOutdatedItems(allDexResolvingItems)
         val validItems = allDexResolvingItems.filterNot { outdatedItems.contains(it) }

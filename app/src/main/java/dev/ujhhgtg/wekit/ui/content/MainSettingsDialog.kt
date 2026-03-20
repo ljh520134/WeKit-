@@ -44,7 +44,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
-class MainSettingsDialog(context: Context) : BasePrefDialog(context, BuildConfig.TAG) {
+class MainSettingsDialog(context: Context) : BasePrefsDialog(context, BuildConfig.TAG) {
 
     // 定义优先级 映射关系 (值 -> 显示文本)
     private val priorityMap = mapOf(
@@ -119,7 +119,6 @@ class MainSettingsDialog(context: Context) : BasePrefDialog(context, BuildConfig
             options = priorityMap,
             defaultValue = 50,
             iconName = "low_priority_24px"
-            // 因为 key 已经包含了前缀 PrekCfgXXX，所以必须设为 true
         )
 
         addSwitchPreference(
