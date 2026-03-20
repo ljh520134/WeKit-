@@ -100,7 +100,7 @@ object SendPacket : ClickableHookItem() {
                                     )
                                 }
                             }
-                            onFail { type, code, msg ->
+                            onFailure { type, code, msg ->
                                 WeLogger.e(TAG, "失败: $type, $code, $msg")
                                 showComposeDialog(context) {
                                     AlertDialogContent(

@@ -62,7 +62,7 @@ import dev.ujhhgtg.wekit.hooks.api.core.WeConversationApi
 import dev.ujhhgtg.wekit.hooks.api.ui.WeMainActivityBeautifyApi
 import dev.ujhhgtg.wekit.hooks.utils.annotation.HookItem
 import dev.ujhhgtg.wekit.ui.content.MainSettingsDialog
-import dev.ujhhgtg.wekit.ui.utils.MainActivityLifecycleOwnerProvider
+import dev.ujhhgtg.wekit.ui.utils.LifecycleOwnerProvider
 import dev.ujhhgtg.wekit.ui.utils.setLifecycleOwner
 import dev.ujhhgtg.wekit.utils.ToastUtils
 import dev.ujhhgtg.wekit.utils.logging.WeLogger
@@ -81,9 +81,7 @@ object AddMainScreenFab : SwitchHookItem() {
     private val providers = CopyOnWriteArrayList<IMenuItemsProvider>()
 
     fun addProvider(provider: IMenuItemsProvider) {
-        if (!providers.contains(provider)) {
-            providers.add(provider)
-        }
+        providers.addIfAbsent(provider)
     }
 
     fun removeProvider(provider: IMenuItemsProvider) {
@@ -169,12 +167,8 @@ object AddMainScreenFab : SwitchHookItem() {
                 }
             }
 
-            val lifecycleOwner = MainActivityLifecycleOwnerProvider.lifecycleOwner
-
-            val decorView = activity.window.decorView
-            decorView.setLifecycleOwner(lifecycleOwner)
+            val lifecycleOwner = LifecycleOwnerProvider.lifecycleOwner
             val rootView = activity.findViewById<ViewGroup>(android.R.id.content)
-            rootView.setLifecycleOwner(lifecycleOwner)
 
             rootView.addView(
                 ComposeView(activity).apply {

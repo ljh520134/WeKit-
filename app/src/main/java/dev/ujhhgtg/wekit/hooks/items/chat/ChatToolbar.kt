@@ -1,6 +1,7 @@
 package dev.ujhhgtg.wekit.hooks.items.chat
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.Context
 import android.util.AttributeSet
 import android.view.View
@@ -47,19 +48,19 @@ import com.highcapable.kavaref.KavaRef.Companion.asResolver
 import com.highcapable.kavaref.extension.createInstance
 import com.highcapable.kavaref.extension.toClass
 import dev.ujhhgtg.nameof.nameof
-import kotlinx.coroutines.flow.MutableStateFlow
 import dev.ujhhgtg.wekit.core.dsl.dexMethod
 import dev.ujhhgtg.wekit.core.model.SwitchHookItem
 import dev.ujhhgtg.wekit.dexkit.abc.IResolvesDex
 import dev.ujhhgtg.wekit.hooks.utils.annotation.HookItem
 import dev.ujhhgtg.wekit.ui.utils.AppTheme
-import dev.ujhhgtg.wekit.ui.utils.MainActivityLifecycleOwnerProvider
+import dev.ujhhgtg.wekit.ui.utils.LifecycleOwnerProvider
 import dev.ujhhgtg.wekit.ui.utils.findViewByChildIndexes
+import dev.ujhhgtg.wekit.ui.utils.findViewWhich
 import dev.ujhhgtg.wekit.ui.utils.iterable
 import dev.ujhhgtg.wekit.ui.utils.setLifecycleOwner
-import dev.ujhhgtg.wekit.utils.RuntimeConfig
 import dev.ujhhgtg.wekit.utils.logging.WeLogger
 import dev.ujhhgtg.wekit.utils.now
+import kotlinx.coroutines.flow.MutableStateFlow
 import org.luckypray.dexkit.DexKitBridge
 import kotlin.time.Duration.Companion.seconds
 
@@ -68,7 +69,6 @@ import kotlin.time.Duration.Companion.seconds
 object ChatToolbar : SwitchHookItem(), IResolvesDex {
 
     private val TAG = nameof(ChatToolbar)
-    private const val VIEW_TAG = "wekit_chat_toolbar"
 
     private val methodAppPanelInitAppGrid by dexMethod()
     private val methodAppPanelOnMeasure by dexMethod()
@@ -152,17 +152,18 @@ object ChatToolbar : SwitchHookItem(), IResolvesDex {
             }
             .self
             .hookAfter { param ->
+                val lifecycleOwner = LifecycleOwnerProvider.lifecycleOwner
+
                 val chatFooter = param.thisObject as FrameLayout
+                chatFooter.setLifecycleOwner(lifecycleOwner)
                 val linearLayout = chatFooter.findViewByChildIndexes<LinearLayout>(0, 1)!!
-                if (linearLayout.findViewWithTag<ComposeView>(VIEW_TAG) != null) return@hookAfter
-
-                val context = RuntimeConfig.getLauncherUiActivity()!!
-                val lifecycleOwner = MainActivityLifecycleOwnerProvider.lifecycleOwner
                 linearLayout.setLifecycleOwner(lifecycleOwner)
-                context.window.decorView.setLifecycleOwner(lifecycleOwner)
+                if (linearLayout.findViewWhich<View> { it is ComposeView } != null) return@hookAfter
 
-                linearLayout.addView(ComposeView(context).apply {
-                    tag = VIEW_TAG
+                val activity = chatFooter.context as Activity
+                activity.window.decorView.setLifecycleOwner(lifecycleOwner)
+
+                linearLayout.addView(ComposeView(activity).apply {
                     setLifecycleOwner(lifecycleOwner)
 
                     setContent {

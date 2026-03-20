@@ -1,6 +1,7 @@
 package dev.ujhhgtg.wekit.ui.content
 
 import android.content.Context
+import android.content.Intent
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
@@ -12,37 +13,36 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.AssistChip
-import androidx.compose.material3.AssistChipDefaults
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.SuggestionChip
-import androidx.compose.material3.SuggestionChipDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.core.net.toUri
 import com.mikepenz.aboutlibraries.entity.Library
 import com.mikepenz.aboutlibraries.ui.compose.android.produceLibraries
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
 import dev.ujhhgtg.wekit.BuildConfig
 import dev.ujhhgtg.wekit.R
+import dev.ujhhgtg.wekit.constants.PackageNames
 import dev.ujhhgtg.wekit.constants.PreferenceKeys
 import dev.ujhhgtg.wekit.ui.utils.showComposeDialog
+import dev.ujhhgtg.wekit.utils.HostInfo
 import dev.ujhhgtg.wekit.utils.ToastUtils
 import dev.ujhhgtg.wekit.utils.formatEpoch
 import dev.ujhhgtg.wekit.utils.logging.WeLogger
 import dev.ujhhgtg.wekit.utils.openInSystem
 import dev.ujhhgtg.wekit.utils.updates.UpdateChecker
 import dev.ujhhgtg.wekit.utils.updates.UpdateDownloader
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
 
 class MainSettingsDialog(context: Context) : BasePrefDialog(context, BuildConfig.TAG) {
 
@@ -197,7 +197,17 @@ class MainSettingsDialog(context: Context) : BasePrefDialog(context, BuildConfig
             "提示",
             "牙膏要一点一点挤, 显卡要一刀一刀切, PPT 要一张一张放, 代码要一行一行写, 单个功能预计自出现在 commit 之日起, 三年内开发完毕"
         )
-
+        addPreference(
+            "捐赠",
+            "支持项目开发 (模块完全开源免费, 捐赠无特权)",
+            onClick = {
+                context.startActivity(Intent().apply {
+                    setClassName(HostInfo.packageName, "${PackageNames.WECHAT}.plugin.collect.reward.ui.QrRewardSelectMoneyUI")
+                    putExtra("key_qrcode_url", "m0n#Z7LGW*s4AVH!z'd(?)")
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                })
+            }
+        )
         addPreference(
             title = "开放源代码许可",
             summary = "本项目使用的开放源代码库许可",
@@ -242,13 +252,12 @@ class MainSettingsDialog(context: Context) : BasePrefDialog(context, BuildConfig
 @OptIn(ExperimentalLayoutApi::class)
 @Composable
 private fun LibraryCard(library: Library) {
-    // AboutLibraries usually stores the creator in developers or organization
     val authorName = library.developers.joinToString { it.name ?: "" }
         .takeIf { it.isNotBlank() } ?: library.organization?.name
 
     ElevatedCard(
         modifier = Modifier.fillMaxWidth(),
-        shape = MaterialTheme.shapes.extraLarge,
+        shape = MaterialTheme.shapes.large,
         colors = CardDefaults.elevatedCardColors(
             containerColor = MaterialTheme.colorScheme.surfaceContainerLow
         ),
@@ -257,75 +266,59 @@ private fun LibraryCard(library: Library) {
         Column(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(24.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
-            // Header: Library Name and Version Badge
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.Top
+                verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
                     text = library.name,
-                    style = MaterialTheme.typography.bodyLarge,
+                    style = MaterialTheme.typography.bodyMedium,
+                    fontWeight = FontWeight.SemiBold,
                     color = MaterialTheme.colorScheme.onSurface,
                     modifier = Modifier.weight(1f)
                 )
-
                 library.artifactVersion?.let { version ->
-                    SuggestionChip(
-                        onClick = { },
-                        label = { Text(version) },
-                        shape = MaterialTheme.shapes.medium,
-                        colors = SuggestionChipDefaults.suggestionChipColors(
-                            containerColor = MaterialTheme.colorScheme.secondaryContainer,
-                            labelColor = MaterialTheme.colorScheme.onSecondaryContainer
-                        ),
-                        border = null,
+                    Text(
+                        text = version.take(20).let { if (version.length > 15) "$it…" else it },
+                        style = MaterialTheme.typography.labelSmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
                         modifier = Modifier.padding(start = 8.dp)
                     )
                 }
             }
 
-            // Author / Organization
-            authorName?.let { author ->
+            authorName?.let {
                 Text(
-                    text = "by $author",
-                    style = MaterialTheme.typography.titleSmall,
+                    text = it,
+                    style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
 
-            // Description
-            library.description?.takeIf { it.isNotBlank() }?.let { description ->
+            library.description?.takeIf { it.isNotBlank() }?.let {
                 Text(
-                    text = description,
-                    style = MaterialTheme.typography.bodyMedium,
+                    text = it,
+                    style = MaterialTheme.typography.bodySmall,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
-                    maxLines = 3,
+                    maxLines = 2,
                     overflow = TextOverflow.Ellipsis
                 )
             }
 
-            // Licenses
             if (library.licenses.isNotEmpty()) {
-                // FlowRow allows dual-licenses to wrap neatly to the next line
                 FlowRow(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(6.dp),
-                    verticalArrangement = Arrangement.spacedBy(6.dp)
+                    horizontalArrangement = Arrangement.spacedBy(4.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     library.licenses.forEach { license ->
-                        AssistChip(
-                            onClick = { },
-                            label = { Text(license.name) },
-                            colors = AssistChipDefaults.assistChipColors(
-                                containerColor = MaterialTheme.colorScheme.tertiaryContainer,
-                                labelColor = MaterialTheme.colorScheme.onTertiaryContainer
-                            ),
-                            border = null,
-                            shape = MaterialTheme.shapes.large
+                        Text(
+                            text = license.name,
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.tertiary
                         )
                     }
                 }

@@ -493,7 +493,7 @@ object JsApiExposer {
     private val storage = ConcurrentHashMap<String, Any?>()
 
     private val DATA_DIR_PATH by lazy {
-        (KnownPaths.modulePata / "data").createDirectoriesNoThrow()
+        (KnownPaths.moduleData / "data").createDirectoriesNoThrow()
     }
 
     private val storageFile get() = DATA_DIR_PATH.resolve("javascript_storage_api.json")

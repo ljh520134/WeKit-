@@ -46,7 +46,7 @@ object JsScriptingHook : SwitchHookItem(),
         WeDatabaseListenerApi.addListener(this)
 
         WeLogger.i(TAG, "loading scripts...")
-        for (path in (KnownPaths.modulePata / "scripts").listDirectoryEntries("*.js")) {
+        for (path in (KnownPaths.moduleData / "scripts").listDirectoryEntries("*.js")) {
             val name = path.name
             val content = runCatching { path.readText() }.getOrElse { continue }
             WeLogger.i(TAG, "loaded script, name='${name}', length=${content.length}")

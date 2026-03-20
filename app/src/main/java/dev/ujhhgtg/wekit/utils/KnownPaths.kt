@@ -11,8 +11,8 @@ object KnownPaths {
         Environment.getExternalStorageDirectory().toPath()
     }
 
-    val modulePata by lazy {
-        (internalStorage / "Android" / "data" / HostInfo.packageName / "files" / BuildConfig.TAG)
+    val moduleData by lazy {
+        (internalStorage / "Android" / "data" / HostInfo.packageName / BuildConfig.TAG)
             .createDirectoriesNoThrow()
     }
 

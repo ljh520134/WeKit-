@@ -64,7 +64,7 @@ object NotificationsEvolved : SwitchHookItem() {
 
     private lateinit var meAvatarIcon: Icon
 
-    private val meAvatarPath by lazy { KnownPaths.modulePata / "me_avatar" }
+    private val meAvatarPath by lazy { KnownPaths.moduleData / "me_avatar" }
 
     private val notificationReceiver = object : BroadcastReceiver() {
         override fun onReceive(context: Context, intent: Intent) {

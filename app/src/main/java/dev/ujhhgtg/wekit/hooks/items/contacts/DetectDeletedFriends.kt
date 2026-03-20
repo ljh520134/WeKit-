@@ -16,32 +16,29 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import dev.ujhhgtg.nameof.nameof
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.launch
-import kotlinx.serialization.json.Json
-import kotlinx.serialization.json.jsonObject
 import dev.ujhhgtg.wekit.core.model.ClickableHookItem
 import dev.ujhhgtg.wekit.hooks.api.core.WeApi
 import dev.ujhhgtg.wekit.hooks.api.core.WeDatabaseApi
 import dev.ujhhgtg.wekit.hooks.api.net.WePacketHelper
-import dev.ujhhgtg.wekit.hooks.api.net.WeProtoData
-import dev.ujhhgtg.wekit.hooks.api.net.abc.IWePacketInterceptor
 import dev.ujhhgtg.wekit.hooks.utils.annotation.HookItem
 import dev.ujhhgtg.wekit.ui.content.AlertDialogContent
 import dev.ujhhgtg.wekit.ui.content.Button
 import dev.ujhhgtg.wekit.ui.content.TextButton
 import dev.ujhhgtg.wekit.ui.utils.showComposeDialog
 import dev.ujhhgtg.wekit.utils.logging.WeLogger
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.jsonObject
 import kotlin.time.Duration.Companion.seconds
 
 @HookItem(path = "联系人与群组/检测单向删除好友", desc = "批量扫描全部好友, 检测是否被对方单向删除")
-object DetectDeletedFriends : ClickableHookItem(), IWePacketInterceptor {
+object DetectDeletedFriends : ClickableHookItem() {
 
     override val noSwitchWidget: Boolean
         get() = true
@@ -86,7 +83,7 @@ object DetectDeletedFriends : ClickableHookItem(), IWePacketInterceptor {
                         for (friend in friends) {
                             WePacketHelper.sendCgi(
                                 "/cgi-bin/mmpay-bin/beforetransfer", 2783, 0, 0,
-                                """{"2":"${friend.customWxid}"}"""
+                                """{"2":"${friend.wxId}"}"""
                             ) {
                                 // status is always success
                                 onSuccess { json, _ ->
@@ -106,7 +103,7 @@ object DetectDeletedFriends : ClickableHookItem(), IWePacketInterceptor {
                                     (phase as DialogPhase.Scanning).completed.intValue++
                                 }
 
-                                onFail { errType, errCode, errMsg ->
+                                onFailure { errType, errCode, errMsg ->
                                     WeLogger.w(TAG, "failed friend ${friend.wxId}: $errType, $errCode, $errMsg")
                                     (phase as DialogPhase.Scanning).completed.intValue++
                                 }
@@ -128,13 +125,10 @@ object DetectDeletedFriends : ClickableHookItem(), IWePacketInterceptor {
 
                         is DialogPhase.Scanning -> {
                             val completed by (phase as DialogPhase.Scanning).completed
-                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                                LinearWavyProgressIndicator(progress = {
-                                    completed.toFloat() / (phase as DialogPhase.Scanning).total
-                                })
-                                Spacer(modifier = Modifier.height(8.dp))
-                                Text("正在扫描, 请稍等...\n已完成: ")
-                            }
+                            val total = (phase as DialogPhase.Scanning).total
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Text("正在扫描, 请稍等...\n已完成: $completed/$total")
+                            LinearWavyProgressIndicator(progress = { completed.toFloat() / total })
                         }
 
                         is DialogPhase.Done -> {
@@ -184,24 +178,5 @@ object DetectDeletedFriends : ClickableHookItem(), IWePacketInterceptor {
                 }
             )
         }
-    }
-
-    override fun onRequest(uri: String, cgiId: Int, reqBytes: ByteArray): ByteArray? {
-        if (uri == "/cgi-bin/mmpay-bin/beforetransfer") return null
-
-        WeLogger.d("DetectDeletedFriends", "req: uri=$uri, cgiId=$cgiId, reqBytes.size=${reqBytes.size}")
-        val packet = WeProtoData()
-        packet.fromBytes(reqBytes)
-        WeLogger.d("DetectDeletedFriends", "req_packet: json=${packet.toJsonObject()}")
-
-        return null
-    }
-
-    override fun onResponse(uri: String, cgiId: Int, respBytes: ByteArray): ByteArray? {
-        val packet = WeProtoData()
-        packet.fromBytes(respBytes)
-        WeLogger.d("DetectDeletedFriends", "resp: uri=$uri, cgiId=$cgiId, respBytes.size=${respBytes.size}")
-        WeLogger.d("DetectDeletedFriends", "resp_packet=${packet.toJsonObject()}")
-        return null
     }
 }

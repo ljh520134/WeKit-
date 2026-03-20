@@ -47,7 +47,7 @@ import dev.ujhhgtg.wekit.ui.content.Button
 import dev.ujhhgtg.wekit.ui.content.LiquidBottomTab
 import dev.ujhhgtg.wekit.ui.content.LiquidBottomTabs
 import dev.ujhhgtg.wekit.ui.content.TextButton
-import dev.ujhhgtg.wekit.ui.utils.MainActivityLifecycleOwnerProvider
+import dev.ujhhgtg.wekit.ui.utils.LifecycleOwnerProvider
 import dev.ujhhgtg.wekit.ui.utils.setLifecycleOwner
 import dev.ujhhgtg.wekit.ui.utils.showComposeDialog
 
@@ -91,10 +91,7 @@ object ReplaceNavigationBar : ClickableHookItem() {
             val viewParent = viewPager.parent as ViewGroup
             val bottomTabViewGroup = viewParent.getChildAt(1) as ViewGroup
 
-            val lifecycleOwner = MainActivityLifecycleOwnerProvider.lifecycleOwner
-            val decorView = activity.window.decorView
-
-            decorView.setLifecycleOwner(lifecycleOwner)
+            val lifecycleOwner = LifecycleOwnerProvider.lifecycleOwner
             bottomTabViewGroup.setLifecycleOwner(lifecycleOwner)
 
             val selectedPageIndexState = mutableIntStateOf(0)

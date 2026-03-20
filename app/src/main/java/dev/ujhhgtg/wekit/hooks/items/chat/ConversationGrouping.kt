@@ -41,7 +41,7 @@ import dev.ujhhgtg.wekit.dexkit.abc.IResolvesDex
 import dev.ujhhgtg.wekit.hooks.api.core.WeConversationApi
 import dev.ujhhgtg.wekit.hooks.utils.annotation.HookItem
 import dev.ujhhgtg.wekit.ui.utils.AppTheme
-import dev.ujhhgtg.wekit.ui.utils.MainActivityLifecycleOwnerProvider
+import dev.ujhhgtg.wekit.ui.utils.LifecycleOwnerProvider
 import dev.ujhhgtg.wekit.ui.utils.setLifecycleOwner
 import org.luckypray.dexkit.DexKitBridge
 
@@ -57,7 +57,7 @@ object ConversationGrouping : SwitchHookItem(), IResolvesDex {
                 .get()!! as ListView
 
             val composeView = ComposeView(convListView.context).apply {
-                val lifecycleOwner = MainActivityLifecycleOwnerProvider.lifecycleOwner
+                val lifecycleOwner = LifecycleOwnerProvider.lifecycleOwner
                 setLifecycleOwner(lifecycleOwner)
 
                 // this value gets lost when ComposeView becomes invisible,

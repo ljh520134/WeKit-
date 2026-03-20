@@ -11,7 +11,7 @@ class WeRequestDsl : WeRequestCallback {
         this.successHandler = handler
     }
 
-    fun onFail(handler: (errType: Int, errCode: Int, errMsg: String) -> Unit) {
+    fun onFailure(handler: (errType: Int, errCode: Int, errMsg: String) -> Unit) {
         this.failHandler = handler
     }
 
@@ -19,7 +19,7 @@ class WeRequestDsl : WeRequestCallback {
         successHandler?.invoke(json, bytes)
     }
 
-    override fun onFail(errType: Int, errCode: Int, errMsg: String) {
+    override fun onFailure(errType: Int, errCode: Int, errMsg: String) {
         failHandler?.invoke(errType, errCode, errMsg)
     }
 }

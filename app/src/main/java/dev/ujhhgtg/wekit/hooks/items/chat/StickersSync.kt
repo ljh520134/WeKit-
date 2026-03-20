@@ -21,15 +21,6 @@ import com.highcapable.kavaref.extension.createInstance
 import com.highcapable.kavaref.extension.isSubclassOf
 import com.highcapable.kavaref.extension.toClass
 import dev.ujhhgtg.nameof.nameof
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.async
-import kotlinx.coroutines.awaitAll
-import kotlinx.coroutines.runBlocking
-import kotlinx.coroutines.sync.Semaphore
-import kotlinx.coroutines.sync.withPermit
-import kotlinx.coroutines.withContext
-import kotlinx.serialization.Serializable
-import kotlinx.serialization.json.Json
 import dev.ujhhgtg.wekit.core.dsl.dexClass
 import dev.ujhhgtg.wekit.core.dsl.dexConstructor
 import dev.ujhhgtg.wekit.core.dsl.dexMethod
@@ -48,6 +39,15 @@ import dev.ujhhgtg.wekit.utils.createDirectoriesNoThrow
 import dev.ujhhgtg.wekit.utils.enumValueOfClass
 import dev.ujhhgtg.wekit.utils.logging.WeLogger
 import dev.ujhhgtg.wekit.utils.polyfills.convToList
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.async
+import kotlinx.coroutines.awaitAll
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.sync.Semaphore
+import kotlinx.coroutines.sync.withPermit
+import kotlinx.coroutines.withContext
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 import org.luckypray.dexkit.DexKitBridge
 import java.lang.reflect.Modifier
 import java.nio.file.Files
@@ -230,7 +230,7 @@ object StickersSync : ClickableHookItem(), IResolvesDex {
     private val ctorResourceLoadOptions by dexConstructor()
     private val methodDownloadImage by dexMethod()
 
-    private val stickersDir: Path by lazy { (KnownPaths.modulePata / "stickers")
+    private val stickersDir: Path by lazy { (KnownPaths.moduleData / "stickers")
         .createDirectoriesNoThrow() }
 
     private val emojiMgrImpl: Any by lazy {

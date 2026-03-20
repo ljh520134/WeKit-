@@ -144,7 +144,7 @@ object ModifyTransferWalletBalanceDisplay : ClickableHookItem(), IWePacketInterc
             }
 
             AlertDialogContent(
-                title = { Text("修改显示余额") },
+                title = { Text("修改转账显示余额") },
                 text = {
                     TextField(
                         value = cftInput,

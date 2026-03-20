@@ -84,6 +84,10 @@ object ModifySportsStepCount : ClickableHookItem(), IResolvesDex {
                     }
                 },
                 dismissButton = {
+                    TextButton(dismiss) {
+                        Text("取消")
+                    }
+
                     TextButton(onClick = {
                         val count = stepCount.toLongOrNull() ?: run {
                             ToastUtils.showToast("格式不正确!")
@@ -91,13 +95,9 @@ object ModifySportsStepCount : ClickableHookItem(), IResolvesDex {
                         }
                         val sportsMan = methodUploadSteps.method.declaringClass.createInstance()
                         val result = methodUploadSteps.method.invoke(sportsMan, count) as Boolean
-                        ToastUtils.showToast("已上传! 宿主返回结果: ${if (result) "成功" else "失败"}")
+                        ToastUtils.showToast("已上传! 返回结果: ${if (result) "成功" else "失败"}")
                     }) {
                         Text("立即上传")
-                    }
-
-                    TextButton(dismiss) {
-                        Text("取消")
                     }
                 }
             )

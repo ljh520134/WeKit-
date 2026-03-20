@@ -55,7 +55,7 @@ object SetProfileNickname : ClickableHookItem() {
                                 }
                             }
 
-                            onFail { type, code, msg ->
+                            onFailure { type, code, msg ->
                                 showComposeDialog(context) {
                                     AlertDialogContent(
                                         title = { Text("发送失败, 响应结果:") },

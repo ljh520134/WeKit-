@@ -33,9 +33,7 @@ object WeHomeScreenPopupMenuApi : ApiHookItem(), IResolvesDex {
     private val providers = CopyOnWriteArrayList<IMenuItemsProvider>()
 
     fun addProvider(provider: IMenuItemsProvider) {
-        if (!providers.contains(provider)) {
-            providers.add(provider)
-        }
+        providers.addIfAbsent(provider)
     }
 
     fun removeProvider(provider: IMenuItemsProvider) {

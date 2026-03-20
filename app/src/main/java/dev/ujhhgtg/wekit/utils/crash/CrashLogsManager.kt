@@ -25,7 +25,7 @@ import kotlin.io.path.writeText
 
 class CrashLogsManager {
 
-    private val crashLogsDir: Path by lazy { KnownPaths.modulePata / CRASH_LOGS_DIR }
+    private val crashLogsDir: Path by lazy { KnownPaths.moduleData / CRASH_LOGS_DIR }
 
     init {
         ensureCrashLogDirExists()

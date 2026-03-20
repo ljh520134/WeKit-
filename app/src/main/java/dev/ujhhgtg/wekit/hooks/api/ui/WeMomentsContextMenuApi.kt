@@ -1,9 +1,9 @@
 package dev.ujhhgtg.wekit.hooks.api.ui
 
-import android.annotation.SuppressLint
 import android.app.Activity
 import android.graphics.drawable.Drawable
 import android.view.ContextMenu
+import com.highcapable.kavaref.KavaRef.Companion.asResolver
 import de.robv.android.xposed.XC_MethodHook
 import dev.ujhhgtg.nameof.nameof
 import dev.ujhhgtg.wekit.core.dsl.dexMethod
@@ -51,7 +51,6 @@ object WeMomentsContextMenuApi : ApiHookItem(), IResolvesDex {
     private val methodSnsInfoStorage by dexMethod()
     private val methodGetSnsInfoStorage by dexMethod()
 
-    @SuppressLint("NonUniqueDexKitData")
     override fun resolveDex(dexKit: DexKitBridge): Map<String, String> {
         val descriptors = mutableMapOf<String, String>()
 
@@ -91,12 +90,9 @@ object WeMomentsContextMenuApi : ApiHookItem(), IResolvesDex {
         methodGetSnsInfoStorage.find(dexKit, descriptors) {
             searchPackages("com.tencent.mm.plugin.sns.model")
             matcher {
-                // 必须是静态方法
                 modifiers = Modifier.STATIC
                 returnType(methodSnsInfoStorage.method.declaringClass)
-                // 无参数
                 paramCount(0)
-                // 同时包含两个特征字符串
                 usingStrings(
                     "com.tencent.mm.plugin.sns.model.SnsCore",
                     "getSnsInfoStorage"
@@ -118,14 +114,13 @@ object WeMomentsContextMenuApi : ApiHookItem(), IResolvesDex {
     }
 
     private fun handleCreateMenu(param: XC_MethodHook.MethodHookParam) {
-        val menu = param.args.getOrNull(0) as? ContextMenu ?: return
-
+        val menu = param.args.getOrNull(0) as? ContextMenu? ?: return
         for (item in menuItems.values.flatten()) {
-            try {
-                menu.add(ContextMenu.NONE, item.id, 0, item.text).icon = item.drawable()
-            } catch (e: Throwable) {
-                WeLogger.e(TAG, "OnCreate 回调执行异常", e)
-            }
+            menu.asResolver()
+                .firstMethod {
+                    parameters(Int::class, CharSequence::class, Drawable::class)
+                }
+                .invoke(item.id, item.text, item.drawable())
         }
     }
 

@@ -9,18 +9,16 @@ import dev.ujhhgtg.wekit.core.dsl.dexMethod
 import dev.ujhhgtg.wekit.core.model.ApiHookItem
 import dev.ujhhgtg.wekit.dexkit.abc.IResolvesDex
 import dev.ujhhgtg.wekit.hooks.utils.annotation.HookItem
-import dev.ujhhgtg.wekit.utils.logging.WeLogger
 import org.json.JSONObject
 import org.luckypray.dexkit.DexKitBridge
 import java.util.LinkedList
-import java.util.concurrent.CopyOnWriteArrayList
 
 @SuppressLint("StaticFieldLeak")
 @HookItem(path = "API/视频号分享菜单扩展", desc = "为视频号分享菜单提供添加菜单项功能")
 object WeShortVideosShareMenuApi : ApiHookItem(), IResolvesDex {
 
     interface IMenuItemsProvider {
-        fun getMenuItems(param: XC_MethodHook.MethodHookParam): List<MenuItem>
+        fun getMenuItems(): List<MenuItem>
     }
 
     data class MenuItem(
@@ -29,22 +27,14 @@ object WeShortVideosShareMenuApi : ApiHookItem(), IResolvesDex {
         val onClick: (XC_MethodHook.MethodHookParam, Int, List<JSONObject>) -> Unit
     )
 
-    private const val TAG: String = "WeShortVideosShareMenuApi"
-
-    private val providers = CopyOnWriteArrayList<IMenuItemsProvider>()
+    private val menuItems = mutableMapOf<String, List<MenuItem>>()
 
     fun addProvider(provider: IMenuItemsProvider) {
-        if (!providers.contains(provider)) {
-            providers.add(provider)
-        }
+        menuItems[provider.javaClass.name] = provider.getMenuItems()
     }
 
     fun removeProvider(provider: IMenuItemsProvider) {
-        val removed = providers.remove(provider)
-        WeLogger.i(
-            TAG,
-            "provider remove ${if (removed) "succeeded" else "failed"}, current provider count: ${providers.size}"
-        )
+        menuItems.remove(provider.javaClass.name)
     }
 
     private val methodCreateMenu1 by dexMethod()
@@ -55,7 +45,7 @@ object WeShortVideosShareMenuApi : ApiHookItem(), IResolvesDex {
     override fun onEnable() {
         methodCreateMenu1.hookBefore { param ->
             val menu = param.args[0] as ContextMenu
-            handleCreateMenu(param, menu)
+            handleCreateMenu(menu)
         }
 
         methodOnSelectMenuItem1.hookBefore { param ->
@@ -70,7 +60,7 @@ object WeShortVideosShareMenuApi : ApiHookItem(), IResolvesDex {
 
         methodCreateMenu2.hookBefore { param ->
             val menu = param.args[1] as ContextMenu
-            handleCreateMenu(param, menu)
+            handleCreateMenu(menu)
         }
 
         methodOnSelectMenuItem2.hookBefore { param ->
@@ -81,25 +71,14 @@ object WeShortVideosShareMenuApi : ApiHookItem(), IResolvesDex {
     }
 
     private fun handleCreateMenu(
-        param: XC_MethodHook.MethodHookParam,
         menu: ContextMenu
     ) {
-        for (provider in providers) {
-            try {
-                for (item in provider.getMenuItems(param)) {
-                    menu.asResolver()
-                        .firstMethod {
-                            parameters(Int::class, CharSequence::class, Drawable::class)
-                        }
-                        .invoke(item.id, item.text, item.drawable())
+        for (item in menuItems.values.flatten()) {
+            menu.asResolver()
+                .firstMethod {
+                    parameters(Int::class, CharSequence::class, Drawable::class)
                 }
-            } catch (ex: Exception) {
-                WeLogger.e(
-                    TAG,
-                    "provider ${provider.javaClass.name} threw while providing menu items",
-                    ex
-                )
-            }
+                .invoke(item.id, item.text, item.drawable())
         }
     }
 
@@ -133,21 +112,11 @@ object WeShortVideosShareMenuApi : ApiHookItem(), IResolvesDex {
                 }.invoke()!! as JSONObject
         }
 
-        for (provider in providers) {
-            try {
-                for (item in provider.getMenuItems(param)) {
-                    if (item.id == itemId) {
-                        item.onClick(param, mediaType, mediaJsonList)
-                        param.result = null
-                        return
-                    }
-                }
-            } catch (ex: Exception) {
-                WeLogger.e(
-                    TAG,
-                    "provider ${provider.javaClass.name} threw while handling click event",
-                    ex
-                )
+        for (item in menuItems.values.flatten()) {
+            if (item.id == itemId) {
+                item.onClick(param, mediaType, mediaJsonList)
+                param.result = null
+                return
             }
         }
     }

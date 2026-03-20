@@ -15,6 +15,7 @@ import dev.ujhhgtg.wekit.dexkit.abc.IResolvesDex
 import dev.ujhhgtg.wekit.hooks.utils.annotation.HookItem
 import dev.ujhhgtg.wekit.preferences.WePrefs
 import dev.ujhhgtg.wekit.ui.content.AlertDialogContent
+import dev.ujhhgtg.wekit.ui.content.Button
 import dev.ujhhgtg.wekit.ui.content.TextButton
 import dev.ujhhgtg.wekit.ui.utils.showComposeDialog
 import org.luckypray.dexkit.DexKitBridge
@@ -118,7 +119,7 @@ object RemoveChatMessageContextMenuItems : ClickableHookItem(), IResolvesDex {
                 },
                 dismissButton = { TextButton(onClick = dismiss) { Text("取消") } },
                 confirmButton = {
-                    TextButton(onClick = {
+                    Button(onClick = {
                         WePrefs.putString(
                             KEY_REMOVED_ITEM_NAMES,
                             removedNames

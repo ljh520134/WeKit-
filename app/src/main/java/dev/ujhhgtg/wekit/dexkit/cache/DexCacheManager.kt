@@ -32,7 +32,7 @@ object DexCacheManager {
     private const val HOST_VERSION_FILE = "host_version.txt"
     private const val CACHE_FILE_SUFFIX = ".json"
     private val cacheDir: Path by lazy {
-        (KnownPaths.modulePata / CACHE_DIR_NAME).createDirectoriesNoThrow()
+        (KnownPaths.moduleData / CACHE_DIR_NAME).createDirectoriesNoThrow()
     }
     private var currentHostVersion: String = ""
 

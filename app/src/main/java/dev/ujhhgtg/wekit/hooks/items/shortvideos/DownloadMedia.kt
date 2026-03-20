@@ -4,12 +4,7 @@ import android.annotation.SuppressLint
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
-import de.robv.android.xposed.XC_MethodHook
 import dev.ujhhgtg.nameof.nameof
-import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-import kotlinx.coroutines.withContext
 import dev.ujhhgtg.wekit.core.model.SwitchHookItem
 import dev.ujhhgtg.wekit.hooks.api.ui.WeShortVideosShareMenuApi
 import dev.ujhhgtg.wekit.hooks.utils.annotation.HookItem
@@ -19,6 +14,10 @@ import dev.ujhhgtg.wekit.utils.ModuleRes
 import dev.ujhhgtg.wekit.utils.ToastUtils
 import dev.ujhhgtg.wekit.utils.formatBytesSize
 import dev.ujhhgtg.wekit.utils.logging.WeLogger
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
 import java.math.BigInteger
 import java.net.URL
 import java.nio.file.Path
@@ -46,9 +45,7 @@ object DownloadMedia : SwitchHookItem(),
         WeShortVideosShareMenuApi.removeProvider(this)
     }
 
-    override fun getMenuItems(
-        param: XC_MethodHook.MethodHookParam,
-    ): List<WeShortVideosShareMenuApi.MenuItem> {
+    override fun getMenuItems(): List<WeShortVideosShareMenuApi.MenuItem> {
         return listOf(
             WeShortVideosShareMenuApi.MenuItem(
                 777004,

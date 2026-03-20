@@ -11,7 +11,7 @@ import kotlin.io.path.exists
 
 object LogUtils {
 
-    private val rootDir: Path by lazy { (KnownPaths.modulePata / "logs").createDirectoriesNoThrow() }
+    private val rootDir: Path by lazy { (KnownPaths.moduleData / "logs").createDirectoriesNoThrow() }
 
     private val runLogDirectory: Path by lazy { (rootDir / "run").createDirectoriesNoThrow() }
 

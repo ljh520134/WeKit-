@@ -66,7 +66,9 @@ object FingerprintPay : ClickableHookItem() {
             return
         }
 
-        "com.tencent.mm.framework.app.UIPageFragmentActivity".toClass().asResolver()
+        listOf("com.tencent.mm.framework.app.UIPageFragmentActivity",
+            "com.tencent.mm.plugin.lite.ui.WxaLiteAppTransparentLiteUI").forEach {
+            it.toClass().asResolver()
             .apply {
                 firstMethod { name = "onResume" }
                     .hookBefore { param ->
@@ -102,11 +104,13 @@ object FingerprintPay : ClickableHookItem() {
                         }
                     }
 
-                firstMethod { name = "finish" }
+                // WxaLiteAppTransparentLiteUI inherits WxaLiteAppTransparentUI::finish()
+                firstMethod { name = "finish"; superclass() }
                     .hookBefore { _ ->
                         isVerificationOngoing = false
                     }
             }
+        }
 
         "com.tencent.mm.plugin.fingerprint.ui.FingerPrintAuthTransparentUI".toClass().asResolver()
             .firstMethod {
@@ -162,7 +166,7 @@ object FingerprintPay : ClickableHookItem() {
                         val splitRawEncData = rawEncData.split(SPLIT_CHAR)
                         val encData = EncryptedData(splitRawEncData[0], splitRawEncData[1])
                         decryptWithBiometric(encData) { plaintext ->
-                            ToastUtils.showToast("支付密码解密成功! 内容: $plaintext")
+                            ToastUtils.showToast("支付密码解密成功! 内容: ${plaintext.first()}****${plaintext.last()}")
                         }
                     }) { Text("测试解密") }
                 },

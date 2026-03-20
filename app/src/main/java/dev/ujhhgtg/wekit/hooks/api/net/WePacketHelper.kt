@@ -519,7 +519,7 @@ object WePacketHelper : ApiHookItem(), IResolvesDex {
 
             } catch (e: Throwable) {
                 WeLogger.e(TAG, "[$cgiId] 引擎异常", e)
-                Handler(Looper.getMainLooper()).post { callback?.onFail(-1, -1, e.message ?: "") }
+                Handler(Looper.getMainLooper()).post { callback?.onFailure(-1, -1, e.message ?: "") }
             }
         }
     }
@@ -577,7 +577,7 @@ object WePacketHelper : ApiHookItem(), IResolvesDex {
 
                         userCallback?.onSuccess(json, bytes)
                     } else {
-                        userCallback?.onFail(errType, errCode, errMsg)
+                        userCallback?.onFailure(errType, errCode, errMsg)
                     }
                 }
             }
@@ -613,7 +613,7 @@ object WePacketHelper : ApiHookItem(), IResolvesDex {
                                 .toString() else "{}"
                         userCallback?.onSuccess(json, bytes)
                     } else {
-                        userCallback?.onFail(
+                        userCallback?.onFailure(
                             errType,
                             errCode,
                             args[2] as? String ?: "null (No Error Message)"

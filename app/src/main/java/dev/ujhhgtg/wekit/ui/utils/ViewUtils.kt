@@ -1,6 +1,7 @@
 package dev.ujhhgtg.wekit.ui.utils
 
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ListAdapter
@@ -131,3 +132,6 @@ fun ListAdapter.iterator(parent: ViewGroup): Iterator<View> =
 
 fun ListAdapter.iterable(parent: ViewGroup): Iterable<View> =
     Iterable { iterator(parent) }
+
+val Activity.rootView: View
+    get() = this.findViewById(android.R.id.content)

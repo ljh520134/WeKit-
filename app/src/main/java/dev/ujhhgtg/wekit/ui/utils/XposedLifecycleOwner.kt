@@ -23,6 +23,12 @@ class XposedLifecycleOwner : LifecycleOwner, ViewModelStoreOwner, SavedStateRegi
         lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
     }
 
-    fun onResume() = lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
-    fun onDestroy() = lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_DESTROY)
+    fun onStart()   = lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_START)
+    fun onResume()  = lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
+    fun onPause()   = lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_PAUSE)
+    fun onStop()    = lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_STOP)
+    fun onDestroy() {
+        lifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_DESTROY)
+        viewModelStore.clear()
+    }
 }

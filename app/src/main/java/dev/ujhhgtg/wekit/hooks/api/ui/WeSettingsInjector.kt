@@ -11,6 +11,7 @@ import com.highcapable.kavaref.extension.toClass
 import com.highcapable.kavaref.extension.toClassOrNull
 import de.robv.android.xposed.XposedHelpers
 import dev.ujhhgtg.nameof.nameof
+import dev.ujhhgtg.wekit.BuildConfig
 import dev.ujhhgtg.wekit.core.dsl.dexClass
 import dev.ujhhgtg.wekit.core.dsl.dexMethod
 import dev.ujhhgtg.wekit.core.model.ApiHookItem
@@ -46,8 +47,8 @@ object WeSettingsInjector : ApiHookItem(), IResolvesDex {
 
     private val TAG = nameof(WeSettingsInjector)
 
-    private const val KEY_WEKIT_ENTRY = "wekit_settings_entry"
-    private const val TITLE_WEKIT_ENTRY = "WeKit 设置"
+    private const val PREFS_KEY = "wekit_settings_entry"
+    private const val PREFS_TITLE = "${BuildConfig.TAG} 设置"
     private const val PREFERENCE_CLASS_NAME = "com.tencent.mm.ui.base.preference.Preference"
 
     @SuppressLint("NonUniqueDexKitData")
@@ -232,8 +233,8 @@ object WeSettingsInjector : ApiHookItem(), IResolvesDex {
                     "com.tencent.mm.ui.base.preference.IconPreference".toClass()
                 val prefInstance = clsIconPref.createInstance(context)
 
-                setKeyMethod.invoke(prefInstance, KEY_WEKIT_ENTRY)
-                setTitleMethod.invoke(prefInstance, TITLE_WEKIT_ENTRY)
+                setKeyMethod.invoke(prefInstance, PREFS_KEY)
+                setTitleMethod.invoke(prefInstance, PREFS_TITLE)
 
                 val prefScreen = XposedHelpers.callMethod(activity, "getPreferenceScreen")
 
@@ -251,7 +252,7 @@ object WeSettingsInjector : ApiHookItem(), IResolvesDex {
 
                 val key = getKeyMethod.invoke(preference) as? String
 
-                if (KEY_WEKIT_ENTRY == key) {
+                if (PREFS_KEY == key) {
                     val activity = param.thisObject as Activity
 
                     openSettingsDialog(activity)
@@ -364,7 +365,7 @@ object WeSettingsInjector : ApiHookItem(), IResolvesDex {
 
         if (!::customSettingItemClass.isInitialized)
             customSettingItemClass = createSettingItemClass(
-                (KnownPaths.modulePata / "generated_proxy_classes").createDirectoriesNoThrow()
+                (KnownPaths.moduleData / "generated_proxy_classes").createDirectoriesNoThrow()
             )
 
         // a simple way to inject string resource
@@ -376,7 +377,7 @@ object WeSettingsInjector : ApiHookItem(), IResolvesDex {
             .hookBefore { param ->
                 val resId = param.args[0] as Int
                 if (resId == WEKIT_SETTING_ITEM_NAME_RES_ID)
-                    param.result = "WeKit"
+                    param.result = "${BuildConfig.TAG} 设置"
             }
 
         // create dependency chain
