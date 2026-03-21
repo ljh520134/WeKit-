@@ -12,11 +12,11 @@ import com.highcapable.kavaref.extension.toClassOrNull
 import de.robv.android.xposed.XposedHelpers
 import dev.ujhhgtg.nameof.nameof
 import dev.ujhhgtg.wekit.BuildConfig
+import dev.ujhhgtg.wekit.dexkit.DexMethodDescriptor
+import dev.ujhhgtg.wekit.dexkit.abc.IResolvesDex
 import dev.ujhhgtg.wekit.dexkit.dsl.dexClass
 import dev.ujhhgtg.wekit.dexkit.dsl.dexMethod
 import dev.ujhhgtg.wekit.hooks.core.ApiHookItem
-import dev.ujhhgtg.wekit.dexkit.DexMethodDescriptor
-import dev.ujhhgtg.wekit.dexkit.abc.IResolvesDex
 import dev.ujhhgtg.wekit.hooks.core.HookItem
 import dev.ujhhgtg.wekit.ui.content.MainSettingsDialog
 import dev.ujhhgtg.wekit.utils.KnownPaths
@@ -39,7 +39,6 @@ object WeSettingsInjector : ApiHookItem(), IResolvesDex {
     private val methodAddPref by dexMethod()
 
     // method 3
-    private val methodSettingGroupPluginOnClick by dexMethod()
     private val classSettingItemClassesProvider by dexClass()
     private val classBaseSettingItem by dexClass()
     private val classSettingLocation by dexClass()
@@ -148,51 +147,56 @@ object WeSettingsInjector : ApiHookItem(), IResolvesDex {
             }
         }
 
-        methodSettingGroupPluginOnClick.find(dexKit, descriptors) {
-            matcher {
-                declaredClass =
-                    "com.tencent.mm.plugin.setting.ui.setting_new.settings.other.SettingGroupPlugin"
-                usingEqStrings("MicroMsg.SettingGroupPlugin", "openLiteApp query:%s")
+        if ("com.tencent.mm.plugin.setting.ui.setting_new.settings.SettingGroupMain".toClassOrNull() != null) {
+            classSettingItemClassesProvider.find(dexKit, descriptors, throwOnFailure = false) {
+                matcher {
+                    usingEqStrings("Repairer_Setting")
+
+                    superClass {
+                        usingEqStrings("type")
+                    }
+                }
             }
-        }
 
-        classSettingItemClassesProvider.find(dexKit, descriptors) {
-            matcher {
-                usingEqStrings("Repairer_Setting")
+            classBaseSettingItem.find(dexKit, descriptors) {
+                matcher {
+                    usingEqStrings("", "activity", "context", "intent")
 
-                superClass {
-                    usingEqStrings("type")
+                    addMethod {
+                        name = "<init>"
+                        paramTypes("androidx.appcompat.app.AppCompatActivity")
+                    }
+
+                    addInterface {
+                        className("com.tencent.mm.plugin.newtips.model", StringMatchType.StartsWith)
+                    }
+                }
+            }
+
+            classSettingLocation.find(dexKit, descriptors) {
+                matcher {
+                    usingEqStrings("SettingLocation(parentGroup=", ", frontItem=")
+                }
+            }
+
+            methodSettingGroupAccountInfoReturns1.find(dexKit, descriptors) {
+                matcher {
+                    declaredClass = "com.tencent.mm.plugin.setting.ui.setting_new.settings.SettingGroupAccountInfo"
+                    usingNumbers(1)
+                    returnType = "int"
                 }
             }
         }
-
-        classBaseSettingItem.find(dexKit, descriptors) {
-            matcher {
-                usingEqStrings("", "activity", "context", "intent")
-
-                addMethod {
-                    name = "<init>"
-                    paramTypes("androidx.appcompat.app.AppCompatActivity")
-                }
-
-                addInterface {
-                    className("com.tencent.mm.plugin.newtips.model", StringMatchType.StartsWith)
-                }
-            }
-        }
-
-        classSettingLocation.find(dexKit, descriptors) {
-            matcher {
-                usingEqStrings("SettingLocation(parentGroup=", ", frontItem=")
-            }
-        }
-
-        methodSettingGroupAccountInfoReturns1.find(dexKit, descriptors) {
-            matcher {
-                declaredClass = "com.tencent.mm.plugin.setting.ui.setting_new.settings.SettingGroupAccountInfo"
-                usingNumbers(1)
-                returnType = "int"
-            }
+        else {
+            // placeholders
+            descriptors += "${nameof(WeSettingsInjector)}:${nameof(classSettingItemClassesProvider)}" to
+                    "com.tencent.mm.ui.LauncherUI"
+            descriptors += "${nameof(WeSettingsInjector)}:${nameof(classBaseSettingItem)}" to
+                    "com.tencent.mm.ui.LauncherUI"
+            descriptors += "${nameof(WeSettingsInjector)}:${nameof(classSettingLocation)}" to
+                    "com.tencent.mm.ui.LauncherUI"
+            descriptors += "${nameof(WeSettingsInjector)}:${nameof(methodSettingGroupAccountInfoReturns1)}" to
+                    "Lcom/tencent/mm/ui/LauncherUI;->()Lcom/tencent/mm/ui/LauncherUI;"
         }
 
         return descriptors
