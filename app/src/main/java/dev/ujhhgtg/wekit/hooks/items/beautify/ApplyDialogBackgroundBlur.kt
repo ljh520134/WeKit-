@@ -45,7 +45,6 @@ object ApplyDialogBackgroundBlur : ClickableHookItem(), IResolvesDex {
     private val classMmQuickDialog by dexClass()
 
     override fun onEnable() {
-        WeLogger.d(TAG, classMmQuickDialog.clazz.name)
         listOf(
             classMmAlertDialog.clazz,
             classMmProgressDialog.clazz,

@@ -70,7 +70,7 @@ object DetectDeletedFriends : ClickableHookItem() {
 
         val friends = WeDatabaseApi.getFriends().filter { c ->
             c.type != 2051 && c.type != 2049 && c.wxId.startsWith("wxid_") && c.wxId != WeApi.selfWxId
-        }.take(10)
+        }
 
         showComposeDialog(context) {
             var phase by phaseState
