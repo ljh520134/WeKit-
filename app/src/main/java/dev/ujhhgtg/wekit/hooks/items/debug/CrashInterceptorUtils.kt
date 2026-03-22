@@ -115,9 +115,11 @@ internal object CrashInterceptorUtils {
                     title = { Text(titleDetail) },
                     text = {
                         SelectionContainer {
-                            Text(displayInfo,
+                            Text(
+                                displayInfo,
                                 fontFamily = FontFamily.Monospace,
-                                modifier = Modifier.verticalScroll(rememberScrollState()))
+                                modifier = Modifier.verticalScroll(rememberScrollState())
+                            )
                         }
                     },
                     confirmButton = {
@@ -140,9 +142,11 @@ internal object CrashInterceptorUtils {
                     title = { Text(titleSummary) },
                     text = {
                         SelectionContainer {
-                            Text(extractSummary(crashInfo),
+                            Text(
+                                extractSummary(crashInfo),
                                 fontFamily = FontFamily.Monospace,
-                                modifier = Modifier.verticalScroll(rememberScrollState()))
+                                modifier = Modifier.verticalScroll(rememberScrollState())
+                            )
                         }
                     },
                     confirmButton = {

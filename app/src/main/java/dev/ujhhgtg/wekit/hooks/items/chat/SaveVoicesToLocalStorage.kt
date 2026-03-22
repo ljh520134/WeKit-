@@ -64,7 +64,8 @@ object SaveVoicesToLocalStorage : SwitchHookItem(), IResolvesDex,
         WeChatMessageContextMenuApi.removeProvider(this)
     }
 
-    override fun resolveDex(dexKit: DexKitBridge) {classVoiceLogic.find(dexKit) {
+    override fun resolveDex(dexKit: DexKitBridge) {
+        classVoiceLogic.find(dexKit) {
             matcher {
                 usingEqStrings("MicroMsg.VoiceLogic", "startRecord insert voicestg success")
             }

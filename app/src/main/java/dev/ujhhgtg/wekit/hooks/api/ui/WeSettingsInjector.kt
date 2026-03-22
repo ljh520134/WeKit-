@@ -289,7 +289,8 @@ object WeSettingsInjector : ApiHookItem(), IResolvesDex {
                 val mGetNameResId =
                     this.last { m ->
                         m.returnType == Int::class.javaPrimitiveType &&
-                        m.name != methodSettingGroupAccountInfoReturns1.method.name }.name // z6
+                                m.name != methodSettingGroupAccountInfoReturns1.method.name
+                    }.name // z6
                 // non-play 8069: C6, K6, Q6, w6, x6, z6
                 // play 8068: E6, M6, T6, z6, B6, D6
                 WeLogger.d(

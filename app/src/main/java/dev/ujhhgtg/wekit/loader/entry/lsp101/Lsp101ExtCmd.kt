@@ -1,7 +1,7 @@
 package dev.ujhhgtg.wekit.loader.entry.lsp101
 
-import io.github.libxposed.api.XposedInterface
 import dev.ujhhgtg.wekit.loader.utils.LibXposedApiByteCodeGenerator
+import io.github.libxposed.api.XposedInterface
 
 object Lsp101ExtCmd {
     fun handleQueryExtension(cmd: String): Any? {

@@ -35,11 +35,11 @@ import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.IntOffset
 import androidx.compose.ui.unit.dp
 import com.highcapable.kavaref.KavaRef.Companion.asResolver
-import dev.ujhhgtg.wekit.dexkit.dsl.dexMethod
-import dev.ujhhgtg.wekit.hooks.core.SwitchHookItem
 import dev.ujhhgtg.wekit.dexkit.abc.IResolvesDex
+import dev.ujhhgtg.wekit.dexkit.dsl.dexMethod
 import dev.ujhhgtg.wekit.hooks.api.core.WeConversationApi
 import dev.ujhhgtg.wekit.hooks.core.HookItem
+import dev.ujhhgtg.wekit.hooks.core.SwitchHookItem
 import dev.ujhhgtg.wekit.ui.utils.AppTheme
 import dev.ujhhgtg.wekit.ui.utils.LifecycleOwnerProvider
 import dev.ujhhgtg.wekit.ui.utils.setLifecycleOwner
@@ -116,7 +116,8 @@ object ConversationGrouping : SwitchHookItem(), IResolvesDex {
 
     private val methodOnTabCreate by dexMethod()
 
-    override fun resolveDex(dexKit: DexKitBridge) {methodOnTabCreate.find(dexKit) {
+    override fun resolveDex(dexKit: DexKitBridge) {
+        methodOnTabCreate.find(dexKit) {
             matcher {
                 declaredClass = "com.tencent.mm.ui.conversation.MainUI"
                 usingEqStrings("MicroMsg.MainUI", "onTabCreate, %d")

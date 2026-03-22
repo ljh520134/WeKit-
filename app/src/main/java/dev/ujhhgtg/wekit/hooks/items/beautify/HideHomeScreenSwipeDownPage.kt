@@ -4,9 +4,9 @@ import android.view.View
 import android.widget.AbsListView
 import com.highcapable.kavaref.KavaRef.Companion.asResolver
 import com.highcapable.kavaref.extension.toClass
+import dev.ujhhgtg.wekit.hooks.core.HookItem
 import dev.ujhhgtg.wekit.hooks.core.SwitchHookItem
 import dev.ujhhgtg.wekit.hooks.items.chat.ConversationGrouping
-import dev.ujhhgtg.wekit.hooks.core.HookItem
 import dev.ujhhgtg.wekit.utils.invokeOriginal
 
 @HookItem(path = "界面美化/隐藏主页下滑「最近」页", desc = "禁用主页下滑功能")

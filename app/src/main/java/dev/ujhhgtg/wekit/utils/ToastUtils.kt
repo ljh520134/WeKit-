@@ -19,7 +19,7 @@ object ToastUtils {
     // CoroutineScope receiver is required to disambiguate from the non-suspend overload
     @Suppress("UnusedReceiverParameter")
     suspend fun CoroutineScope.showToastSuspend(msg: String) =
-    withContext(Dispatchers.Main) {
-        showToast(msg)
-    }
+        withContext(Dispatchers.Main) {
+            showToast(msg)
+        }
 }

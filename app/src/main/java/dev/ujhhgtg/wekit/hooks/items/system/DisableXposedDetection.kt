@@ -26,7 +26,8 @@ object DisableXposedDetection : SwitchHookItem(), IResolvesDex {
         // placeholder method
         if (HostInfo.isHostGooglePlay)
             methodCheckStackTraceElements.setDescriptor(
-                DexMethodDescriptor("Lcom/tencent/mm/ui/LauncherUI;->()Lcom/tencent/mm/ui/LauncherUI;"))
+                DexMethodDescriptor("Lcom/tencent/mm/ui/LauncherUI;->()Lcom/tencent/mm/ui/LauncherUI;")
+            )
 
         methodCheckStackTraceElements.find(dexKit) {
             searchPackages("com.tencent.mm.app")

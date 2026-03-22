@@ -63,10 +63,12 @@ object HookItemsLoader {
                         hookItem.setEnabledSilently(WePrefs.getBoolOrFalse(hookItem.path))
                         if (hookItem.isEnabled || hookItem.alwaysRun) hookItem.enable(process)
                     }
+
                     is SwitchHookItem -> {
                         hookItem.setEnabledSilently(WePrefs.getBoolOrFalse(hookItem.path))
                         if (hookItem.isEnabled) hookItem.enable(process)
                     }
+
                     is ApiHookItem -> hookItem.enable(process)
                 }
             }

@@ -1,8 +1,8 @@
 package dev.ujhhgtg.wekit.utils.updates
 
+import dev.ujhhgtg.wekit.BuildConfig
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
-import dev.ujhhgtg.wekit.BuildConfig
 import okhttp3.Request
 import org.json.JSONObject
 import java.io.IOException

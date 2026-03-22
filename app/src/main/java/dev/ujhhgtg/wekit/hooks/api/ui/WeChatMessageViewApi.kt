@@ -80,7 +80,8 @@ object WeChatMessageViewApi : ApiHookItem(), IResolvesDex {
         return MessageInfo(msgInfo)
     }
 
-    override fun resolveDex(dexKit: DexKitBridge) {methodChatItemOnBindView.find(dexKit) {
+    override fun resolveDex(dexKit: DexKitBridge) {
+        methodChatItemOnBindView.find(dexKit) {
             matcher {
                 usingStrings(
                     "MicroMsg.MvvmChattingItem",

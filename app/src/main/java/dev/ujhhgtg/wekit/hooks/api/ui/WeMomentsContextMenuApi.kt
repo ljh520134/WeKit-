@@ -6,9 +6,9 @@ import android.view.ContextMenu
 import com.highcapable.kavaref.KavaRef.Companion.asResolver
 import de.robv.android.xposed.XC_MethodHook
 import dev.ujhhgtg.nameof.nameof
+import dev.ujhhgtg.wekit.dexkit.abc.IResolvesDex
 import dev.ujhhgtg.wekit.dexkit.dsl.dexMethod
 import dev.ujhhgtg.wekit.hooks.core.ApiHookItem
-import dev.ujhhgtg.wekit.dexkit.abc.IResolvesDex
 import dev.ujhhgtg.wekit.hooks.core.HookItem
 import dev.ujhhgtg.wekit.utils.logging.WeLogger
 import org.luckypray.dexkit.DexKitBridge
@@ -51,7 +51,8 @@ object WeMomentsContextMenuApi : ApiHookItem(), IResolvesDex {
     private val methodSnsInfoStorage by dexMethod()
     private val methodGetSnsInfoStorage by dexMethod()
 
-    override fun resolveDex(dexKit: DexKitBridge) {methodOnCreateMenu.find(dexKit) {
+    override fun resolveDex(dexKit: DexKitBridge) {
+        methodOnCreateMenu.find(dexKit) {
             searchPackages("com.tencent.mm.plugin.sns.ui.listener")
             matcher {
                 usingStrings(

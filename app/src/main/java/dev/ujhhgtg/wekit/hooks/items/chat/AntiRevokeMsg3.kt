@@ -4,13 +4,13 @@ import android.content.ContentValues
 import android.database.Cursor
 import com.highcapable.kavaref.KavaRef.Companion.asResolver
 import dev.ujhhgtg.nameof.nameof
-import dev.ujhhgtg.wekit.dexkit.dsl.dexMethod
-import dev.ujhhgtg.wekit.hooks.core.SwitchHookItem
 import dev.ujhhgtg.wekit.dexkit.abc.IResolvesDex
+import dev.ujhhgtg.wekit.dexkit.dsl.dexMethod
 import dev.ujhhgtg.wekit.hooks.api.core.WeDatabaseApi
 import dev.ujhhgtg.wekit.hooks.api.core.WeMessageApi
 import dev.ujhhgtg.wekit.hooks.api.core.WeServiceApi
 import dev.ujhhgtg.wekit.hooks.core.HookItem
+import dev.ujhhgtg.wekit.hooks.core.SwitchHookItem
 import dev.ujhhgtg.wekit.utils.logging.WeLogger
 import org.luckypray.dexkit.DexKitBridge
 import kotlin.random.Random
@@ -22,7 +22,8 @@ object AntiRevokeMsg3 : SwitchHookItem(), IResolvesDex {
 
     private val methodXmlParser by dexMethod()
 
-    override fun resolveDex(dexKit: DexKitBridge) {methodXmlParser.find(dexKit) {
+    override fun resolveDex(dexKit: DexKitBridge) {
+        methodXmlParser.find(dexKit) {
             searchPackages("com.tencent.mm.sdk.platformtools")
             matcher {
                 usingEqStrings("MicroMsg.SDK.XmlParser", "[ %s ]")

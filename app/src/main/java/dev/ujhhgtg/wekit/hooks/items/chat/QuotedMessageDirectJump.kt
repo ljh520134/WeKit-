@@ -41,8 +41,7 @@ object QuotedMessageDirectJump : SwitchHookItem(), IResolvesDex {
                     msgQuoteItem,
                     "handleQuoteMsgClick" /* hardcoded in original code */
                 )!!
-            }
-            else {
+            } else {
                 msgInfo = mGetQuoteMessageInfo.invoke(
                     null,
                     false /* isGroupChat: this arg is ignored */,
@@ -65,8 +64,7 @@ object QuotedMessageDirectJump : SwitchHookItem(), IResolvesDex {
                     msgQuoteItem,
                     enumValueOfClass(classEnumQuoteJumpToPositionSource.clazz, "QuoteLongClickFromQuoteView")
                 )
-            }
-            else {
+            } else {
                 methodClickToPositionEvent.method.invoke(
                     null,
                     chattingContext,
@@ -82,7 +80,8 @@ object QuotedMessageDirectJump : SwitchHookItem(), IResolvesDex {
         }
     }
 
-    override fun resolveDex(dexKit: DexKitBridge) {methodClickEvent.find(dexKit) {
+    override fun resolveDex(dexKit: DexKitBridge) {
+        methodClickEvent.find(dexKit) {
             searchPackages("com.tencent.mm.ui.chatting.viewitems")
             matcher {
                 usingEqStrings(

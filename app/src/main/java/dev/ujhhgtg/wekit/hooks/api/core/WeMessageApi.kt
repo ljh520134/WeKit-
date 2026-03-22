@@ -9,7 +9,6 @@ import com.highcapable.kavaref.extension.createInstance
 import com.highcapable.kavaref.extension.toClass
 import de.robv.android.xposed.XposedHelpers
 import dev.ujhhgtg.nameof.nameof
-import dev.ujhhgtg.wekit.dexkit.DexMethodDescriptor
 import dev.ujhhgtg.wekit.dexkit.abc.IResolvesDex
 import dev.ujhhgtg.wekit.dexkit.dsl.dexClass
 import dev.ujhhgtg.wekit.dexkit.dsl.dexMethod
@@ -19,8 +18,6 @@ import dev.ujhhgtg.wekit.utils.XmlUtils.extractXmlAttr
 import dev.ujhhgtg.wekit.utils.XmlUtils.extractXmlTag
 import dev.ujhhgtg.wekit.utils.logging.WeLogger
 import org.luckypray.dexkit.DexKitBridge
-import java.io.FileNotFoundException
-import java.io.IOException
 import java.io.InputStream
 import java.io.OutputStream
 import java.lang.reflect.Constructor
@@ -83,49 +80,48 @@ object WeMessageApi : ApiHookItem(), IResolvesDex {
     // -------------------------------------------------------------------------------------
 
     // 基础 & 文本
-    private var netSceneSendMsgClass: Class<*>? = null
-    private var getSendMsgObjectMethod: Method? = null
-    private var postToQueueMethod: Method? = null
-    private var shareFileMethod: Method? = null
+    private lateinit var netSceneSendMsgClass: Class<*>
+    private lateinit var getSendMsgObjectMethod: Method
+    private lateinit var postToQueueMethod: Method
+    private lateinit var shareFileMethod: Method
     private var getServiceMethod: Method? = null       // ServiceManager.getService
-    private var getSelfAliasMethod: Method? = null
+    private lateinit var getSelfAliasMethod: Method
 
     // 图片
-    private var p6Method: Method? = null
-    private var imageServiceApiClass: Class<*>? = null
-    private var sendImageMethod: Method? = null
-    private var taskConstructor: Constructor<*>? = null
-    private var crossParamsClass: Class<*>? = null
-    private var crossParamsConstructor: Constructor<*>? = null
+    private lateinit var p6Method: Method
+    private lateinit var imageServiceApiClass: Class<*>
+    private lateinit var sendImageMethod: Method
+    private lateinit var taskConstructor: Constructor<*>
+    private lateinit var crossParamsClass: Class<*>
+    private lateinit var crossParamsConstructor: Constructor<*>
 
     // 文件
-    private var wxFileObjectClass: Class<*>? = null
-    private var wxMediaMessageClass: Class<*>? = null
+    private lateinit var wxFileObjectClass: Class<*>
+    private lateinit var wxMediaMessageClass: Class<*>
 
     // 语音 & VFS
-    private var vfsCopyMethod: Method? = null         // VFS.L (write)
-    private var vfsReadMethod: Method? = null         // VFS.F (read)
-    private var vfsExistsMethod: Method? = null       // VFS.k/e (exists)
-    private var voiceNameGenMethod: Method? = null    // g1.E
-    private var kernelStorageMethod: Method? = null   // j1.u
+    private lateinit var vfsCopyMethod: Method         // VFS.L (write)
+    private lateinit var vfsReadMethod: Method         // VFS.F (read)
+    private lateinit var vfsExistsMethod: Method       // VFS.k/e (exists)
+    private lateinit var voiceNameGenMethod: Method    // g1.E
+    private lateinit var kernelStorageMethod: Method   // j1.u
     private var storageAccPathMethod: Method? = null  // b0.e (动态解析)
-    private var pathGenMethod: Method? = null         // h1.c
-    private var voiceParamsClass: Class<*>? = null
-    private var voiceTaskClass: Class<*>? = null
-    private var voiceTaskConstructor: Constructor<*>? = null
-    private var voiceServiceInterfaceClass: Class<*>? = null // sc0.e
-    private var voiceSendMethod: Method? = null       // gh
-    private var voiceDurationField: Field? = null     // 语音时长字段
-    private var voiceOffsetField: Field? = null       // 偏移量字段
-
-    // Unsafe
-    private var unsafeInstance: Any? = null
-    private var allocateInstanceMethod: Method? = null
+    private lateinit var pathGenMethod: Method         // h1.c
+    private lateinit var voiceParamsClass: Class<*>
+    private lateinit var voiceTaskClass: Class<*>
+    private lateinit var voiceTaskConstructor: Constructor<*>
+    private lateinit var voiceServiceInterfaceClass: Class<*> // sc0.e
+    private lateinit var voiceSendMethod: Method       // gh
+    private lateinit var voiceDurationField: Field     // 语音时长字段
+    private lateinit var voiceOffsetField: Field       // 偏移量字段
+    private lateinit var unsafeInstance: Any
+    private lateinit var allocateInstanceMethod: Method
 
     private val TAG = nameof(WeMessageApi)
 
     @SuppressLint("NonUniqueDexKitData")
     override fun resolveDex(dexKit: DexKitBridge) {
+
         // ---------------------------------------------------------------------------------
         // 基础组件查找
         // ---------------------------------------------------------------------------------
@@ -266,50 +262,27 @@ object WeMessageApi : ApiHookItem(), IResolvesDex {
             }
         }
 
-        val senderDesc = classImageSender.getDescriptorString()
-        if (!classImageSender.isPlaceholder) {
-            val sendMethodData = dexKit.findMethod {
-                matcher {
-                    declaredClass = senderDesc!!
-                    modifiers = Modifier.PUBLIC or Modifier.STATIC or Modifier.FINAL
-                    paramCount = 4
-                    paramTypes(senderDesc, null, null, null)
-                }
-            }.singleOrNull()
-
-            if (sendMethodData != null) {
-                methodImageSendEntry.setDescriptor(DexMethodDescriptor(sendMethodData.descriptor))
-
-                val taskClassName = sendMethodData.paramTypes[1]
-                classImageTask.setDescriptor(taskClassName.name)
-            }
-            else {
-                methodImageSendEntry.setPlaceholderDescriptor()
-                classImageTask.setPlaceholderDescriptor()
-            }
-
-            val mvvmBaseDesc = classMvvmBase.getDescriptorString()
-            if (mvvmBaseDesc != null) {
-                classImageServiceImpl.find(dexKit, allowFailure = true) {
-                    matcher {
-                        usingStrings("MicroMsg.ImgUpload.MsgImgFeatureService")
-                        superClass(mvvmBaseDesc)
-                    }
-                }
-            }
-            else {
-                classImageServiceImpl.setPlaceholderDescriptor()
-            }
-
-            classImageTask.find(dexKit, allowFailure = true) {
-                matcher { usingStrings("msg_raw_img_send") }
+        methodImageSendEntry.find(dexKit) {
+            matcher {
+                declaredClass(classImageSender.clazz)
+                modifiers = Modifier.PUBLIC or Modifier.STATIC or Modifier.FINAL
+                paramCount = 4
+                paramTypes(classImageSender.clazz, null, null, null)
             }
         }
-        else {
-            methodImageSendEntry.setPlaceholderDescriptor()
-            classImageTask.setPlaceholderDescriptor()
-            classImageServiceImpl.setPlaceholderDescriptor()
-            classImageTask.setPlaceholderDescriptor()
+
+        val taskClassName = methodImageSendEntry.method.parameterTypes[1]
+        classImageTask.setDescriptor(taskClassName.name)
+
+        classImageServiceImpl.find(dexKit, allowFailure = true) {
+            matcher {
+                usingStrings("MicroMsg.ImgUpload.MsgImgFeatureService")
+                superClass(classMvvmBase.getDescriptorString()!!)
+            }
+        }
+
+        classImageTask.find(dexKit, allowFailure = true) {
+            matcher { usingStrings("msg_raw_img_send") }
         }
 
         // 查找 ServiceManager
@@ -328,8 +301,10 @@ object WeMessageApi : ApiHookItem(), IResolvesDex {
 
         classConfigLogic.find(dexKit) {
             matcher {
-                usingEqStrings("MicroMsg.ConfigStorageLogic",
-                    "get userinfo fail")
+                usingEqStrings(
+                    "MicroMsg.ConfigStorageLogic",
+                    "get userinfo fail"
+                )
             }
         }
 
@@ -349,27 +324,22 @@ object WeMessageApi : ApiHookItem(), IResolvesDex {
             }
         }
 
-        classVoiceParams.find(dexKit, allowFailure = true) {
+        classVoiceParams.find(dexKit) {
             matcher {
                 usingEqStrings("toUserName", "fileName", "send_voice_msg")
             }
         }
 
-        if (!classVoiceParams.isPlaceholder) {
-            classVoiceTask.find(dexKit, allowFailure = true) {
-                matcher {
-                    usingStrings("MicroMsg.VoiceMsg.VoiceMsgSendTask")
-                    methods {
-                        add {
-                            name = "<init>"
-                            paramTypes(classVoiceParams.clazz)
-                        }
+        classVoiceTask.find(dexKit) {
+            matcher {
+                usingStrings("MicroMsg.VoiceMsg.VoiceMsgSendTask")
+                methods {
+                    add {
+                        name = "<init>"
+                        paramTypes(classVoiceParams.clazz)
                     }
                 }
             }
-        }
-        else {
-            classVoiceTask.setPlaceholderDescriptor()
         }
 
         classPathUtil.find(dexKit) {
@@ -407,42 +377,34 @@ object WeMessageApi : ApiHookItem(), IResolvesDex {
         }
 
         // 定位 VoiceServiceImpl (tc0.k)
-        classVoiceServiceImpl.find(dexKit, allowFailure = true) {
+        classVoiceServiceImpl.find(dexKit) {
             matcher {
-                usingStrings("MicroMsg.VoiceMsgAsyncSendFSC")
-                methods {
-                    add {
-                        usingStrings("sendSync only support BaseSendMsgTask Type")
-                    }
-                }
+                usingEqStrings(
+                    "MicroMsg.VoiceMsgAsyncSendFSC",
+                    "sendAsync only support BaseSendMsgTask Type"
+                )
             }
         }
 
-        if (!classVoiceServiceImpl.isPlaceholder) {
-            // 定位 sendSync 方法 (gh)
-            methodSendVoice.find(dexKit, true) {
-                matcher {
-                    declaredClass(classVoiceServiceImpl.clazz)
-                    usingStrings("sendSync only support BaseSendMsgTask Type")
-                    paramCount = 1
-                }
+        // 定位 sendSync 方法 (gh)
+        methodSendVoice.find(dexKit, true) {
+            matcher {
+                declaredClass(classVoiceServiceImpl.clazz)
+                // 8.0.65 sendSync 方法打错字打成 sendAsync 了没绷住
+//                    usingStrings("sendSync only support BaseSendMsgTask Type")
+//                    paramCount = 1
+                paramCount = 1
+                returnType = "void"
             }
+        }
 
-            // 遍历所有接口，找到第一个非系统接口作为 Service 接口
-            val targetInterface = classVoiceServiceImpl.clazz.interfaces.firstOrNull {
-                !it.name.startsWith("java.") && !it.name.startsWith("android.") && !it.name.startsWith(
-                    "kotlin."
-                ) && !it.name.startsWith("ki0.") // FIXME: might change with WeChat version
-            }
-            if (targetInterface != null) {
-                classVoiceServiceInterface.setDescriptor(targetInterface.name)
-                WeLogger.i(TAG, "从实现类反推接口成功: ${targetInterface.name}")
-            }
+        // 遍历所有接口，找到第一个非系统接口作为 Service 接口
+        val targetInterface = classVoiceServiceImpl.clazz.interfaces.first {
+            !it.name.startsWith("java.") && !it.name.startsWith("android.") && !it.name.startsWith(
+                "kotlin."
+            ) && !it.name.startsWith("ki0.") // FIXME: might change with WeChat version
         }
-        else {
-            methodSendVoice.setPlaceholderDescriptor()
-            classVoiceServiceInterface.setPlaceholderDescriptor()
-        }
+        classVoiceServiceInterface.setDescriptor(targetInterface.name)
     }
 
     fun createMsgInfoFromContentValues(contentValues: ContentValues, boolValue: Boolean): Any {
@@ -479,10 +441,10 @@ object WeMessageApi : ApiHookItem(), IResolvesDex {
             .firstConstructor { parameterCount = 5 }
             .self
 
-        crossParamsClass = taskConstructor!!.parameterTypes[4]
-        crossParamsConstructor = crossParamsClass?.asResolver()
-            ?.firstConstructor { emptyParameters() }
-            ?.self
+        crossParamsClass = taskConstructor.parameterTypes[4]
+        crossParamsConstructor = crossParamsClass.asResolver()
+            .firstConstructor { emptyParameters() }
+            .self
 
         // -----------------------------------------------------------------------------
         // 语音/VFS 组件初始化
@@ -533,14 +495,14 @@ object WeMessageApi : ApiHookItem(), IResolvesDex {
         voiceParamsClass = classVoiceParams.clazz
         classVoiceParams.asResolver().let { voiceParams ->
             val intFields = voiceParams.field { type = Int::class }
-            voiceDurationField = intFields.firstOrNull()?.self
-            voiceOffsetField = intFields.getOrNull(1)?.self
+            voiceDurationField = intFields[0].self
+            voiceOffsetField = intFields[1].self
         }
 
         voiceTaskClass = classVoiceTask.clazz
         classVoiceTask.asResolver().let { voiceTask ->
             voiceTaskConstructor = voiceTask.firstConstructor {
-                parameters(voiceParamsClass!!)
+                parameters(voiceParamsClass)
             }.self
         }
 
@@ -560,7 +522,7 @@ object WeMessageApi : ApiHookItem(), IResolvesDex {
         val unsafeClass = Class.forName("sun.misc.Unsafe")
         val theUnsafeField = unsafeClass.getDeclaredField("theUnsafe")
         theUnsafeField.isAccessible = true
-        unsafeInstance = theUnsafeField.get(null)
+        unsafeInstance = theUnsafeField.get(null)!!
         allocateInstanceMethod = unsafeClass.getMethod(
             "allocateInstance",
             Class::class.java
@@ -571,8 +533,8 @@ object WeMessageApi : ApiHookItem(), IResolvesDex {
      * 动态解析 AccPath 获取方法
      */
     private fun getAccPath(): String {
-        val storageObj = kernelStorageMethod?.invoke(null)
-            ?: throw IllegalStateException("Kernel.getStorage() failed (returned null)")
+        val storageObj = kernelStorageMethod.invoke(null)
+            ?: error("Kernel.getStorage() failed (returned null)")
 
         if (storageAccPathMethod != null) {
             return storageAccPathMethod!!.invoke(storageObj) as String
@@ -618,12 +580,12 @@ object WeMessageApi : ApiHookItem(), IResolvesDex {
     /** 发送图片消息 */
     fun sendImage(toUser: String, imgPath: String): Boolean {
         return try {
-            val apiInterface = imageServiceApiClass ?: return false
+            val apiInterface = imageServiceApiClass
             val taskClass = classImageTask.clazz
 
             val serviceObj = getServiceMethod?.invoke(null, apiInterface) ?: return false
 
-            val paramsClass = crossParamsClass ?: return false
+            val paramsClass = crossParamsClass
             val paramsObj = XposedHelpers.newInstance(paramsClass)
             assignValueToFirstFieldByType(paramsObj, Int::class.javaPrimitiveType!!, 4)
 
@@ -638,7 +600,7 @@ object WeMessageApi : ApiHookItem(), IResolvesDex {
                 )
             assignValueToLastFieldByType(taskObj, String::class.java, "media_generate_send_img")
 
-            sendImageMethod?.invoke(serviceObj, taskObj)
+            sendImageMethod.invoke(serviceObj, taskObj)
 
             WeLogger.i(TAG, "[sendImage] 任务已提交: $toUser")
             true
@@ -653,8 +615,8 @@ object WeMessageApi : ApiHookItem(), IResolvesDex {
     fun sendText(toUser: String, text: String): Boolean {
         return try {
             WeLogger.i(TAG, "[sendText] 准备发送文本消息: $text")
-            val sendMsgObject = getSendMsgObjectMethod?.invoke(null) ?: return false
-            val constructor = netSceneSendMsgClass?.getConstructor(
+            val sendMsgObject = getSendMsgObjectMethod.invoke(null) ?: return false
+            val constructor = netSceneSendMsgClass.getConstructor(
                 String::class.java,
                 String::class.java,
                 Int::class.javaPrimitiveType,
@@ -662,7 +624,7 @@ object WeMessageApi : ApiHookItem(), IResolvesDex {
                 Any::class.java
             ) ?: return false
             val msgObj = constructor.newInstance(toUser, text, 1, 0, null)
-            postToQueueMethod?.invoke(sendMsgObject, msgObj) as? Boolean ?: false
+            postToQueueMethod.invoke(sendMsgObject, msgObj) as? Boolean ?: false
         } catch (e: Exception) {
             WeLogger.e(TAG, "[sendText] Text 发送失败", e)
             false
@@ -673,13 +635,12 @@ object WeMessageApi : ApiHookItem(), IResolvesDex {
     fun sendFile(talker: String, filePath: String, title: String, appId: String? = null): Boolean {
         return try {
             WeLogger.i(TAG, "[sendFile] 准备发送文件消息: $filePath")
-            if (shareFileMethod == null || wxFileObjectClass == null || wxMediaMessageClass == null) return false
-            val fileObject = wxFileObjectClass?.createInstance() ?: return false
-            wxFileObjectClass?.getField("filePath")?.set(fileObject, filePath)
-            val mediaMessage = wxMediaMessageClass?.createInstance() ?: return false
-            wxMediaMessageClass?.getField("mediaObject")?.set(mediaMessage, fileObject)
-            wxMediaMessageClass?.getField("title")?.set(mediaMessage, title)
-            shareFileMethod?.invoke(null, mediaMessage, appId ?: "", "", talker, 2, null)
+            val fileObject = wxFileObjectClass.createInstance() ?: return false
+            wxFileObjectClass.getField("filePath").set(fileObject, filePath)
+            val mediaMessage = wxMediaMessageClass.createInstance() ?: return false
+            wxMediaMessageClass.getField("mediaObject").set(mediaMessage, fileObject)
+            wxMediaMessageClass.getField("title").set(mediaMessage, title)
+            shareFileMethod.invoke(null, mediaMessage, appId ?: "", "", talker, 2, null)
             true
         } catch (e: Exception) {
             WeLogger.e(TAG, "[sendFile] File 发送失败", e)
@@ -692,7 +653,6 @@ object WeMessageApi : ApiHookItem(), IResolvesDex {
         return try {
             // 获取 Service 实例
             val serviceInterface = voiceServiceInterfaceClass
-                ?: error("VoiceService interface not found")
 
             // 尝试通过 ServiceManager 获取
             var finalServiceObj: Any? = null
@@ -719,25 +679,25 @@ object WeMessageApi : ApiHookItem(), IResolvesDex {
             if (finalServiceObj == null) error("无法获取 VoiceService 实例")
 
             // 准备文件
-            val fileName = voiceNameGenMethod?.invoke(null, selfCustomWxId, "amr_") as? String
+            val fileName = voiceNameGenMethod.invoke(null, selfCustomWxId, "amr_") as? String
                 ?: error("VoiceName Gen Failed")
             val accPath = getAccPath()
             val voice2Root = if (accPath.endsWith("/")) "${accPath}voice2/" else "$accPath/voice2/"
             val destFullPath =
-                pathGenMethod?.invoke(null, voice2Root, "msg_", fileName, ".amr", 2) as? String
+                pathGenMethod.invoke(null, voice2Root, "msg_", fileName, ".amr", 2) as? String
                     ?: error("Path Gen Failed")
 
             if (!copyFileViaVfs(path, destFullPath)) return false
 
             // 构造任务
-            val paramsObj = voiceParamsClass!!.createInstance(toUser, fileName)
-            voiceDurationField?.set(paramsObj, durationMs)
-            voiceOffsetField?.set(paramsObj, 0)
+            val paramsObj = voiceParamsClass.createInstance(toUser, fileName)
+            voiceDurationField.set(paramsObj, durationMs)
+            voiceOffsetField.set(paramsObj, 0)
 
-            val taskObj = voiceTaskConstructor?.newInstance(paramsObj)
+            val taskObj = voiceTaskConstructor.newInstance(paramsObj)
                 ?: error("Task 构造失败")
 
-            voiceSendMethod?.invoke(finalServiceObj, taskObj)
+            voiceSendMethod.invoke(finalServiceObj, taskObj)
             WeLogger.i(TAG, "语音发送指令已下发: $fileName")
             true
         } catch (e: Exception) {
@@ -760,14 +720,11 @@ object WeMessageApi : ApiHookItem(), IResolvesDex {
     private fun copyFileViaVfs(sourcePath: String, destPath: String): Boolean {
         WeLogger.d(TAG, "VFS Copy: $sourcePath -> $destPath")
         return try {
-            if (vfsReadMethod == null) throw IllegalStateException("VFS Read Method not found")
-            if (vfsCopyMethod == null) throw IllegalStateException("VFS Copy Method not found")
+            val input = vfsReadMethod.invoke(null, sourcePath) as? InputStream
+                ?: error("VFS Open Failed for $sourcePath")
 
-            val input = vfsReadMethod?.invoke(null, sourcePath) as? InputStream
-                ?: throw FileNotFoundException("VFS Open Failed for $sourcePath")
-
-            val output = vfsCopyMethod?.invoke(null, destPath, false) as? OutputStream
-                ?: throw IOException("VFS Create Failed for $destPath")
+            val output = vfsCopyMethod.invoke(null, destPath, false) as? OutputStream
+                ?: error("VFS Create Failed for $destPath")
 
             input.use { i ->
                 output.use { o ->
@@ -776,7 +733,7 @@ object WeMessageApi : ApiHookItem(), IResolvesDex {
             }
 
             // 校验
-            val exists = vfsExistsMethod?.invoke(null, destPath) as? Boolean ?: false
+            val exists = vfsExistsMethod.invoke(null, destPath) as? Boolean ?: false
             if (exists) {
                 WeLogger.i(TAG, "VFS 拷贝成功")
             } else {
@@ -791,7 +748,7 @@ object WeMessageApi : ApiHookItem(), IResolvesDex {
 
     val selfCustomWxId: String
         get() {
-            return getSelfAliasMethod?.invoke(null) as? String ?: ""
+            return getSelfAliasMethod.invoke(null) as? String ?: ""
         }
 
     private fun bindServiceFramework() {
@@ -814,11 +771,11 @@ object WeMessageApi : ApiHookItem(), IResolvesDex {
         val implClazz = classImageServiceImpl.clazz
         val taskClazz = classImageTask.clazz
 
-        imageServiceApiClass = implClazz.interfaces.firstOrNull {
+        imageServiceApiClass = implClazz.interfaces.first {
             !it.name.startsWith("java.") && !it.name.startsWith("android.")
         }
 
-        sendImageMethod = implClazz.declaredMethods.firstOrNull { m ->
+        sendImageMethod = implClazz.declaredMethods.first { m ->
             m.parameterCount == 1 &&
                     m.parameterTypes[0] == taskClazz &&
                     m.returnType.name.contains("flow", ignoreCase = true)
@@ -840,6 +797,26 @@ object WeMessageApi : ApiHookItem(), IResolvesDex {
         obj.javaClass.declaredFields.lastOrNull { it.type == type }?.let {
             it.isAccessible = true
             it.set(obj, value)
+        }
+    }
+
+    fun getMsgInfoInstanceFromTag(tag: Any): Any {
+        val mGetMsgInfo = tag.asResolver()
+            .optional()
+            .firstMethodOrNull {
+                returnType = classMsgInfo.clazz
+                parameterCount(0)
+                superclass()
+            }
+
+        return if (mGetMsgInfo != null) {
+            mGetMsgInfo.invoke()!!
+        } else {
+            tag.asResolver()
+                .firstField {
+                    type = classMsgInfo.clazz
+                    superclass()
+                }.get()!!
         }
     }
 }

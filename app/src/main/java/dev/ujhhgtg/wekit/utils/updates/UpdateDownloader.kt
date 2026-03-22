@@ -3,10 +3,10 @@ package dev.ujhhgtg.wekit.utils.updates
 import android.content.Context
 import android.content.Intent
 import androidx.core.content.FileProvider
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.withContext
 import dev.ujhhgtg.wekit.constants.PackageNames
 import dev.ujhhgtg.wekit.utils.KnownPaths
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import okhttp3.Request
 import java.io.IOException
 import java.nio.file.Path

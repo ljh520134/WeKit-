@@ -5,9 +5,9 @@ import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import dev.ujhhgtg.nameof.nameof
-import dev.ujhhgtg.wekit.hooks.core.SwitchHookItem
 import dev.ujhhgtg.wekit.hooks.api.ui.WeShortVideosShareMenuApi
 import dev.ujhhgtg.wekit.hooks.core.HookItem
+import dev.ujhhgtg.wekit.hooks.core.SwitchHookItem
 import dev.ujhhgtg.wekit.utils.HostInfo
 import dev.ujhhgtg.wekit.utils.KnownPaths
 import dev.ujhhgtg.wekit.utils.ModuleRes
@@ -446,14 +446,17 @@ object DownloadMedia : SwitchHookItem(),
                         // e[0] = ~(e[0] ^ (e[0] <<< 21))
                         e[0] = e[0].xor(e[0].shiftLeft(21)).not().and(mask)
                     }
+
                     1 -> {
                         // e[0] ^= (e[0] >>> 5)
                         e[0] = e[0].xor(e[0].shiftRight(5))
                     }
+
                     2 -> {
                         // e[0] ^= (e[0] <<< 12)
                         e[0] = e[0].xor(e[0].shiftLeft(12))
                     }
+
                     3 -> {
                         // e[0] ^= (e[0] >>> 33)
                         e[0] = e[0].xor(e[0].shiftRight(33))

@@ -85,7 +85,7 @@ object AddMainScreenFab : SwitchHookItem() {
     }
 
     fun removeProvider(provider: IMenuItemsProvider) {
-        val removed = providers.remove(provider)
+        providers.remove(provider)
     }
 
     private val TAG = nameof(AddMainScreenFab)

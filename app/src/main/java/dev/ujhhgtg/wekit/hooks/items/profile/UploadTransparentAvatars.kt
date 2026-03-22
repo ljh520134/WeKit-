@@ -1,10 +1,10 @@
 package dev.ujhhgtg.wekit.hooks.items.profile
 
 import android.graphics.Bitmap
-import dev.ujhhgtg.wekit.dexkit.dsl.dexMethod
-import dev.ujhhgtg.wekit.hooks.core.SwitchHookItem
 import dev.ujhhgtg.wekit.dexkit.abc.IResolvesDex
+import dev.ujhhgtg.wekit.dexkit.dsl.dexMethod
 import dev.ujhhgtg.wekit.hooks.core.HookItem
+import dev.ujhhgtg.wekit.hooks.core.SwitchHookItem
 import dev.ujhhgtg.wekit.utils.logging.WeLogger
 import org.luckypray.dexkit.DexKitBridge
 
@@ -13,7 +13,8 @@ object UploadTransparentAvatars : SwitchHookItem(), IResolvesDex {
 
     private val methodSaveBitmap by dexMethod()
 
-    override fun resolveDex(dexKit: DexKitBridge) {methodSaveBitmap.find(dexKit) {
+    override fun resolveDex(dexKit: DexKitBridge) {
+        methodSaveBitmap.find(dexKit) {
             searchPackages("com.tencent.mm.sdk.platformtools")
             matcher {
                 usingStrings("saveBitmapToImage pathName null or nil", "MicroMsg.BitmapUtil")

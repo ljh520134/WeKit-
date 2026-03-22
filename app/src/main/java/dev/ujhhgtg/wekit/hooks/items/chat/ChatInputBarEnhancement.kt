@@ -66,7 +66,10 @@ import kotlin.io.path.div
 import kotlin.io.path.outputStream
 import android.widget.Button as AndroidButton
 
-@HookItem(path = "聊天/聊天输入栏增强", desc = "为聊天输入栏添加更多功能\n1. 在聊天界面长按「发送」或「加号菜单」按钮打开菜单\n2. 长按「语音」按钮发送自定义语音文件 (SILK/AMR 或 MP3)")
+@HookItem(
+    path = "聊天/聊天输入栏增强",
+    desc = "为聊天输入栏添加更多功能\n1. 在聊天界面长按「发送」或「加号菜单」按钮打开菜单\n2. 长按「语音」按钮发送自定义语音文件 (SILK/AMR 或 MP3)"
+)
 object ChatInputBarEnhancement : SwitchHookItem() {
 
     interface IChatMenuItemProvider {
@@ -94,162 +97,166 @@ object ChatInputBarEnhancement : SwitchHookItem() {
             firstConstructor {
                 parameters(Context::class, AttributeSet::class, Int::class)
             }
-            .hookAfter { param ->
-                val chatFooter = param.thisObject as FrameLayout
-                val searchedView = chatFooter.findViewByChildIndexes<View>(0)!!
-                val imgButtons = searchedView.findViewsWhich<ImageButton> { view ->
-                    view.javaClass.simpleName == "WeImageButton"
-                }
-                val voiceButton = imgButtons.first()
-                val menuButton = imgButtons.last()
-                val sendButton = searchedView.findViewWhich<AndroidButton> { view ->
-                    view.javaClass.name == "android.widget.Button" && run {
-                        val text = (view as AndroidButton).text?.toString()?.trim() ?: ""
-                        text == "发送" || text.equals("send", ignoreCase = true)
+                .hookAfter { param ->
+                    val chatFooter = param.thisObject as FrameLayout
+                    val searchedView = chatFooter.findViewByChildIndexes<View>(0)!!
+                    val imgButtons = searchedView.findViewsWhich<ImageButton> { view ->
+                        view.javaClass.simpleName == "WeImageButton"
                     }
-                }!!
+                    val voiceButton = imgButtons.first()
+                    val menuButton = imgButtons.last()
+                    val sendButton = searchedView.findViewWhich<AndroidButton> { view ->
+                        view.javaClass.name == "android.widget.Button" && run {
+                            val text = (view as AndroidButton).text?.toString()?.trim() ?: ""
+                            text == "发送" || text.equals("send", ignoreCase = true)
+                        }
+                    }!!
 
-                voiceButton.setOnLongClickListener { view ->
-                    val context = view.context
-                    val currentConv = currentConv
-                    if (currentConv.isNullOrBlank()) {
-                        ToastUtils.showToast("当前聊天对象获取失败!")
+                    voiceButton.setOnLongClickListener { view ->
+                        val context = view.context
+                        val currentConv = currentConv
+                        if (currentConv.isNullOrBlank()) {
+                            ToastUtils.showToast("当前聊天对象获取失败!")
+                            return@setOnLongClickListener true
+                        }
+
+                        StubFragmentActivity.launch(context) {
+                            val importLauncher = registerForActivityResult(
+                                ActivityResultContracts.OpenDocument()
+                            ) { uri ->
+                                if (uri == null) {
+                                    finish()
+                                    return@registerForActivityResult
+                                }
+
+                                lifecycleScope.launch(Dispatchers.IO) {
+                                    val tempPath = KnownPaths.moduleCache / "voice.tmp"
+                                    contentResolver.openInputStream(uri)!!.use { fis ->
+                                        tempPath.outputStream().use { fos ->
+                                            fis.copyTo(fos)
+                                        }
+                                    }
+                                    val mimeType = contentResolver.getType(uri) ?: return@launch
+                                    val isAmr = mimeType == "audio/amr"
+                                    showToastSuspend("语音文件准备完成")
+                                    val durationMs = if (!isAmr) {
+                                        runCatching { mp3DurationMs(tempPath.absolutePathString()) }.getOrDefault(0L)
+                                    } else 0L
+
+                                    withContext(Dispatchers.Main) {
+                                        finish()
+                                        showComposeDialog(context) {
+                                            var durationInput by remember { mutableStateOf(durationMs.toString()) }
+                                            AlertDialogContent(
+                                                title = { Text("发送语音文件") },
+                                                text = {
+                                                    TextField(
+                                                        value = durationInput,
+                                                        onValueChange = { durationInput = it.filter { c -> c.isDigit() } },
+                                                        label = { Text("语音时长 (毫秒)") })
+                                                },
+                                                dismissButton = { TextButton(dismiss) { Text("取消") } },
+                                                confirmButton = {
+                                                    Button(onClick = {
+                                                        val durationMs = durationInput.toLongOrNull()
+                                                        if (durationMs == null) {
+                                                            ToastUtils.showToast("时长格式不正确!")
+                                                            return@Button
+                                                        }
+
+                                                        var success = false
+                                                        if (isAmr) {
+                                                            success = WeMessageApi.sendVoice(
+                                                                currentConv,
+                                                                tempPath.absolutePathString(),
+                                                                durationMs.coerceToInt()
+                                                            )
+                                                        } else {
+                                                            // TODO
+                                                            ToastUtils.showToast("暂未支持 MP3 文件转码发送!")
+                                                            return@Button
+                                                        }
+                                                        ToastUtils.showToast("语音发送${if (success) "成功" else "失败!"}")
+                                                        tempPath.deleteIfExists()
+                                                        dismiss()
+                                                    }) { Text("确定") }
+                                                })
+                                        }
+                                    }
+                                }
+                            }
+                            importLauncher.launch(arrayOf("audio/amr", "audio/mpeg"))
+                        }
+
                         return@setOnLongClickListener true
                     }
 
-                    StubFragmentActivity.launch(context) {
-                        val importLauncher = registerForActivityResult(
-                            ActivityResultContracts.OpenDocument()
-                        ) { uri ->
-                            if (uri == null) {
-                                finish()
-                                return@registerForActivityResult
-                            }
+                    listOf(menuButton, sendButton).forEach {
+                        it.setOnLongClickListener { view ->
+                            val context = view.context
+                            val lifecycleOwner = XposedLifecycleOwner.create()
 
-                            lifecycleScope.launch(Dispatchers.IO) {
-                                val tempPath = KnownPaths.moduleCache / "voice.tmp"
-                                contentResolver.openInputStream(uri)!!.use { fis ->
-                                    tempPath.outputStream().use { fos ->
-                                        fis.copyTo(fos)
-                                    }
-                                }
-                                val mimeType = contentResolver.getType(uri) ?: return@launch
-                                val isAmr = mimeType == "audio/amr"
-                                showToastSuspend("语音文件准备完成")
-                                val durationMs = if (!isAmr) {
-                                    runCatching { mp3DurationMs(tempPath.absolutePathString()) }.getOrDefault(0L)
-                                } else 0L
+                            chatFooter.addView(ComposeView(context).apply {
+                                setLifecycleOwner(lifecycleOwner)
 
-                                withContext(Dispatchers.Main) {
-                                    finish()
-                                    showComposeDialog(context) {
-                                        var durationInput by remember { mutableStateOf(durationMs.toString()) }
-                                        AlertDialogContent(title = { Text("发送语音文件") },
-                                            text = {
-                                                TextField(value = durationInput,
-                                                    onValueChange = { durationInput = it.filter { c -> c.isDigit() } },
-                                                    label = { Text("语音时长 (毫秒)") })
-                                            },
-                                            dismissButton = { TextButton(dismiss) { Text("取消") } },
-                                            confirmButton = { Button(onClick = {
-                                                val durationMs = durationInput.toLongOrNull()
-                                                if (durationMs == null) {
-                                                    ToastUtils.showToast("时长格式不正确!")
-                                                    return@Button
-                                                }
+                                setContent {
+                                    AppTheme {
+                                        var shouldShow by remember { mutableStateOf(true) }
+                                        if (shouldShow) {
+                                            ModalBottomSheet(onDismissRequest = { shouldShow = false }) {
+                                                Row(
+                                                    modifier = Modifier
+                                                        .fillMaxWidth()
+                                                        .padding(horizontal = 16.dp, vertical = 24.dp),
+                                                    horizontalArrangement = Arrangement.SpaceEvenly,
+                                                    verticalAlignment = Alignment.Top,
+                                                ) {
+                                                    ActionItem(
+                                                        icon = MaterialSymbols.Outlined.Send_time_extension,
+                                                        label = "发送卡片消息",
+                                                        onClick = {
+                                                            val currentConv = currentConv
+                                                            val content = methodGetLastText.invoke(chatFooter) as String
+                                                            if (currentConv.isNullOrBlank()) {
+                                                                ToastUtils.showToast("当前聊天对象获取失败!")
+                                                                return@ActionItem
+                                                            }
 
-                                                var success = false
-                                                if (isAmr) {
-                                                    success = WeMessageApi.sendVoice(
-                                                        currentConv,
-                                                        tempPath.absolutePathString(),
-                                                        durationMs.coerceToInt())
-                                                }
-                                                else {
-                                                    // TODO
-                                                    ToastUtils.showToast("暂未支持 MP3 文件转码发送!")
-                                                    return@Button
-                                                }
-                                                ToastUtils.showToast("语音发送${if (success) "成功" else "失败!"}")
-                                                tempPath.deleteIfExists()
-                                                dismiss()
-                                            }) { Text("确定") } })
-                                    }
-                                }
-                            }
-                        }
-                        importLauncher.launch(arrayOf("audio/amr", "audio/mpeg"))
-                    }
+                                                            if (content.isEmpty()) {
+                                                                ToastUtils.showToast("输入内容为空!")
+                                                                return@ActionItem
+                                                            }
 
-                    return@setOnLongClickListener true
-                }
+                                                            val isSuccess = WeMessageApi.sendXmlAppMsg(currentConv, content)
+                                                            if (!isSuccess) {
+                                                                ToastUtils.showToast("发送卡片消息失败, 请检查格式")
+                                                                return@ActionItem
+                                                            }
 
-                listOf(menuButton, sendButton).forEach {
-                    it.setOnLongClickListener { view ->
-                        val context = view.context
-                        val lifecycleOwner = XposedLifecycleOwner.create()
+                                                            chatFooter.findViewWhich<EditText> { view is EditText }?.setText("")
+                                                            shouldShow = false
+                                                        },
+                                                    )
 
-                        chatFooter.addView(ComposeView(context).apply {
-                            setLifecycleOwner(lifecycleOwner)
+                                                    ActionItem(
+                                                        icon = MaterialSymbols.Outlined.Home,
+                                                        label = "测试",
+                                                        onClick = { },
+                                                    )
 
-                            setContent {
-                                AppTheme {
-                                    var shouldShow by remember { mutableStateOf(true) }
-                                    if (shouldShow) {
-                                        ModalBottomSheet(onDismissRequest = { shouldShow = false }) {
-                                            Row(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .padding(horizontal = 16.dp, vertical = 24.dp),
-                                                horizontalArrangement = Arrangement.SpaceEvenly,
-                                                verticalAlignment = Alignment.Top,
-                                            ) {
-                                                ActionItem(
-                                                    icon = MaterialSymbols.Outlined.Send_time_extension,
-                                                    label = "发送卡片消息",
-                                                    onClick = {
-                                                        val currentConv = currentConv
-                                                        val content = methodGetLastText.invoke(chatFooter) as String
-                                                        if (currentConv.isNullOrBlank()) {
-                                                            ToastUtils.showToast("当前聊天对象获取失败!")
-                                                            return@ActionItem
-                                                        }
-
-                                                        if (content.isEmpty()) {
-                                                            ToastUtils.showToast("输入内容为空!")
-                                                            return@ActionItem
-                                                        }
-
-                                                        val isSuccess = WeMessageApi.sendXmlAppMsg(currentConv, content)
-                                                        if (!isSuccess) {
-                                                            ToastUtils.showToast("发送卡片消息失败, 请检查格式")
-                                                            return@ActionItem
-                                                        }
-
-                                                        chatFooter.findViewWhich<EditText> { view is EditText }?.setText("")
-                                                        shouldShow = false
-                                                    },
-                                                )
-
-                                                ActionItem(
-                                                    icon = MaterialSymbols.Outlined.Home,
-                                                    label = "测试",
-                                                    onClick = { },
-                                                )
-
-                                                for (provider in providers) {
-                                                    provider.Content(chatFooter) { shouldShow = false }
+                                                    for (provider in providers) {
+                                                        provider.Content(chatFooter) { shouldShow = false }
+                                                    }
                                                 }
                                             }
                                         }
                                     }
                                 }
-                            }
-                        })
-                        return@setOnLongClickListener true
+                            })
+                            return@setOnLongClickListener true
+                        }
                     }
                 }
-            }
 
             firstMethod {
                 name = "setUserName"
@@ -269,7 +276,7 @@ private fun mp3DurationMs(path: String): Long {
 }
 
 @Composable
-private fun ActionItem(
+fun ActionItem(
     icon: ImageVector,
     label: String,
     onClick: () -> Unit,

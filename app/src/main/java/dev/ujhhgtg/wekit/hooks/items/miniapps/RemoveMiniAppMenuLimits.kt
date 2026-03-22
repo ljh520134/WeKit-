@@ -1,10 +1,10 @@
 package dev.ujhhgtg.wekit.hooks.items.miniapps
 
 import android.content.Context
-import dev.ujhhgtg.wekit.dexkit.dsl.dexMethod
-import dev.ujhhgtg.wekit.hooks.core.SwitchHookItem
 import dev.ujhhgtg.wekit.dexkit.abc.IResolvesDex
+import dev.ujhhgtg.wekit.dexkit.dsl.dexMethod
 import dev.ujhhgtg.wekit.hooks.core.HookItem
+import dev.ujhhgtg.wekit.hooks.core.SwitchHookItem
 import dev.ujhhgtg.wekit.utils.enumValueOfClass
 import org.luckypray.dexkit.DexKitBridge
 import org.luckypray.dexkit.query.enums.StringMatchType
@@ -26,7 +26,8 @@ object RemoveMiniAppMenuLimits : SwitchHookItem(), IResolvesDex {
 
     private val methodGetMenuItemVisibility1 by dexMethod()
 
-    override fun resolveDex(dexKit: DexKitBridge) {methodGetMenuItemVisibility1.find(dexKit) {
+    override fun resolveDex(dexKit: DexKitBridge) {
+        methodGetMenuItemVisibility1.find(dexKit) {
             searchPackages("com.tencent.mm.plugin.appbrand.menu")
             matcher {
                 declaredClass {

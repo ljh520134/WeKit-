@@ -30,10 +30,10 @@ import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XposedBridge
 import de.robv.android.xposed.XposedHelpers
 import dev.ujhhgtg.nameof.nameof
-import dev.ujhhgtg.wekit.dexkit.dsl.dexMethod
-import dev.ujhhgtg.wekit.hooks.core.SwitchHookItem
 import dev.ujhhgtg.wekit.dexkit.abc.IResolvesDex
+import dev.ujhhgtg.wekit.dexkit.dsl.dexMethod
 import dev.ujhhgtg.wekit.hooks.core.HookItem
+import dev.ujhhgtg.wekit.hooks.core.SwitchHookItem
 import dev.ujhhgtg.wekit.ui.content.AlertDialogContent
 import dev.ujhhgtg.wekit.ui.content.Button
 import dev.ujhhgtg.wekit.ui.content.TextButton
@@ -68,7 +68,8 @@ object EmojiGameControl : SwitchHookItem(), IResolvesDex {
         FOUR(3, "四"), FIVE(4, "五"), SIX(5, "六")
     }
 
-    override fun resolveDex(dexKit: DexKitBridge) {methodRandom.find(dexKit) {
+    override fun resolveDex(dexKit: DexKitBridge) {
+        methodRandom.find(dexKit) {
             searchPackages("com.tencent.mm.sdk.platformtools")
             matcher {
                 returnType(Int::class.java)

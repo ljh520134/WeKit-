@@ -8,9 +8,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.highcapable.kavaref.extension.createInstance
+import dev.ujhhgtg.wekit.dexkit.abc.IResolvesDex
 import dev.ujhhgtg.wekit.dexkit.dsl.dexMethod
 import dev.ujhhgtg.wekit.hooks.core.ClickableHookItem
-import dev.ujhhgtg.wekit.dexkit.abc.IResolvesDex
 import dev.ujhhgtg.wekit.hooks.core.HookItem
 import dev.ujhhgtg.wekit.preferences.WePrefs
 import dev.ujhhgtg.wekit.ui.content.AlertDialogContent
@@ -26,7 +26,8 @@ object ModifySportsStepCount : ClickableHookItem(), IResolvesDex {
     private val methodGetSteps by dexMethod()
     private val methodUploadSteps by dexMethod()
 
-    override fun resolveDex(dexKit: DexKitBridge) {methodGetSteps.find(dexKit) {
+    override fun resolveDex(dexKit: DexKitBridge) {
+        methodGetSteps.find(dexKit) {
             searchPackages("com.tencent.mm.plugin.sport.model")
             matcher {
                 usingEqStrings("MicroMsg.Sport.DeviceStepManager", "get today step from %s todayStep %d")

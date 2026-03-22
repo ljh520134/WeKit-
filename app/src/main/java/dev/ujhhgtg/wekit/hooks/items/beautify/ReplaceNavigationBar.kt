@@ -58,10 +58,10 @@ import dev.ujhhgtg.wekit.ui.utils.showComposeDialog
 object ReplaceNavigationBar : ClickableHookItem() {
 
     private val ICONS = listOf(
-        MaterialSymbols.OutlinedFilled.Home     to "主页",
+        MaterialSymbols.OutlinedFilled.Home to "主页",
         MaterialSymbols.OutlinedFilled.Contacts to "联系人",
-        MaterialSymbols.OutlinedFilled.Explore  to "发现",
-        MaterialSymbols.OutlinedFilled.Person   to "我"
+        MaterialSymbols.OutlinedFilled.Explore to "发现",
+        MaterialSymbols.OutlinedFilled.Person to "我"
     )
 
     private const val KEY_USE_BACKDROP = "tab_bar_use_backdrop"

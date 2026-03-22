@@ -45,7 +45,8 @@ object WeServiceApi : ApiHookItem(), IResolvesDex {
         return methodApiManagerGetApi.method.invoke(apiManager, clazz.interfaces[0])!!
     }
 
-    override fun resolveDex(dexKit: DexKitBridge) {methodServiceManagerGetService.find(dexKit) {
+    override fun resolveDex(dexKit: DexKitBridge) {
+        methodServiceManagerGetService.find(dexKit) {
             matcher {
                 modifiers(Modifier.STATIC)
                 paramTypes(Class::class.java)

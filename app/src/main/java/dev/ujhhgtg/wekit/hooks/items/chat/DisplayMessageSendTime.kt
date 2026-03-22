@@ -51,7 +51,8 @@ object DisplayMessageSendTime : SwitchHookItem(),
 
         val context = parent.context
         val color = if (context.resources.configuration.uiMode and
-            Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES) {
+            Configuration.UI_MODE_NIGHT_MASK == Configuration.UI_MODE_NIGHT_YES
+        ) {
             "#9E9E9E".toColorInt()
         } else {
             "#616161".toColorInt()

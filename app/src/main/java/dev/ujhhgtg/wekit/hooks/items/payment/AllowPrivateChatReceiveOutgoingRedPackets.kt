@@ -3,9 +3,9 @@ package dev.ujhhgtg.wekit.hooks.items.payment
 import android.content.Intent
 import de.robv.android.xposed.XC_MethodHook
 import dev.ujhhgtg.nameof.nameof
-import dev.ujhhgtg.wekit.hooks.core.SwitchHookItem
 import dev.ujhhgtg.wekit.hooks.api.ui.WeStartActivityApi
 import dev.ujhhgtg.wekit.hooks.core.HookItem
+import dev.ujhhgtg.wekit.hooks.core.SwitchHookItem
 import dev.ujhhgtg.wekit.utils.logging.WeLogger
 
 @HookItem(path = "红包与支付/允许领取私聊红包", desc = "允许打开私聊中自己发出的红包")

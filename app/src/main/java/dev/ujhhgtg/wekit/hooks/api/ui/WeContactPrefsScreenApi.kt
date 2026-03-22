@@ -40,7 +40,7 @@ object WeContactPrefsScreenApi : ApiHookItem() {
     }
 
     fun removeProvider(provider: IContactInfoProvider) {
-        val removed = providers.remove(provider)
+        providers.remove(provider)
     }
 
     private lateinit var prefConstructor: Constructor<*>

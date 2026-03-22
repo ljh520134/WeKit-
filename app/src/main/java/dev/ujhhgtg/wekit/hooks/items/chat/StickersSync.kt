@@ -9,7 +9,6 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.ui.Alignment
@@ -135,10 +134,11 @@ object StickersSync : ClickableHookItem(), IResolvesDex {
                             val newHashes = mutableMapOf<String, String>()
 
                             val images = packDir.walk()
-                                .filter { it.isRegularFile() &&
-                                        it.extension.lowercase() in ALLOWED_STICKER_EXTENSIONS &&
-                                        it.name != ".pack_icon.png" &&
-                                        !(it.extension.lowercase() == "webp" && it.resolveSibling("${it.nameWithoutExtension}.png").isRegularFile())
+                                .filter {
+                                    it.isRegularFile() &&
+                                            it.extension.lowercase() in ALLOWED_STICKER_EXTENSIONS &&
+                                            it.name != ".pack_icon.png" &&
+                                            !(it.extension.lowercase() == "webp" && it.resolveSibling("${it.nameWithoutExtension}.png").isRegularFile())
                                 }
                                 .toList()
 
@@ -228,8 +228,10 @@ object StickersSync : ClickableHookItem(), IResolvesDex {
     private val ctorResourceLoadOptions by dexConstructor()
     private val methodDownloadImage by dexMethod()
 
-    private val stickersDir: Path by lazy { (KnownPaths.moduleData / "stickers")
-        .createDirectoriesNoThrow() }
+    private val stickersDir: Path by lazy {
+        (KnownPaths.moduleData / "stickers")
+            .createDirectoriesNoThrow()
+    }
 
     private val emojiMgrImpl: Any by lazy {
         WeServiceApi.emojiFeatureService.asResolver()
@@ -310,7 +312,7 @@ object StickersSync : ClickableHookItem(), IResolvesDex {
                     ContentValues::class.java,
                     Boolean::class.java
                 )
-                .invoke(emojiGroupInfo, stickersPackData, true)
+                    .invoke(emojiGroupInfo, stickersPackData, true)
 
                 (param.result as MutableList<Any?>).add(index, emojiGroupInfo)
             }
@@ -399,12 +401,15 @@ object StickersSync : ClickableHookItem(), IResolvesDex {
                     }
                 }.getInstance(ClassLoaderProvider.classLoader!!)
             }
-            param.result = retType.createInstance(bytes, "image/png",
-                actualRetTypeInitArg2Type!!.createInstance(bytes))
+            param.result = retType.createInstance(
+                bytes, "image/png",
+                actualRetTypeInitArg2Type!!.createInstance(bytes)
+            )
         }
     }
 
-    override fun resolveDex(dexKit: DexKitBridge) {methodGetEmojiGroupInfo.find(dexKit) {
+    override fun resolveDex(dexKit: DexKitBridge) {
+        methodGetEmojiGroupInfo.find(dexKit) {
             matcher {
                 paramTypes(Int::class.java)
                 usingEqStrings("MicroMsg.emoji.EmojiGroupInfoStorage", "get Panel EmojiGroupInfo.")

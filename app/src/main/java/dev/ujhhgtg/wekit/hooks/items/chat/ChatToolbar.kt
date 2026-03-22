@@ -237,7 +237,8 @@ object ChatToolbar : SwitchHookItem(), IResolvesDex {
         "音乐" to MaterialSymbols.Outlined.Music_note
     )
 
-    override fun resolveDex(dexKit: DexKitBridge) {methodAppPanelInitAppGrid.find(dexKit) {
+    override fun resolveDex(dexKit: DexKitBridge) {
+        methodAppPanelInitAppGrid.find(dexKit) {
             matcher {
                 declaredClass = "com.tencent.mm.pluginsdk.ui.chat.AppPanel"
                 usingEqStrings("MicroMsg.AppPanel", "initAppGrid()")

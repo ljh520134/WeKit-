@@ -3,10 +3,10 @@ package dev.ujhhgtg.wekit.hooks.api.core
 import android.database.Cursor
 import com.highcapable.kavaref.KavaRef.Companion.asResolver
 import dev.ujhhgtg.nameof.nameof
+import dev.ujhhgtg.wekit.dexkit.abc.IResolvesDex
 import dev.ujhhgtg.wekit.dexkit.dsl.dexClass
 import dev.ujhhgtg.wekit.dexkit.dsl.dexMethod
 import dev.ujhhgtg.wekit.hooks.core.ApiHookItem
-import dev.ujhhgtg.wekit.dexkit.abc.IResolvesDex
 import dev.ujhhgtg.wekit.hooks.core.HookItem
 import dev.ujhhgtg.wekit.utils.logging.WeLogger
 import org.luckypray.dexkit.DexKitBridge
@@ -157,7 +157,8 @@ object WeConversationApi : ApiHookItem(), IResolvesDex {
         setConversationsVisibility(true, visibleTalkers)
     }
 
-    override fun resolveDex(dexKit: DexKitBridge) {classConversationStorage.find(dexKit) {
+    override fun resolveDex(dexKit: DexKitBridge) {
+        classConversationStorage.find(dexKit) {
             searchPackages("com.tencent.mm.storage")
             matcher {
                 usingEqStrings("rconversation", "PRAGMA table_info( rconversation)")

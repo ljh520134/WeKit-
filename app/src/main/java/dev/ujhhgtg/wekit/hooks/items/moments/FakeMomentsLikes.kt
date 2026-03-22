@@ -76,89 +76,89 @@ object FakeMomentsLikes : SwitchHookItem(), WeMomentsContextMenuApi.IMenuItemsPr
                 "伪点赞",
                 { ModuleRes.getDrawable("star_24px")!! },
                 { _, _ -> true }) { moments ->
-                    val allFriends = WeDatabaseApi.getContacts()
+                val allFriends = WeDatabaseApi.getContacts()
 
-                    val displayItems = allFriends.map { contact ->
-                        buildString {
-                            if (contact.remarkName.isNotBlank()) {
-                                append(contact.remarkName)
-                                if (contact.nickname.isNotBlank()) append(" (${contact.nickname})")
-                            } else if (contact.nickname.isNotBlank()) {
-                                append(contact.nickname)
-                            } else {
-                                append(contact.wxId)
-                            }
+                val displayItems = allFriends.map { contact ->
+                    buildString {
+                        if (contact.remarkName.isNotBlank()) {
+                            append(contact.remarkName)
+                            if (contact.nickname.isNotBlank()) append(" (${contact.nickname})")
+                        } else if (contact.nickname.isNotBlank()) {
+                            append(contact.nickname)
+                        } else {
+                            append(contact.wxId)
                         }
                     }
+                }
 
-                    val snsInfo = moments.snsInfo
-                    val snsId = moments.snsInfo!!.javaClass.superclass!!
-                        .getDeclaredField("field_snsId")
-                        .apply { isAccessible = true }
-                        .get(snsInfo) as Long
+                val snsInfo = moments.snsInfo
+                val snsId = moments.snsInfo!!.javaClass.superclass!!
+                    .getDeclaredField("field_snsId")
+                    .apply { isAccessible = true }
+                    .get(snsInfo) as Long
 
-                    val currentSelected = fakeLikeWxIds[snsId] ?: emptySet()
-                    val initialSelection = allFriends.mapIndexedNotNull { index, contact ->
-                        if (contact.wxId in currentSelected) index else null
-                    }.toSet()
+                val currentSelected = fakeLikeWxIds[snsId] ?: emptySet()
+                val initialSelection = allFriends.mapIndexedNotNull { index, contact ->
+                    if (contact.wxId in currentSelected) index else null
+                }.toSet()
 
-                    showComposeDialog(moments.activity) {
-                        var selectedIndices by remember { mutableStateOf(initialSelection) }
+                showComposeDialog(moments.activity) {
+                    var selectedIndices by remember { mutableStateOf(initialSelection) }
 
-                        AlertDialogContent(
-                            title = { Text("选择伪点赞用户") },
-                            text = {
-                                LazyColumn {
-                                    itemsIndexed(displayItems) { index, label ->
-                                        Row(
-                                            modifier = Modifier
-                                                .fillMaxWidth()
-                                                .clickable {
-                                                    selectedIndices = if (index in selectedIndices)
-                                                        selectedIndices - index
-                                                    else
-                                                        selectedIndices + index
-                                                }
-                                                .padding(vertical = 4.dp),
-                                            verticalAlignment = Alignment.CenterVertically
-                                        ) {
-                                            Checkbox(
-                                                checked = index in selectedIndices,
-                                                onCheckedChange = { checked ->
-                                                    selectedIndices = if (checked)
-                                                        selectedIndices + index
-                                                    else
-                                                        selectedIndices - index
-                                                }
-                                            )
-                                            Spacer(modifier = Modifier.width(8.dp))
-                                            Text(text = label)
-                                        }
+                    AlertDialogContent(
+                        title = { Text("选择伪点赞用户") },
+                        text = {
+                            LazyColumn {
+                                itemsIndexed(displayItems) { index, label ->
+                                    Row(
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .clickable {
+                                                selectedIndices = if (index in selectedIndices)
+                                                    selectedIndices - index
+                                                else
+                                                    selectedIndices + index
+                                            }
+                                            .padding(vertical = 4.dp),
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Checkbox(
+                                            checked = index in selectedIndices,
+                                            onCheckedChange = { checked ->
+                                                selectedIndices = if (checked)
+                                                    selectedIndices + index
+                                                else
+                                                    selectedIndices - index
+                                            }
+                                        )
+                                        Spacer(modifier = Modifier.width(8.dp))
+                                        Text(text = label)
                                     }
-                                }
-                            },
-                            dismissButton = {
-                                TextButton(onClick = { dismiss() }) {
-                                    Text("取消")
-                                }
-                            },
-                            confirmButton = {
-                                Button(onClick = {
-                                    val selectedWxids = selectedIndices.map { allFriends[it].wxId }.toSet()
-                                    if (selectedWxids.isEmpty()) {
-                                        fakeLikeWxIds.remove(snsId)
-                                        ToastUtils.showToast("已清除朋友圈的伪点赞配置")
-                                    } else {
-                                        fakeLikeWxIds[snsId] = selectedWxids
-                                        ToastUtils.showToast("已设置朋友圈的 ${selectedWxids.size} 个伪点赞")
-                                    }
-                                    dismiss()
-                                }) {
-                                    Text("确定")
                                 }
                             }
-                        )
-                    }
+                        },
+                        dismissButton = {
+                            TextButton(onClick = { dismiss() }) {
+                                Text("取消")
+                            }
+                        },
+                        confirmButton = {
+                            Button(onClick = {
+                                val selectedWxids = selectedIndices.map { allFriends[it].wxId }.toSet()
+                                if (selectedWxids.isEmpty()) {
+                                    fakeLikeWxIds.remove(snsId)
+                                    ToastUtils.showToast("已清除朋友圈的伪点赞配置")
+                                } else {
+                                    fakeLikeWxIds[snsId] = selectedWxids
+                                    ToastUtils.showToast("已设置朋友圈的 ${selectedWxids.size} 个伪点赞")
+                                }
+                                dismiss()
+                            }) {
+                                Text("确定")
+                            }
+                        }
+                    )
+                }
             }
         )
     }

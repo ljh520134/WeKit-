@@ -9,9 +9,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.highcapable.kavaref.KavaRef.Companion.asResolver
+import dev.ujhhgtg.wekit.dexkit.abc.IResolvesDex
 import dev.ujhhgtg.wekit.dexkit.dsl.dexMethod
 import dev.ujhhgtg.wekit.hooks.core.ClickableHookItem
-import dev.ujhhgtg.wekit.dexkit.abc.IResolvesDex
 import dev.ujhhgtg.wekit.hooks.core.HookItem
 import dev.ujhhgtg.wekit.preferences.WePrefs
 import dev.ujhhgtg.wekit.ui.content.AlertDialogContent
@@ -42,7 +42,8 @@ object ModifyWalletBalanceDisplay : ClickableHookItem(), IResolvesDex {
         }
     }
 
-    override fun resolveDex(dexKit: DexKitBridge) {methodUpdateBalanceDisplay.find(dexKit) {
+    override fun resolveDex(dexKit: DexKitBridge) {
+        methodUpdateBalanceDisplay.find(dexKit) {
             matcher {
                 declaredClass = "com.tencent.mm.plugin.mall.ui.MallIndexUIv2"
                 usingEqStrings("MicorMsg.MallIndexUIv2", "updateBalanceNum")

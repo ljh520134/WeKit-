@@ -1,9 +1,9 @@
 package dev.ujhhgtg.wekit.loader.entry.lsp100.codegen
 
-import io.github.libxposed.api.XposedInterface
 import dev.ujhhgtg.wekit.loader.entry.lsp100.Lsp100HookImpl
 import dev.ujhhgtg.wekit.loader.entry.lsp100.Lsp100HookWrapper
 import dev.ujhhgtg.wekit.loader.entry.lsp100.dyn.Lsp100CallbackProxy
+import io.github.libxposed.api.XposedInterface
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
 

@@ -4,6 +4,7 @@ import android.annotation.SuppressLint
 import android.graphics.drawable.Drawable
 import android.view.View
 import com.highcapable.kavaref.KavaRef.Companion.asResolver
+import com.highcapable.kavaref.extension.isSubclassOf
 import dev.ujhhgtg.wekit.dexkit.abc.IResolvesDex
 import dev.ujhhgtg.wekit.dexkit.dsl.dexClass
 import dev.ujhhgtg.wekit.dexkit.dsl.dexMethod
@@ -54,26 +55,7 @@ object WeChatMessageContextMenuApi : ApiHookItem(), IResolvesDex {
             currentView = param.args[1] as View
             val tag = currentView!!.tag
 
-            val msgInfo: Any
-
-            val mGetMsgInfo = tag.asResolver()
-                .optional()
-                .firstMethodOrNull {
-                    returnType = WeMessageApi.classMsgInfo.clazz
-                    parameterCount(0)
-                    superclass()
-                }
-
-            if (mGetMsgInfo != null) {
-                msgInfo = mGetMsgInfo.invoke()!!
-            }
-            else {
-                msgInfo = tag.asResolver()
-                    .firstField {
-                        type = WeMessageApi.classMsgInfo.clazz
-                        superclass()
-                    }.get()!!
-            }
+            val msgInfo = WeMessageApi.getMsgInfoInstanceFromTag(tag)
 
             try {
                 for (item in menuItems.values.flatten()) {
@@ -100,7 +82,7 @@ object WeChatMessageContextMenuApi : ApiHookItem(), IResolvesDex {
             val viewOnLongClickListener = thisObj.asResolver()
                 .firstField {
                     type {
-                        View.OnLongClickListener::class.java.isAssignableFrom(it)
+                        it isSubclassOf View.OnLongClickListener::class
                     }
                 }
                 .get() as View.OnLongClickListener
@@ -110,15 +92,9 @@ object WeChatMessageContextMenuApi : ApiHookItem(), IResolvesDex {
                     superclass()
                 }
                 .get()!!
-            val tag = currentView!!.tag
 
-            val msgInfo = tag.asResolver()
-                .firstMethod {
-                    returnType = WeMessageApi.classMsgInfo.clazz
-                    parameterCount(0)
-                    superclass()
-                }
-                .invoke()!!
+            val tag = currentView!!.tag
+            val msgInfo = WeMessageApi.getMsgInfoInstanceFromTag(tag)
 
             val menuItem = param.args[0] as android.view.MenuItem
             val msgInfoWrapper = MessageInfo(msgInfo)
@@ -144,7 +120,8 @@ object WeChatMessageContextMenuApi : ApiHookItem(), IResolvesDex {
         }
     }
 
-    override fun resolveDex(dexKit: DexKitBridge) {methodCreateMenu.find(dexKit) {
+    override fun resolveDex(dexKit: DexKitBridge) {
+        methodCreateMenu.find(dexKit) {
             searchPackages("com.tencent.mm.ui.chatting.viewitems")
             matcher {
                 usingEqStrings("MicroMsg.ChattingItem", "msg is null!")

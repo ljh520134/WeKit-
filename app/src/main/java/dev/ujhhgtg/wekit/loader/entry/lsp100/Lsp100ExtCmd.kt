@@ -1,8 +1,8 @@
 package dev.ujhhgtg.wekit.loader.entry.lsp100
 
-import io.github.libxposed.api.XposedInterface
 import dev.ujhhgtg.wekit.loader.entry.lsp100.codegen.Lsp100ProxyClassMaker
 import dev.ujhhgtg.wekit.loader.utils.LibXposedApiByteCodeGenerator
+import io.github.libxposed.api.XposedInterface
 
 object Lsp100ExtCmd {
     fun handleQueryExtension(cmd: String, arg: Array<Any?>?): Any? {

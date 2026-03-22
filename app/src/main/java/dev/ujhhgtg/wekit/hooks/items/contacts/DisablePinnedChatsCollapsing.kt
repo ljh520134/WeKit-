@@ -1,10 +1,10 @@
 package dev.ujhhgtg.wekit.hooks.items.contacts
 
-import dev.ujhhgtg.wekit.dexkit.dsl.dexMethod
-import dev.ujhhgtg.wekit.hooks.core.SwitchHookItem
 import dev.ujhhgtg.wekit.dexkit.abc.IResolvesDex
+import dev.ujhhgtg.wekit.dexkit.dsl.dexMethod
 import dev.ujhhgtg.wekit.hooks.api.core.WeDatabaseApi
 import dev.ujhhgtg.wekit.hooks.core.HookItem
+import dev.ujhhgtg.wekit.hooks.core.SwitchHookItem
 import org.luckypray.dexkit.DexKitBridge
 
 @HookItem(
@@ -27,7 +27,8 @@ object DisablePinnedChatsCollapsing : SwitchHookItem(), IResolvesDex {
         }
     }
 
-    override fun resolveDex(dexKit: DexKitBridge) {methodAddCollapseChatItem.find(dexKit) {
+    override fun resolveDex(dexKit: DexKitBridge) {
+        methodAddCollapseChatItem.find(dexKit) {
             searchPackages("com.tencent.mm.ui.conversation")
             matcher {
                 usingEqStrings("MicroMsg.FolderHelper", "fold item exist")

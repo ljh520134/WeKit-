@@ -115,13 +115,14 @@ object MarkdownRendering : ClickableHookItem(), IResolvesDex {
                             .get()!!.asResolver()
                             .firstField { type = WeMessageApi.classMsgInfo.clazz }
                             .get()!!)
-                }
-                else {
-                    msgInfo = MessageInfo(tag.asResolver()
+                } else {
+                    msgInfo = MessageInfo(
+                        tag.asResolver()
                         .firstField {
                             type = WeMessageApi.classMsgInfo.clazz
                             superclass()
-                        }.get()!!)
+                        }.get()!!
+                    )
                 }
 
                 if (!msgInfo.isText) return@hookBefore
@@ -390,7 +391,8 @@ object MarkdownRendering : ClickableHookItem(), IResolvesDex {
 
     private val classMsgInfoWrapper by dexClass()
 
-    override fun resolveDex(dexKit: DexKitBridge) {classMsgInfoWrapper.find(dexKit) {
+    override fun resolveDex(dexKit: DexKitBridge) {
+        classMsgInfoWrapper.find(dexKit) {
             matcher {
                 usingEqStrings("other", "null cannot be cast to non-null type com.tencent.mm.storage.MsgInfo")
             }

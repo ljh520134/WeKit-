@@ -10,15 +10,15 @@ import android.view.animation.Interpolator
 import android.widget.FrameLayout
 import com.highcapable.kavaref.KavaRef.Companion.asResolver
 import de.robv.android.xposed.XC_MethodHook
+import dev.ujhhgtg.wekit.dexkit.abc.IResolvesDex
 import dev.ujhhgtg.wekit.dexkit.dsl.dexClass
 import dev.ujhhgtg.wekit.dexkit.dsl.dexMethod
-import dev.ujhhgtg.wekit.hooks.core.SwitchHookItem
-import dev.ujhhgtg.wekit.dexkit.abc.IResolvesDex
 import dev.ujhhgtg.wekit.hooks.api.core.WeMessageApi
 import dev.ujhhgtg.wekit.hooks.api.core.WeServiceApi
 import dev.ujhhgtg.wekit.hooks.api.core.model.MessageInfo
 import dev.ujhhgtg.wekit.hooks.api.ui.WeChatMessageViewApi
 import dev.ujhhgtg.wekit.hooks.core.HookItem
+import dev.ujhhgtg.wekit.hooks.core.SwitchHookItem
 import dev.ujhhgtg.wekit.utils.LruCache
 import org.luckypray.dexkit.DexKitBridge
 import kotlin.math.PI
@@ -210,7 +210,8 @@ object SwipeToQuote : SwitchHookItem(), IResolvesDex,
     private val classChattingUiFootComponent by dexClass()
     private val methodGetMsgInfo by dexMethod()
 
-    override fun resolveDex(dexKit: DexKitBridge) {classChattingUiFootComponent.find(dexKit) {
+    override fun resolveDex(dexKit: DexKitBridge) {
+        classChattingUiFootComponent.find(dexKit) {
             searchPackages("com.tencent.mm.ui.chatting.component")
             matcher {
                 usingEqStrings(

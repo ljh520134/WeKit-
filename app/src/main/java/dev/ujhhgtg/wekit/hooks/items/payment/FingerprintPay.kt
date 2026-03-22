@@ -65,48 +65,49 @@ object FingerprintPay : ClickableHookItem() {
             return
         }
 
-        listOf("com.tencent.mm.framework.app.UIPageFragmentActivity",
+        listOf(
+            "com.tencent.mm.framework.app.UIPageFragmentActivity",
             "com.tencent.mm.plugin.lite.ui.WxaLiteAppTransparentLiteUI"
         ).forEach { className ->
             className.toClass().asResolver()
-            .apply {
-                firstMethod { name = "onResume" }
-                    .hookBefore { param ->
-                        if (isVerificationOngoing) return@hookBefore
-                        isVerificationOngoing = true
+                .apply {
+                    firstMethod { name = "onResume" }
+                        .hookBefore { param ->
+                            if (isVerificationOngoing) return@hookBefore
+                            isVerificationOngoing = true
 
-                        val activity = param.thisObject as Activity
+                            val activity = param.thisObject as Activity
 
-                        val root = activity.findViewById<ViewGroup>(android.R.id.content)
-                        val searchedView = root.findViewByChildIndexes<ViewGroup>(0, 0, 2, 0, 2) ?: return@hookBefore
-                        val myKeyboardWindow = searchedView.findViewWhich<LinearLayout> { view ->
-                            view.javaClass.name == "com.tenpay.android.wechat.MyKeyboardWindow"
-                        } ?: return@hookBefore
-                        val digitViews = myKeyboardWindow.findViewsWhich<TextView> { it is TextView }
-                        val orderedDigits = listOf(digitViews.last()) + digitViews.dropLast(1)
+                            val root = activity.findViewById<ViewGroup>(android.R.id.content)
+                            val searchedView = root.findViewByChildIndexes<ViewGroup>(0, 0, 2, 0, 2) ?: return@hookBefore
+                            val myKeyboardWindow = searchedView.findViewWhich<LinearLayout> { view ->
+                                view.javaClass.name == "com.tenpay.android.wechat.MyKeyboardWindow"
+                            } ?: return@hookBefore
+                            val digitViews = myKeyboardWindow.findViewsWhich<TextView> { it is TextView }
+                            val orderedDigits = listOf(digitViews.last()) + digitViews.dropLast(1)
 
-                        val rawEncData = WePrefs.getString(KEY_ENCRYPTED_DATA) ?: run {
-                            ToastUtils.showToast("支付密码未设置, 指纹支付不会生效!")
-                            return@hookBefore
-                        }
-                        val splitRawEncData = rawEncData.split(SPLIT_CHAR)
-                        val encData = EncryptedData(splitRawEncData[0], splitRawEncData[1])
-                        decryptWithBiometric(encData) { plaintext ->
-                            ToastUtils.showToast("支付密码解密成功!")
-                            for (char in plaintext) {
-                                val digit = char.digitToInt()
-                                orderedDigits[digit].performClick()
-                                Thread.sleep(20)
+                            val rawEncData = WePrefs.getString(KEY_ENCRYPTED_DATA) ?: run {
+                                ToastUtils.showToast("支付密码未设置, 指纹支付不会生效!")
+                                return@hookBefore
+                            }
+                            val splitRawEncData = rawEncData.split(SPLIT_CHAR)
+                            val encData = EncryptedData(splitRawEncData[0], splitRawEncData[1])
+                            decryptWithBiometric(encData) { plaintext ->
+                                ToastUtils.showToast("支付密码解密成功!")
+                                for (char in plaintext) {
+                                    val digit = char.digitToInt()
+                                    orderedDigits[digit].performClick()
+                                    Thread.sleep(20)
+                                }
                             }
                         }
-                    }
 
-                // WxaLiteAppTransparentLiteUI inherits WxaLiteAppTransparentUI::finish()
-                firstMethod { name = "finish"; superclass() }
-                    .hookBefore { _ ->
-                        isVerificationOngoing = false
-                    }
-            }
+                    // WxaLiteAppTransparentLiteUI inherits WxaLiteAppTransparentUI::finish()
+                    firstMethod { name = "finish"; superclass() }
+                        .hookBefore { _ ->
+                            isVerificationOngoing = false
+                        }
+                }
         }
 
         "com.tencent.mm.plugin.fingerprint.ui.FingerPrintAuthTransparentUI".toClass().asResolver()

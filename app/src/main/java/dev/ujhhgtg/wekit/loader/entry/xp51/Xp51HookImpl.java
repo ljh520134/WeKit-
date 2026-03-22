@@ -13,11 +13,11 @@ import java.util.Objects;
 import java.util.Set;
 
 import de.robv.android.xposed.XposedBridge;
-import lombok.SneakyThrows;
 import dev.ujhhgtg.wekit.BuildConfig;
 import dev.ujhhgtg.wekit.loader.abc.IClassLoaderHelper;
 import dev.ujhhgtg.wekit.loader.abc.IHookBridge;
 import dev.ujhhgtg.wekit.loader.abc.ILoaderService;
+import lombok.SneakyThrows;
 
 public class Xp51HookImpl implements IHookBridge, ILoaderService {
 

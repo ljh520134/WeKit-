@@ -1,12 +1,12 @@
 package dev.ujhhgtg.wekit.loader.entry.lsp100
 
-import io.github.libxposed.api.XposedModule
-import io.github.libxposed.api.XposedModuleInterface.PackageLoadedParam
-import io.github.libxposed.api.annotations.XposedApiExact
 import dev.ujhhgtg.wekit.constants.PackageNames
 import dev.ujhhgtg.wekit.loader.entry.common.ModuleLoader
 import dev.ujhhgtg.wekit.loader.entry.lsp100.Lsp100HookImpl.Companion.init
 import dev.ujhhgtg.wekit.loader.entry.lsp10x.Lsp10xHookEntryHandler
+import io.github.libxposed.api.XposedModule
+import io.github.libxposed.api.XposedModuleInterface.PackageLoadedParam
+import io.github.libxposed.api.annotations.XposedApiExact
 
 @XposedApiExact(100)
 class Lsp100HookEntry(private val self: XposedModule) : Lsp10xHookEntryHandler {

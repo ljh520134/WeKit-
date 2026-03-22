@@ -2,10 +2,10 @@ package dev.ujhhgtg.wekit.hooks.items.system
 
 import android.content.Context
 import androidx.compose.material3.Text
-import dev.ujhhgtg.wekit.dexkit.dsl.dexMethod
-import dev.ujhhgtg.wekit.hooks.core.SwitchHookItem
 import dev.ujhhgtg.wekit.dexkit.abc.IResolvesDex
+import dev.ujhhgtg.wekit.dexkit.dsl.dexMethod
 import dev.ujhhgtg.wekit.hooks.core.HookItem
+import dev.ujhhgtg.wekit.hooks.core.SwitchHookItem
 import dev.ujhhgtg.wekit.ui.content.AlertDialogContent
 import dev.ujhhgtg.wekit.ui.content.Button
 import dev.ujhhgtg.wekit.ui.content.TextButton
@@ -23,7 +23,8 @@ object ForceTabletMode : SwitchHookItem(), IResolvesDex {
         }
     }
 
-    override fun resolveDex(dexKit: DexKitBridge) {methodIsTablet.find(dexKit) {
+    override fun resolveDex(dexKit: DexKitBridge) {
+        methodIsTablet.find(dexKit) {
             matcher {
                 usingEqStrings("Lenovo TB-9707F", "eebbk")
             }

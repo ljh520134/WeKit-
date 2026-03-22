@@ -4,15 +4,15 @@ import android.annotation.SuppressLint
 import android.database.Cursor
 import com.highcapable.kavaref.KavaRef.Companion.asResolver
 import dev.ujhhgtg.nameof.nameof
+import dev.ujhhgtg.wekit.dexkit.abc.IResolvesDex
 import dev.ujhhgtg.wekit.dexkit.dsl.dexClass
 import dev.ujhhgtg.wekit.dexkit.dsl.dexMethod
-import dev.ujhhgtg.wekit.hooks.core.ApiHookItem
-import dev.ujhhgtg.wekit.dexkit.abc.IResolvesDex
 import dev.ujhhgtg.wekit.hooks.api.core.model.SelfProfileField
 import dev.ujhhgtg.wekit.hooks.api.core.model.WeContact
 import dev.ujhhgtg.wekit.hooks.api.core.model.WeGroup
 import dev.ujhhgtg.wekit.hooks.api.core.model.WeMessage
 import dev.ujhhgtg.wekit.hooks.api.core.model.WeOfficial
+import dev.ujhhgtg.wekit.hooks.core.ApiHookItem
 import dev.ujhhgtg.wekit.hooks.core.HookItem
 import dev.ujhhgtg.wekit.utils.logging.WeLogger
 import org.luckypray.dexkit.DexKitBridge
@@ -176,7 +176,8 @@ object WeDatabaseApi : ApiHookItem(), IResolvesDex {
         const val GROUP_MEMBERS = "SELECT memberlist FROM chatroom WHERE chatroomname = '%s'"
     }
 
-    override fun resolveDex(dexKit: DexKitBridge) {classMmKernel.find(dexKit) {
+    override fun resolveDex(dexKit: DexKitBridge) {
+        classMmKernel.find(dexKit) {
             matcher {
                 usingEqStrings("MicroMsg.MMKernel", "Kernel not null, has initialized.")
             }

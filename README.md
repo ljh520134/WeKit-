@@ -26,7 +26,7 @@
 ## 宿主需求
 
 - 包名: `com.tencent.mm` 或以 `com.tencent.mm` 开头的任意包名
-- 版本: 非 Play: 8.0.67~8.0.69 (完美), < 8.0.67 (未测试, 不提供支持) | Play: 8.0.68 (完美), < 8.0.68 (未测试)
+- 版本: 非 Play: 8.0.65~8.0.69 (完美), < 8.0.65 (不提供支持) | Play: 8.0.68 (完美), < 8.0.68 (未测试)
 - 架构: arm64 或 x86_64
 - Android 版本: >= 10 (SDK >= 29)
 - Xposed API 版本: >= 51 (51~101)
@@ -105,6 +105,10 @@ chmod +x ./gradlew
    - A：尝试禁用「Xposed API 调用保护」和「隐藏应用列表」
 2. - Q: XXX
    - A: [![问 DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/Ujhhgtg/WeKit)
+3. - Q: 模块数据在哪
+   - A: /sdcard/Android/data/<宿主包名>/WeKit
+4. - Q: 不受支持的旧版本启动一直弹 DEX 缓存更新怎么办
+   - A: 设置启用「禁用版本适配」或更新到 >= 8.0.65
 
 ## 注意
 

@@ -5,8 +5,8 @@ import android.widget.Button
 import com.highcapable.kavaref.KavaRef.Companion.asResolver
 import com.highcapable.kavaref.extension.toClass
 import dev.ujhhgtg.nameof.nameof
-import dev.ujhhgtg.wekit.hooks.core.SwitchHookItem
 import dev.ujhhgtg.wekit.hooks.core.HookItem
+import dev.ujhhgtg.wekit.hooks.core.SwitchHookItem
 import dev.ujhhgtg.wekit.utils.logging.WeLogger
 
 @HookItem(path = "系统与隐私/自动批准设备登录", desc = "其他设备请求登录时自动勾选选项并点击按钮")

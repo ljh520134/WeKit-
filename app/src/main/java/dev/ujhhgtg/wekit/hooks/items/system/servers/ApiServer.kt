@@ -153,8 +153,8 @@ object ApiServer : ClickableHookItem() {
             )
         ) { req ->
             val args = req.arguments ?: return@addTool textRes("Arguments are empty")
-            val type    = args["type"]?.jsonPrimitive?.content    ?: return@addTool textRes("Invalid type", true)
-            val convId  = args["conv-id"]?.jsonPrimitive?.content ?: return@addTool textRes("Invalid conversation ID", true)
+            val type = args["type"]?.jsonPrimitive?.content ?: return@addTool textRes("Invalid type", true)
+            val convId = args["conv-id"]?.jsonPrimitive?.content ?: return@addTool textRes("Invalid conversation ID", true)
             val content = args["content"]?.jsonPrimitive?.content ?: return@addTool textRes("Invalid content", true)
             WeChatService.sendMessage(type, convId, content)
                 .toCallToolResult { textRes("Sent successfully") }
@@ -193,10 +193,10 @@ object ApiServer : ClickableHookItem() {
                 required = listOf("conv-id")
             )
         ) { req ->
-            val args   = req.arguments ?: return@addTool textRes("Arguments are empty", true)
+            val args = req.arguments ?: return@addTool textRes("Arguments are empty", true)
             val convId = args["conv-id"]?.jsonPrimitive?.content ?: return@addTool textRes("Invalid conversation ID", true)
             val pageIndex = args["page-index"]?.jsonPrimitive?.intOrNull ?: 1
-            val pageSize  = args["page-size"]?.jsonPrimitive?.intOrNull  ?: 20
+            val pageSize = args["page-size"]?.jsonPrimitive?.intOrNull ?: 20
             WeChatService.listMessages(convId, pageIndex, pageSize).toCallToolResult { messages ->
                 CallToolResult(messages.map { TextContent("${it.sender}: '${it.content}'") })
             }
@@ -236,7 +236,7 @@ object ApiServer : ClickableHookItem() {
         ) { req ->
             val args = req.arguments ?: return@addTool textRes("Arguments are empty")
             val displayName = args["display-name"]?.jsonPrimitive?.content ?: return@addTool textRes("Invalid target")
-            val groupId     = args["group-id"]?.jsonPrimitive?.content
+            val groupId = args["group-id"]?.jsonPrimitive?.content
             WeChatService.getConvIdByDisplayName(displayName, groupId)
                 .toCallToolResult { textRes("WxId=$it") }
         }
@@ -254,7 +254,7 @@ object ApiServer : ClickableHookItem() {
                 required = listOf("conv-id")
             )
         ) { req ->
-            val args   = req.arguments ?: return@addTool textRes("Arguments are empty", true)
+            val args = req.arguments ?: return@addTool textRes("Arguments are empty", true)
             val convId = args["conv-id"]?.jsonPrimitive?.content ?: return@addTool textRes("Invalid conversation ID", true)
             WeChatService.getDisplayNameByConvId(convId).toCallToolResult { textRes(it) }
         }
@@ -370,9 +370,9 @@ object ApiServer : ClickableHookItem() {
             route("conversations/{convId}") {
                 // GET /api/conversations/{convId}/messages?page-index=1&page-size=20
                 get("messages") {
-                    val convId    = call.parameters["convId"]!!
+                    val convId = call.parameters["convId"]!!
                     val pageIndex = call.request.queryParameters["page-index"]?.toIntOrNull() ?: 1
-                    val pageSize  = call.request.queryParameters["page-size"]?.toIntOrNull()  ?: 20
+                    val pageSize = call.request.queryParameters["page-size"]?.toIntOrNull() ?: 20
                     call.respondResult(WeChatService.listMessages(convId, pageIndex, pageSize)) { messages ->
                         respond(HttpStatusCode.OK, messages)
                     }
@@ -448,6 +448,7 @@ object ApiServer : ClickableHookItem() {
             put("description", description)
         }
     }
+
     private fun getLanAddress(): String {
         val addr = NetworkInterface.getNetworkInterfaces()
             .asSequence()

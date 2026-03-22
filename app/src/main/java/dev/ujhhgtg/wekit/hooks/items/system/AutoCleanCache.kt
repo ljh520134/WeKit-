@@ -3,6 +3,12 @@ package dev.ujhhgtg.wekit.hooks.items.system
 import android.content.Context
 import android.widget.Toast
 import dev.ujhhgtg.nameof.nameof
+import dev.ujhhgtg.wekit.hooks.core.ClickableHookItem
+import dev.ujhhgtg.wekit.hooks.core.HookItem
+import dev.ujhhgtg.wekit.utils.HostInfo
+import dev.ujhhgtg.wekit.utils.formatBytesSize
+import dev.ujhhgtg.wekit.utils.formatEpoch
+import dev.ujhhgtg.wekit.utils.logging.WeLogger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -11,12 +17,6 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
-import dev.ujhhgtg.wekit.hooks.core.ClickableHookItem
-import dev.ujhhgtg.wekit.hooks.core.HookItem
-import dev.ujhhgtg.wekit.utils.HostInfo
-import dev.ujhhgtg.wekit.utils.formatBytesSize
-import dev.ujhhgtg.wekit.utils.formatEpoch
-import dev.ujhhgtg.wekit.utils.logging.WeLogger
 import java.nio.file.Path
 import kotlin.io.path.ExperimentalPathApi
 import kotlin.io.path.deleteRecursively

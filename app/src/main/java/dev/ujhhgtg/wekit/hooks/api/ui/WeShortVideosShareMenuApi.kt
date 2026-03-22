@@ -5,9 +5,9 @@ import android.graphics.drawable.Drawable
 import android.view.ContextMenu
 import com.highcapable.kavaref.KavaRef.Companion.asResolver
 import de.robv.android.xposed.XC_MethodHook
+import dev.ujhhgtg.wekit.dexkit.abc.IResolvesDex
 import dev.ujhhgtg.wekit.dexkit.dsl.dexMethod
 import dev.ujhhgtg.wekit.hooks.core.ApiHookItem
-import dev.ujhhgtg.wekit.dexkit.abc.IResolvesDex
 import dev.ujhhgtg.wekit.hooks.core.HookItem
 import org.json.JSONObject
 import org.luckypray.dexkit.DexKitBridge
@@ -121,7 +121,8 @@ object WeShortVideosShareMenuApi : ApiHookItem(), IResolvesDex {
         }
     }
 
-    override fun resolveDex(dexKit: DexKitBridge) {methodCreateMenu1.find(dexKit) {
+    override fun resolveDex(dexKit: DexKitBridge) {
+        methodCreateMenu1.find(dexKit) {
             searchPackages("com.tencent.mm.plugin.finder.feed")
             matcher {
                 name = "onCreateMMMenu"

@@ -49,7 +49,9 @@ abstract class BaseHookItem {
 
     private val _dexDelegates = mutableListOf<DexDelegateBase>()
     val dexDelegates: List<DexDelegateBase> get() = _dexDelegates
-    internal fun registerDexDelegate(d: DexDelegateBase) { _dexDelegates += d }
+    internal fun registerDexDelegate(d: DexDelegateBase) {
+        _dexDelegates += d
+    }
 
     // --- hookBefore ---
 

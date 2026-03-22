@@ -5,8 +5,8 @@ import android.content.Context
 import android.os.Build
 import android.os.Debug
 import android.os.Process
-import dev.ujhhgtg.wekit.utils.polyfills.getThreadId
 import dev.ujhhgtg.wekit.utils.logging.WeLogger
+import dev.ujhhgtg.wekit.utils.polyfills.getThreadId
 import java.io.BufferedReader
 import java.io.FileReader
 import java.io.PrintWriter

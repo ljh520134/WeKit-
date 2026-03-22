@@ -59,6 +59,7 @@ object WeChatService {
     fun sendMessage(type: String, convId: String, content: String): Result<Unit> = when (type) {
         "text" -> if (WeMessageApi.sendText(convId, content)) Result.Success(Unit)
         else Result.Error("Failed to send message")
+
         else -> Result.Error("Unsupported type: $type")
     }
 
@@ -66,18 +67,23 @@ object WeChatService {
         "all" -> Result.Success(WeDatabaseApi.getContacts().map {
             ContactInfo(it.wxId, it.nickname)
         })
-        "friends" -> Result.Success(WeDatabaseApi.getFriends()
+
+        "friends" -> Result.Success(
+            WeDatabaseApi.getFriends()
             .filter { c ->
                 c.type != 2051 && c.type != 2049 && c.wxId.startsWith("wxid_") && c.wxId != WeApi.selfWxId
             }.map {
-            ContactInfo(it.wxId, it.nickname, it.customWxid, it.remarkName)
-        })
+                ContactInfo(it.wxId, it.nickname, it.customWxid, it.remarkName)
+            })
+
         "groups" -> Result.Success(WeDatabaseApi.getGroups().map {
             ContactInfo(it.wxId, it.nickname)
         })
+
         "official_accounts" -> Result.Success(WeDatabaseApi.getOfficialAccounts().map {
             ContactInfo(it.wxId, it.nickname)
         })
+
         else -> Result.Error("Unsupported type: $type")
     }
 

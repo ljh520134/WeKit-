@@ -1,13 +1,13 @@
 package dev.ujhhgtg.wekit.loader.entry.lsp100
 
 import dev.ujhhgtg.nameof.nameof
-import io.github.libxposed.api.XposedInterface
-import io.github.libxposed.api.XposedModule
-import io.github.libxposed.api.annotations.XposedApiExact
 import dev.ujhhgtg.wekit.BuildConfig
 import dev.ujhhgtg.wekit.loader.abc.IClassLoaderHelper
 import dev.ujhhgtg.wekit.loader.abc.IHookBridge
 import dev.ujhhgtg.wekit.loader.abc.ILoaderService
+import io.github.libxposed.api.XposedInterface
+import io.github.libxposed.api.XposedModule
+import io.github.libxposed.api.annotations.XposedApiExact
 import java.lang.reflect.Constructor
 import java.lang.reflect.Member
 import java.lang.reflect.Method

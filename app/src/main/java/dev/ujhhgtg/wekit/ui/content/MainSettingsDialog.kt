@@ -208,6 +208,7 @@ class MainSettingsDialog(context: Context) : BasePrefsDialog(context, BuildConfi
                                                 @Suppress("UNCHECKED_CAST")
                                                 (value as Set<String>).forEach { add(it) }
                                             })
+
                                             null -> put(key, JsonNull)
                                         }
                                     }
@@ -260,15 +261,19 @@ class MainSettingsDialog(context: Context) : BasePrefsDialog(context, BuildConfi
                                             element.isString -> WePrefs.default.putString(key, element.content)
                                             element.booleanOrNull != null && (element.content == "true" || element.content == "false") ->
                                                 WePrefs.putBool(key, element.boolean)
+
                                             element.longOrNull != null && element.intOrNull == null ->
                                                 WePrefs.putLong(key, element.long)
+
                                             element.intOrNull != null -> WePrefs.putInt(key, element.int)
                                             element.floatOrNull != null -> WePrefs.putFloat(key, element.float)
                                         }
+
                                         is JsonArray -> WePrefs.default.putStringSet(
                                             key,
                                             element.mapTo(HashSet()) { it.jsonPrimitive.content }
                                         )
+
                                         else -> Unit
                                     }
                                 }
@@ -366,9 +371,11 @@ class MainSettingsDialog(context: Context) : BasePrefsDialog(context, BuildConfi
                 }
             }
         )
-        addPreference("构建时间",
+        addPreference(
+            "构建时间",
             formatEpoch(BuildConfig.BUILD_TIMESTAMP, true),
-            icon = MaterialSymbols.Outlined.Build_circle)
+            icon = MaterialSymbols.Outlined.Build_circle
+        )
         addPreference(
             "提示",
             "牙膏要一点一点挤, 显卡要一刀一刀切, PPT 要一张一张放, 代码要一行一行写, 单个功能预计自出现在 commit 之日起, 三年内开发完毕",

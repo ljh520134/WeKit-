@@ -42,7 +42,8 @@ object QuickRemoveQuote : SwitchHookItem(), IResolvesDex {
         }
     }
 
-    override fun resolveDex(dexKit: DexKitBridge) {methodSupportAutoCompleteOnKey.find(dexKit) {
+    override fun resolveDex(dexKit: DexKitBridge) {
+        methodSupportAutoCompleteOnKey.find(dexKit) {
             searchPackages("com.tencent.mm.pluginsdk.ui.chat")
             matcher {
                 name = "onKey"

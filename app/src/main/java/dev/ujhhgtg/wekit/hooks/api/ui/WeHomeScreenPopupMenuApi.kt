@@ -8,10 +8,10 @@ import com.highcapable.kavaref.extension.createInstance
 import com.highcapable.kavaref.extension.isSubclassOf
 import de.robv.android.xposed.XC_MethodHook
 import dev.ujhhgtg.nameof.nameof
+import dev.ujhhgtg.wekit.dexkit.abc.IResolvesDex
 import dev.ujhhgtg.wekit.dexkit.dsl.dexClass
 import dev.ujhhgtg.wekit.dexkit.dsl.dexMethod
 import dev.ujhhgtg.wekit.hooks.core.ApiHookItem
-import dev.ujhhgtg.wekit.dexkit.abc.IResolvesDex
 import dev.ujhhgtg.wekit.hooks.core.HookItem
 import dev.ujhhgtg.wekit.utils.logging.WeLogger
 import org.luckypray.dexkit.DexKitBridge
@@ -37,7 +37,7 @@ object WeHomeScreenPopupMenuApi : ApiHookItem(), IResolvesDex {
     }
 
     fun removeProvider(provider: IMenuItemsProvider) {
-        val removed = providers.remove(provider)
+        providers.remove(provider)
     }
 
     private val TAG = nameof(WeHomeScreenPopupMenuApi)
@@ -126,7 +126,8 @@ object WeHomeScreenPopupMenuApi : ApiHookItem(), IResolvesDex {
         }
     }
 
-    override fun resolveDex(dexKit: DexKitBridge) {methodAddItem.find(dexKit) {
+    override fun resolveDex(dexKit: DexKitBridge) {
+        methodAddItem.find(dexKit) {
             searchPackages("com.tencent.mm.ui")
             matcher {
                 usingEqStrings(

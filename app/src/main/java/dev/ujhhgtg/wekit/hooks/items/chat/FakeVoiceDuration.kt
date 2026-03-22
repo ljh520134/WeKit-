@@ -36,9 +36,11 @@ object FakeVoiceDuration : ClickableHookItem(), IResolvesDex {
     override fun onClick(context: Context) {
         showComposeDialog(context) {
             var durationInput by remember { mutableStateOf(WePrefs.getLongOrDef(KEY_DURATION, 0).toString()) }
-            AlertDialogContent(title = { Text("修改语音时长") },
+            AlertDialogContent(
+                title = { Text("修改语音时长") },
                 text = {
-                    TextField(value = durationInput,
+                    TextField(
+                        value = durationInput,
                         onValueChange = { durationInput = it.filter { c -> c.isDigit() } },
                         label = { Text("语音时长 (毫秒)") })
                 },
@@ -49,20 +51,23 @@ object FakeVoiceDuration : ClickableHookItem(), IResolvesDex {
                         dismiss()
                     }) { Text("清除") }
                 },
-                confirmButton = { Button(onClick = {
-                    val durationMs = durationInput.toLongOrNull()
-                    if (durationMs == null) {
-                        ToastUtils.showToast("时长格式不正确!")
-                        return@Button
-                    }
+                confirmButton = {
+                    Button(onClick = {
+                        val durationMs = durationInput.toLongOrNull()
+                        if (durationMs == null) {
+                            ToastUtils.showToast("时长格式不正确!")
+                            return@Button
+                        }
 
-                    WePrefs.putLong(KEY_DURATION, durationMs)
-                    dismiss()
-                }) { Text("确定") } })
+                        WePrefs.putLong(KEY_DURATION, durationMs)
+                        dismiss()
+                    }) { Text("确定") }
+                })
         }
     }
 
-    override fun resolveDex(dexKit: DexKitBridge) {methodVoiceRecorderGetLength.find(dexKit) {
+    override fun resolveDex(dexKit: DexKitBridge) {
+        methodVoiceRecorderGetLength.find(dexKit) {
             matcher {
                 declaredClass {
                     usingEqStrings("MicroMsg.SceneVoice.Recorder", "Stop file success: ")

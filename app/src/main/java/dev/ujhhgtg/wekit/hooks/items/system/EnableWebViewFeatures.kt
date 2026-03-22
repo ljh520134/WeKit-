@@ -4,10 +4,10 @@ import android.app.Activity
 import android.content.Intent
 import com.highcapable.kavaref.KavaRef.Companion.asResolver
 import com.highcapable.kavaref.extension.toClass
-import dev.ujhhgtg.wekit.dexkit.dsl.dexMethod
-import dev.ujhhgtg.wekit.hooks.core.SwitchHookItem
 import dev.ujhhgtg.wekit.dexkit.abc.IResolvesDex
+import dev.ujhhgtg.wekit.dexkit.dsl.dexMethod
 import dev.ujhhgtg.wekit.hooks.core.HookItem
+import dev.ujhhgtg.wekit.hooks.core.SwitchHookItem
 import org.luckypray.dexkit.DexKitBridge
 
 @HookItem(path = "系统与隐私/强制启用 WebView 菜单", desc = "强制显示 WebView 页面右上角菜单按钮")
@@ -51,7 +51,8 @@ object EnableWebViewFeatures : SwitchHookItem(), IResolvesDex {
         }
     }
 
-    override fun resolveDex(dexKit: DexKitBridge) {methodInitWebViewFeatures.find(dexKit) {
+    override fun resolveDex(dexKit: DexKitBridge) {
+        methodInitWebViewFeatures.find(dexKit) {
             matcher {
                 declaredClass = WEBVIEW_UI_CLASS_NAME
                 usingEqStrings(

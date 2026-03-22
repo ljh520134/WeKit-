@@ -1,13 +1,13 @@
 package dev.ujhhgtg.wekit.loader.entry.lsp100.dyn
 
+import dev.ujhhgtg.wekit.loader.entry.lsp100.Lsp100HookWrapper
+import dev.ujhhgtg.wekit.loader.entry.lsp100.Lsp100HookWrapper.InvocationParamWrapper
 import io.github.libxposed.api.XposedInterface.AfterHookCallback
 import io.github.libxposed.api.XposedInterface.BeforeHookCallback
 import io.github.libxposed.api.XposedInterface.Hooker
 import io.github.libxposed.api.annotations.AfterInvocation
 import io.github.libxposed.api.annotations.BeforeInvocation
 import io.github.libxposed.api.annotations.XposedHooker
-import dev.ujhhgtg.wekit.loader.entry.lsp100.Lsp100HookWrapper
-import dev.ujhhgtg.wekit.loader.entry.lsp100.Lsp100HookWrapper.InvocationParamWrapper
 
 class Lsp100CallbackProxy private constructor() {
 

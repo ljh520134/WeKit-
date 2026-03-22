@@ -3,8 +3,10 @@ package dev.ujhhgtg.wekit.dexkit.dsl
 import com.highcapable.kavaref.KavaRef.Companion.asResolver
 import com.highcapable.kavaref.extension.ClassLoaderProvider
 import com.highcapable.kavaref.extension.toClassOrNull
+import dev.ujhhgtg.nameof.nameof
 import dev.ujhhgtg.wekit.dexkit.DexMethodDescriptor
 import dev.ujhhgtg.wekit.hooks.core.BaseHookItem
+import dev.ujhhgtg.wekit.utils.logging.WeLogger
 import org.luckypray.dexkit.DexKitBridge
 import org.luckypray.dexkit.query.FindClass
 import org.luckypray.dexkit.query.FindMethod
@@ -58,6 +60,7 @@ class DexClassDelegate internal constructor(
     }
 
     fun setPlaceholderDescriptor() {
+        WeLogger.w(nameof(DexClassDelegate::class), "setting placeholder for $key")
         setDescriptor("com.tencent.mm.ui.LauncherUI")
     }
 
@@ -135,6 +138,7 @@ class DexMethodDelegate internal constructor(
         setDescriptor(DexMethodDescriptor(className, methodName, methodSign))
 
     fun setPlaceholderDescriptor() {
+        WeLogger.w(nameof(DexMethodDelegate::class), "setting placeholder for $key")
         setDescriptor(DexMethodDescriptor("Lcom/tencent/mm/ui/LauncherUI;->getInstance()Lcom/tencent/mm/ui/LauncherUI;"))
     }
 

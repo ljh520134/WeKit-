@@ -3,8 +3,8 @@ package dev.ujhhgtg.wekit.hooks.items.system
 import android.view.WindowManager
 import com.highcapable.kavaref.KavaRef.Companion.asResolver
 import com.highcapable.kavaref.extension.toClass
-import dev.ujhhgtg.wekit.hooks.core.SwitchHookItem
 import dev.ujhhgtg.wekit.hooks.core.HookItem
+import dev.ujhhgtg.wekit.hooks.core.SwitchHookItem
 
 @HookItem(path = "系统与隐私/禁止屏幕高亮度", desc = "禁止应用将屏幕亮度设置得过高")
 object DisableHighBrightness : SwitchHookItem() {
