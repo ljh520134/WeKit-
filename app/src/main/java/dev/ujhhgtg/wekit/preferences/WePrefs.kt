@@ -104,6 +104,10 @@ abstract class WePrefs protected constructor() : SharedPreferences, SharedPrefer
             return default.getIntOrDef(key, def)
         }
 
+        fun getFloatOrDef(key: String, def: Float): Float {
+            return default.getFloat(key, def)
+        }
+
         fun putString(key: String, value: String) {
             default.putString(key, value)
         }
