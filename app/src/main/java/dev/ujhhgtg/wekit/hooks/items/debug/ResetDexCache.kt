@@ -6,11 +6,17 @@ import dev.ujhhgtg.wekit.dexkit.cache.DexCacheManager
 import dev.ujhhgtg.wekit.hooks.core.ClickableHookItem
 import dev.ujhhgtg.wekit.hooks.core.HookItem
 import dev.ujhhgtg.wekit.ui.content.AlertDialogContent
+import dev.ujhhgtg.wekit.ui.content.Button
 import dev.ujhhgtg.wekit.ui.content.TextButton
 import dev.ujhhgtg.wekit.ui.utils.showComposeDialog
+import dev.ujhhgtg.wekit.utils.showToastSuspend
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.runBlocking
+import kotlinx.coroutines.withContext
 
-@HookItem(path = "调试/清除适配信息", desc = "点击清除适配信息")
-object ClearDexCache : ClickableHookItem() {
+@HookItem(path = "调试/重置适配信息", desc = "清除全部 DEX 适配信息, 等待下次启动时重新适配")
+object ResetDexCache : ClickableHookItem() {
+
     override fun onClick(context: Context) {
         showComposeDialog(context) {
             AlertDialogContent(
@@ -21,16 +27,20 @@ object ClearDexCache : ClickableHookItem() {
                                 "确定清除吗？"
                     )
                 },
-                dismissButton = { TextButton(onClick = dismiss) { Text("取消") } },
+                dismissButton = { TextButton(onDismiss) { Text("取消") } },
                 confirmButton = {
-                    TextButton(onClick = {
-                        DexCacheManager.clearAllCache()
-                        dismiss()
+                    Button(onClick = {
+                        runBlocking(Dispatchers.IO) {
+                            DexCacheManager.clearAllCache()
+                            showToastSuspend("清除成功!")
+                            withContext(Dispatchers.Main) {
+                                onDismiss()
+                            }
+                        }
                     }) { Text("确定") }
                 })
         }
     }
 
-    override val noSwitchWidget: Boolean
-        get() = true
+    override val noSwitchWidget = true
 }

@@ -14,7 +14,7 @@ import dev.ujhhgtg.wekit.ui.content.AlertDialogContent
 import dev.ujhhgtg.wekit.ui.content.Button
 import dev.ujhhgtg.wekit.ui.content.TextButton
 import dev.ujhhgtg.wekit.ui.utils.showComposeDialog
-import dev.ujhhgtg.wekit.utils.logging.WeLogger
+import dev.ujhhgtg.wekit.utils.WeLogger
 
 @HookItem(path = "个人资料/设置微信昵称", desc = "通过发包来更灵活的设置微信昵称")
 object SetProfileNickname : ClickableHookItem() {
@@ -31,7 +31,7 @@ object SetProfileNickname : ClickableHookItem() {
                         value = nickname, onValueChange = { nickname = it }, singleLine = false
                     )
                 },
-                dismissButton = { TextButton(onClick = dismiss) { Text("取消") } },
+                dismissButton = { TextButton(onClick = onDismiss) { Text("取消") } },
                 confirmButton = {
                     Button(onClick = {
                         val payload = """{"1":{"1":1,"2":{"1":64,"2":{"1":16,"2":{"1":1,"2":"${
@@ -50,7 +50,7 @@ object SetProfileNickname : ClickableHookItem() {
                                         title = { Text("发送成功, 响应结果:") },
                                         text = { Text(json) },
                                         confirmButton = {
-                                            TextButton(onClick = dismiss) { Text("关闭") }
+                                            TextButton(onClick = onDismiss) { Text("关闭") }
                                         }
                                     )
                                 }
@@ -62,13 +62,13 @@ object SetProfileNickname : ClickableHookItem() {
                                         title = { Text("发送失败, 响应结果:") },
                                         text = { Text("type: $type, code: $code, msg: $msg") },
                                         confirmButton = {
-                                            TextButton(onClick = dismiss) { Text("关闭") }
+                                            TextButton(onClick = onDismiss) { Text("关闭") }
                                         }
                                     )
                                 }
                             }
                         }
-                        dismiss()
+                        onDismiss()
                     }) { Text("确定") }
                 })
         }

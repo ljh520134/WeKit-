@@ -239,11 +239,11 @@ object ReplaceNavigationBar : ClickableHookItem() {
                         }
                     )
                 },
-                dismissButton = { TextButton(dismiss) { Text("取消") } },
+                dismissButton = { TextButton(onDismiss) { Text("取消") } },
                 confirmButton = {
                     Button(onClick = {
                         WePrefs.putBool(KEY_USE_BACKDROP, useBackdrop)
-                        dismiss()
+                        onDismiss()
                     }) { Text("确定") }
                 }
             )

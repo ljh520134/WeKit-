@@ -8,7 +8,7 @@ import dev.ujhhgtg.wekit.hooks.api.core.WeMessageApi
 import dev.ujhhgtg.wekit.utils.DefaultJson
 import dev.ujhhgtg.wekit.utils.KnownPaths
 import dev.ujhhgtg.wekit.utils.createDirectoriesNoThrow
-import dev.ujhhgtg.wekit.utils.logging.WeLogger
+import dev.ujhhgtg.wekit.utils.WeLogger
 import kotlinx.serialization.json.contentOrNull
 import kotlinx.serialization.json.jsonPrimitive
 import okhttp3.FormBody

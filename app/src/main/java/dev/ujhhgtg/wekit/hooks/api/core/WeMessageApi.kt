@@ -14,9 +14,9 @@ import dev.ujhhgtg.wekit.dexkit.dsl.dexClass
 import dev.ujhhgtg.wekit.dexkit.dsl.dexMethod
 import dev.ujhhgtg.wekit.hooks.core.ApiHookItem
 import dev.ujhhgtg.wekit.hooks.core.HookItem
+import dev.ujhhgtg.wekit.utils.WeLogger
 import dev.ujhhgtg.wekit.utils.XmlUtils.extractXmlAttr
 import dev.ujhhgtg.wekit.utils.XmlUtils.extractXmlTag
-import dev.ujhhgtg.wekit.utils.logging.WeLogger
 import org.luckypray.dexkit.DexKitBridge
 import java.io.InputStream
 import java.io.OutputStream
@@ -80,40 +80,32 @@ object WeMessageApi : ApiHookItem(), IResolvesDex {
     // -------------------------------------------------------------------------------------
 
     // 基础 & 文本
-    private lateinit var netSceneSendMsgClass: Class<*>
-    private lateinit var getSendMsgObjectMethod: Method
-    private lateinit var postToQueueMethod: Method
-    private lateinit var shareFileMethod: Method
     private var getServiceMethod: Method? = null       // ServiceManager.getService
     private lateinit var getSelfAliasMethod: Method
 
     // 图片
-    private lateinit var p6Method: Method
     private lateinit var imageServiceApiClass: Class<*>
     private lateinit var sendImageMethod: Method
     private lateinit var taskConstructor: Constructor<*>
     private lateinit var crossParamsClass: Class<*>
-    private lateinit var crossParamsConstructor: Constructor<*>
 
     // 文件
-    private lateinit var wxFileObjectClass: Class<*>
-    private lateinit var wxMediaMessageClass: Class<*>
+    private val wxFileObjectClass by lazy { "com.tencent.mm.opensdk.modelmsg.WXFileObject".toClass() }
+    private val wxMediaMessageClass by lazy { "com.tencent.mm.opensdk.modelmsg.WXMediaMessage".toClass() }
 
     // 语音 & VFS
     private lateinit var vfsCopyMethod: Method         // VFS.L (write)
     private lateinit var vfsReadMethod: Method         // VFS.F (read)
     private lateinit var vfsExistsMethod: Method       // VFS.k/e (exists)
     private lateinit var voiceNameGenMethod: Method    // g1.E
-    private lateinit var kernelStorageMethod: Method   // j1.u
     private var storageAccPathMethod: Method? = null  // b0.e (动态解析)
     private lateinit var pathGenMethod: Method         // h1.c
-    private lateinit var voiceParamsClass: Class<*>
     private lateinit var voiceTaskClass: Class<*>
     private lateinit var voiceTaskConstructor: Constructor<*>
-    private lateinit var voiceServiceInterfaceClass: Class<*> // sc0.e
-    private lateinit var voiceSendMethod: Method       // gh
     private lateinit var voiceDurationField: Field     // 语音时长字段
     private lateinit var voiceOffsetField: Field       // 偏移量字段
+
+    // Unsafe
     private lateinit var unsafeInstance: Any
     private lateinit var allocateInstanceMethod: Method
 
@@ -422,29 +414,13 @@ object WeMessageApi : ApiHookItem(), IResolvesDex {
         initUnsafe()
 
         // -----------------------------------------------------------------------------
-        // 文本/文件组件初始化
-        // -----------------------------------------------------------------------------
-        netSceneSendMsgClass = classNetSceneSendMsg.clazz
-        getSendMsgObjectMethod = methodGetSendMsgObject.method
-        postToQueueMethod = methodPostToQueue.method
-        shareFileMethod = methodShareFile.method
-        p6Method = methodImageSendEntry.method
-
-        wxFileObjectClass = "com.tencent.mm.opensdk.modelmsg.WXFileObject".toClass()
-        wxMediaMessageClass = "com.tencent.mm.opensdk.modelmsg.WXMediaMessage".toClass()
-
-        // -----------------------------------------------------------------------------
         // 图片组件初始化
         // -----------------------------------------------------------------------------
-        val taskClazz = classImageTask.clazz
-        taskConstructor = taskClazz.asResolver()
+        taskConstructor = classImageTask.clazz.asResolver()
             .firstConstructor { parameterCount = 5 }
             .self
 
         crossParamsClass = taskConstructor.parameterTypes[4]
-        crossParamsConstructor = crossParamsClass.asResolver()
-            .firstConstructor { emptyParameters() }
-            .self
 
         // -----------------------------------------------------------------------------
         // 语音/VFS 组件初始化
@@ -471,9 +447,6 @@ object WeMessageApi : ApiHookItem(), IResolvesDex {
             }.self
         }
 
-        // Kernel
-        kernelStorageMethod = methodMmKernelGetStorage.method
-
         // PathUtil
         classPathUtil.asResolver().let { pathUtil ->
             pathGenMethod = pathUtil.firstMethod {
@@ -492,7 +465,6 @@ object WeMessageApi : ApiHookItem(), IResolvesDex {
             }.self
         }
 
-        voiceParamsClass = classVoiceParams.clazz
         classVoiceParams.asResolver().let { voiceParams ->
             val intFields = voiceParams.field { type = Int::class }
             voiceDurationField = intFields[0].self
@@ -502,16 +474,36 @@ object WeMessageApi : ApiHookItem(), IResolvesDex {
         voiceTaskClass = classVoiceTask.clazz
         classVoiceTask.asResolver().let { voiceTask ->
             voiceTaskConstructor = voiceTask.firstConstructor {
-                parameters(voiceParamsClass)
+                parameters(classVoiceParams.clazz)
             }.self
         }
 
-        // Voice Service
-        voiceServiceInterfaceClass = classVoiceServiceInterface.clazz
-        voiceSendMethod = methodSendVoice.method
+        getServiceMethod = classServiceManager.asResolver()
+            .firstMethod {
+                modifiers(Modifiers.STATIC)
+                parameters(Class::class)
+            }.self
 
-        bindServiceFramework()
-        bindImageBusinessLogic()
+        getSelfAliasMethod = classConfigLogic.asResolver()
+            .firstMethod {
+                name { it.length <= 2 }
+                modifiers(Modifiers.STATIC)
+                parameterCount = 0
+                returnType = String::class
+            }.self
+
+        imageServiceApiClass = classImageServiceImpl.clazz.interfaces.first {
+            !it.name.startsWith("java.") && !it.name.startsWith("android.")
+        }
+
+        sendImageMethod = classImageServiceImpl.clazz.declaredMethods.first { m ->
+            m.parameterCount == 1 &&
+                    m.parameterTypes[0] == classImageTask.clazz &&
+                    m.returnType.name.contains("flow", ignoreCase = true)
+        }
+
+        crossParamsClass = classImageTask.clazz.declaredConstructors
+            .first { it.parameterCount == 5 }.parameterTypes[4]
     }
 
     /**
@@ -533,7 +525,7 @@ object WeMessageApi : ApiHookItem(), IResolvesDex {
      * 动态解析 AccPath 获取方法
      */
     private fun getAccPath(): String {
-        val storageObj = kernelStorageMethod.invoke(null)
+        val storageObj = methodMmKernelGetStorage.method.invoke(null)
             ?: error("Kernel.getStorage() failed (returned null)")
 
         if (storageAccPathMethod != null) {
@@ -615,8 +607,8 @@ object WeMessageApi : ApiHookItem(), IResolvesDex {
     fun sendText(toUser: String, text: String): Boolean {
         return try {
             WeLogger.i(TAG, "[sendText] 准备发送文本消息: $text")
-            val sendMsgObject = getSendMsgObjectMethod.invoke(null) ?: return false
-            val constructor = netSceneSendMsgClass.getConstructor(
+            val sendMsgObject = methodGetSendMsgObject.method.invoke(null) ?: return false
+            val constructor = classNetSceneSendMsg.clazz.getConstructor(
                 String::class.java,
                 String::class.java,
                 Int::class.javaPrimitiveType,
@@ -624,7 +616,7 @@ object WeMessageApi : ApiHookItem(), IResolvesDex {
                 Any::class.java
             ) ?: return false
             val msgObj = constructor.newInstance(toUser, text, 1, 0, null)
-            postToQueueMethod.invoke(sendMsgObject, msgObj) as? Boolean ?: false
+            methodPostToQueue.method.invoke(sendMsgObject, msgObj) as? Boolean ?: false
         } catch (e: Exception) {
             WeLogger.e(TAG, "[sendText] Text 发送失败", e)
             false
@@ -635,12 +627,12 @@ object WeMessageApi : ApiHookItem(), IResolvesDex {
     fun sendFile(talker: String, filePath: String, title: String, appId: String? = null): Boolean {
         return try {
             WeLogger.i(TAG, "[sendFile] 准备发送文件消息: $filePath")
-            val fileObject = wxFileObjectClass.createInstance() ?: return false
+            val fileObject = wxFileObjectClass.createInstance()
             wxFileObjectClass.getField("filePath").set(fileObject, filePath)
-            val mediaMessage = wxMediaMessageClass.createInstance() ?: return false
+            val mediaMessage = wxMediaMessageClass.createInstance()
             wxMediaMessageClass.getField("mediaObject").set(mediaMessage, fileObject)
             wxMediaMessageClass.getField("title").set(mediaMessage, title)
-            shareFileMethod.invoke(null, mediaMessage, appId ?: "", "", talker, 2, null)
+            methodShareFile.method.invoke(null, mediaMessage, appId ?: "", "", talker, 2, null)
             true
         } catch (e: Exception) {
             WeLogger.e(TAG, "[sendFile] File 发送失败", e)
@@ -651,14 +643,11 @@ object WeMessageApi : ApiHookItem(), IResolvesDex {
     /** 发送私有路径下的语音文件 */
     fun sendVoice(toUser: String, path: String, durationMs: Int): Boolean {
         return try {
-            // 获取 Service 实例
-            val serviceInterface = voiceServiceInterfaceClass
-
             // 尝试通过 ServiceManager 获取
             var finalServiceObj: Any? = null
             if (getServiceMethod != null) {
                 try {
-                    finalServiceObj = getServiceMethod!!.invoke(null, serviceInterface)
+                    finalServiceObj = getServiceMethod!!.invoke(null, classVoiceServiceInterface.clazz)
                 } catch (e: Exception) {
                     WeLogger.e(TAG, "ServiceManager 获取失败，尝试单例 fallback", e)
                 }
@@ -690,14 +679,14 @@ object WeMessageApi : ApiHookItem(), IResolvesDex {
             if (!copyFileViaVfs(path, destFullPath)) return false
 
             // 构造任务
-            val paramsObj = voiceParamsClass.createInstance(toUser, fileName)
+            val paramsObj = classVoiceParams.clazz.createInstance(toUser, fileName)
             voiceDurationField.set(paramsObj, durationMs)
             voiceOffsetField.set(paramsObj, 0)
 
             val taskObj = voiceTaskConstructor.newInstance(paramsObj)
                 ?: error("Task 构造失败")
 
-            voiceSendMethod.invoke(finalServiceObj, taskObj)
+            methodSendVoice.method.invoke(finalServiceObj, taskObj)
             WeLogger.i(TAG, "语音发送指令已下发: $fileName")
             true
         } catch (e: Exception) {
@@ -750,41 +739,6 @@ object WeMessageApi : ApiHookItem(), IResolvesDex {
         get() {
             return getSelfAliasMethod.invoke(null) as? String ?: ""
         }
-
-    private fun bindServiceFramework() {
-        getServiceMethod = classServiceManager.asResolver()
-            .firstMethod {
-                modifiers(Modifiers.STATIC)
-                parameters(Class::class)
-            }.self
-
-        getSelfAliasMethod = classConfigLogic.asResolver()
-            .firstMethod {
-                name { it.length <= 2 }
-                modifiers(Modifiers.STATIC)
-                parameterCount = 0
-                returnType = String::class
-            }.self
-    }
-
-    private fun bindImageBusinessLogic() {
-        val implClazz = classImageServiceImpl.clazz
-        val taskClazz = classImageTask.clazz
-
-        imageServiceApiClass = implClazz.interfaces.first {
-            !it.name.startsWith("java.") && !it.name.startsWith("android.")
-        }
-
-        sendImageMethod = implClazz.declaredMethods.first { m ->
-            m.parameterCount == 1 &&
-                    m.parameterTypes[0] == taskClazz &&
-                    m.returnType.name.contains("flow", ignoreCase = true)
-        }
-
-        taskClazz.declaredConstructors.firstOrNull { it.parameterCount == 5 }?.let {
-            crossParamsClass = it.parameterTypes[4]
-        }
-    }
 
     private fun assignValueToFirstFieldByType(obj: Any, type: Class<*>, value: Any) {
         obj.javaClass.declaredFields.firstOrNull { it.type == type }?.let {

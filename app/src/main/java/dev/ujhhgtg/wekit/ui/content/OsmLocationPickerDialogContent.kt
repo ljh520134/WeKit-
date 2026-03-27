@@ -102,13 +102,10 @@ fun OsmLocationPickerDialogContent(
                             minZoomLevel = 3.0
                             maxZoomLevel = 19.0
 
-                            // Tap-to-pin overlay
                             val eventsOverlay = MapEventsOverlay(
                                 object : MapEventsReceiver {
                                     override fun singleTapConfirmedHelper(p: GeoPoint): Boolean {
                                         pickedPoint = p
-
-                                        // Move existing marker or create a new one
                                         val existing = markerRef.value
                                         if (existing != null) {
                                             existing.position = p
@@ -128,20 +125,17 @@ fun OsmLocationPickerDialogContent(
                                     override fun longPressHelper(p: GeoPoint) = false
                                 }
                             )
-                            // Add events overlay FIRST so it's hit-tested last
-                            // (osmdroid overlays are drawn/consumed in reverse order)
                             overlays.add(0, eventsOverlay)
                         }
                     },
                     update = { mapView ->
-                        // Re-apply tile source if it changes (e.g. on recomposition)
                         if (mapView.tileProvider.tileSource != tileSource) {
                             mapView.setTileSource(tileSource)
                         }
                     },
                 )
 
-                // Hint overlay – hidden once a point is chosen
+                // Hint chip – hidden once a point is chosen
                 if (pickedPoint == null) {
                     Surface(
                         modifier = Modifier
@@ -157,12 +151,19 @@ fun OsmLocationPickerDialogContent(
                         )
                     }
                 }
-            }
 
-            // ── Coordinate readout ────────────────────────────────────
-            pickedPoint?.let { pt ->
-                HorizontalDivider()
-                OsmCoordinateReadout(point = pt)
+                // Coordinate chips – float over map once a point is picked
+                pickedPoint?.let { pt ->
+                    Row(
+                        modifier = Modifier
+                            .align(Alignment.BottomCenter)
+                            .padding(bottom = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        OsmCoordinateChip(label = "纬度", value = "%.6f".format(pt.latitude))
+                        OsmCoordinateChip(label = "经度", value = "%.6f".format(pt.longitude))
+                    }
+                }
             }
         }
     }
@@ -203,19 +204,6 @@ private fun OsmPickerHeader(
             Spacer(Modifier.width(4.dp))
             Text("确定")
         }
-    }
-}
-
-@Composable
-private fun OsmCoordinateReadout(point: GeoPoint) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(horizontal = 16.dp, vertical = 10.dp),
-        horizontalArrangement = Arrangement.SpaceEvenly,
-    ) {
-        OsmCoordinateChip(label = "纬度", value = "%.6f".format(point.latitude))
-        OsmCoordinateChip(label = "经度", value = "%.6f".format(point.longitude))
     }
 }
 

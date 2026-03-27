@@ -38,10 +38,10 @@ import com.composables.icons.materialsymbols.outlined.Chat
 import com.composables.icons.materialsymbols.outlined.Contacts
 import com.composables.icons.materialsymbols.outlined.Delete_forever
 import com.composables.icons.materialsymbols.outlined.Download
+import com.composables.icons.materialsymbols.outlined.Frame_bug
 import com.composables.icons.materialsymbols.outlined.Imagesearch_roller
+import com.composables.icons.materialsymbols.outlined.License
 import com.composables.icons.materialsymbols.outlined.Lightbulb_2
-import com.composables.icons.materialsymbols.outlined.List_alt
-import com.composables.icons.materialsymbols.outlined.Low_priority
 import com.composables.icons.materialsymbols.outlined.Movie
 import com.composables.icons.materialsymbols.outlined.Notifications
 import com.composables.icons.materialsymbols.outlined.Package_2
@@ -58,22 +58,23 @@ import dev.ujhhgtg.wekit.R
 import dev.ujhhgtg.wekit.activity.StubFragmentActivity
 import dev.ujhhgtg.wekit.constants.PackageNames
 import dev.ujhhgtg.wekit.constants.PreferenceKeys
+import dev.ujhhgtg.wekit.hooks.items.easter_egg.AprilFools
+import dev.ujhhgtg.wekit.hooks.items.easter_egg.isAprilFools
 import dev.ujhhgtg.wekit.preferences.WePrefs
 import dev.ujhhgtg.wekit.ui.utils.showComposeDialog
 import dev.ujhhgtg.wekit.utils.DefaultJson
 import dev.ujhhgtg.wekit.utils.HostInfo
 import dev.ujhhgtg.wekit.utils.RuntimeConfig
-import dev.ujhhgtg.wekit.utils.ToastUtils.showToast
-import dev.ujhhgtg.wekit.utils.ToastUtils.showToastSuspend
+import dev.ujhhgtg.wekit.utils.WeLogger
 import dev.ujhhgtg.wekit.utils.formatEpoch
-import dev.ujhhgtg.wekit.utils.logging.WeLogger
 import dev.ujhhgtg.wekit.utils.openInSystem
+import dev.ujhhgtg.wekit.utils.showToast
+import dev.ujhhgtg.wekit.utils.showToastSuspend
 import dev.ujhhgtg.wekit.utils.updates.UpdateChecker
 import dev.ujhhgtg.wekit.utils.updates.UpdateDownloader
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.withContext
 import kotlinx.serialization.json.JsonArray
 import kotlinx.serialization.json.JsonNull
@@ -92,17 +93,23 @@ import kotlinx.serialization.json.jsonPrimitive
 import kotlinx.serialization.json.long
 import kotlinx.serialization.json.longOrNull
 import kotlinx.serialization.json.put
+import java.time.LocalDate
 
 class MainSettingsDialog(context: Context) : BasePrefsDialog(context, BuildConfig.TAG) {
 
-    // 定义优先级 映射关系 (值 -> 显示文本)
-    private val priorityMap = mapOf(
-        10000 to "高优先级",
-        50 to "智能",
-        -10000 to "低优先级"
-    )
-
     override fun initPreferences() {
+        if (LocalDate.now().isAprilFools) {
+            addCategory("???")
+            addPreference(
+                title = "🏳",
+                summary = "投降喵投降喵",
+                onClick = {
+                    WePrefs.putBool(AprilFools.KEY_SURRENDER, true)
+                    showToast("重启生效")
+                }
+            )
+        }
+
         addCategory("功能")
         val categories = listOf(
             "聊天" to MaterialSymbols.Outlined.Chat,
@@ -128,56 +135,20 @@ class MainSettingsDialog(context: Context) : BasePrefsDialog(context, BuildConfi
 
         addCategory("调试")
         addSwitchPreference(
-            key = PreferenceKeys.ENABLE_LOG,
-            title = "日志记录",
-            summary = "反馈问题前必须开启日志记录",
-            icon = MaterialSymbols.Outlined.List_alt
-        )
-
-        addSwitchPreference(
             key = PreferenceKeys.VERBOSE_LOG,
             title = "详细日志",
             summary = "输出高频日志 (这可能会暴露你的隐私信息）",
-            icon = "frame_bug_24px"
+            icon = MaterialSymbols.Outlined.Frame_bug
         )
 
-        val dependentKey = addSwitchPreference(
-            key = PreferenceKeys.DB_VERBOSE_LOG,
-            title = "数据库详细日志",
-            summary = "输出完整的数据库插入事件详情（ContentValues）",
-            icon = "database_upload_24px"
-        )
-
-        // 数据库详细日志依赖于详细日志
-        setDependency(
-            dependentKey = dependentKey,
-            dependencyKey = PreferenceKeys.VERBOSE_LOG,
-            enableWhen = true
-        )
-
-        // ==========================================
-        // 兼容 (Compatibility)
-        // ==========================================
         addCategory("兼容")
-
-        // 使用 addSelectPreference 替代手动实现
-        addSelectPreference(
-            key = PreferenceKeys.HOOK_PRIORITY,
-            title = "XC_MethodHook 优先级",
-            summary = "当前设定", // 当配置的值不在 map 中时，会显示 "当前设定: [值]"
-            options = priorityMap,
-            defaultValue = 50,
-            icon = MaterialSymbols.Outlined.Low_priority
-        )
-
         addSwitchPreference(
             key = PreferenceKeys.NO_DEX_RESOLVE,
             title = "禁用版本适配",
             summary = "开启后不会弹出 DEX 查找对话框，未适配功能将不会被加载",
             icon = MaterialSymbols.Outlined.Block
         )
-
-        addCategory("备份与恢复")
+        addCategory("配置")
         addPreference(
             title = "导出配置",
             summary = "将模块配置导出为 JSON",
@@ -291,21 +262,23 @@ class MainSettingsDialog(context: Context) : BasePrefsDialog(context, BuildConfi
                 }
             }
         )
-        var confirmDeletion = false
         addPreference(
             title = "清除配置",
             summary = "清除全部模块配置 (警告: 此操作不可逆!)",
             icon = MaterialSymbols.Outlined.Delete_forever,
             onClick = {
-                if (!confirmDeletion) {
-                    showToast("再次点击以确认清除!")
-                    confirmDeletion = true
-                    return@addPreference
-                }
-
-                runBlocking(Dispatchers.IO) {
-                    WePrefs.default.clear()
-                    showToastSuspend("清除成功!")
+                showComposeDialog(context) {
+                    AlertDialogContent(title = { Text("清除模块配置") },
+                        text = { Text("确定清除配置? (警告: 此操作不可逆!)") },
+                        dismissButton = { TextButton(onDismiss) { Text("取消") } },
+                        confirmButton = { Button(onClick = {
+                            onDismiss()
+                            CoroutineScope(Dispatchers.IO).launch {
+                                showToastSuspend("正在清除...")
+                                WePrefs.default.clear()
+                                showToastSuspend("清除成功!")
+                            }
+                        }) { Text("清除") } })
                 }
             }
         )
@@ -329,10 +302,10 @@ class MainSettingsDialog(context: Context) : BasePrefsDialog(context, BuildConfi
                                                 "是否尝试直接下载并安装最新版本?"
                                     )
                                 },
-                                dismissButton = { TextButton(dismiss) { Text("取消") } },
+                                dismissButton = { TextButton(onDismiss) { Text("取消") } },
                                 confirmButton = {
                                     Button(onClick = {
-                                        dismiss()
+                                        onDismiss()
                                         CoroutineScope(Dispatchers.Main).launch {
                                             UpdateDownloader.downloadAndInstall(context, UpdateChecker.DOWNLOAD_URL)
                                         }
@@ -357,10 +330,10 @@ class MainSettingsDialog(context: Context) : BasePrefsDialog(context, BuildConfi
                                             "是否下载并安装?"
                                 )
                             },
-                            dismissButton = { TextButton(dismiss) { Text("取消") } },
+                            dismissButton = { TextButton(onDismiss) { Text("取消") } },
                             confirmButton = {
                                 Button(onClick = {
-                                    dismiss()
+                                    onDismiss()
                                     CoroutineScope(Dispatchers.Main).launch {
                                         UpdateDownloader.downloadAndInstall(context, update.downloadUrl)
                                     }
@@ -396,7 +369,7 @@ class MainSettingsDialog(context: Context) : BasePrefsDialog(context, BuildConfi
         addPreference(
             title = "开放源代码许可",
             summary = "本项目使用的开放源代码库许可",
-            icon = "license_24px",
+            icon = MaterialSymbols.Outlined.License,
             onClick = {
                 showComposeDialog(context) {
                     Surface(
@@ -418,17 +391,16 @@ class MainSettingsDialog(context: Context) : BasePrefsDialog(context, BuildConfi
                 }
             }
         )
-
         addPreference(
             title = "GitHub",
             summary = "修改于 Ujhhgtg/WeKit (原始: cwuom/WeKit)",
-            icon = "github_24px",
+            icon = R.drawable.github_24px,
             onClick = { "https://github.com/Ujhhgtg/WeKit".toUri().openInSystem(context, true) }
         )
         addPreference(
             title = "Telegram",
             summary = "@ujhhgtg_wekit_ci",
-            icon = "telegram_24px",
+            icon = R.drawable.telegram_24px,
             onClick = { "https://t.me/ujhhgtg_wekit_ci".toUri().openInSystem(context, true) }
         )
     }

@@ -18,7 +18,7 @@
 - AGP 升级至 9.X
 - 反射移植至 KavaRef
 - 原生库移植至 Rust
-- 支持 arm64 与 x86_64
+- 支持全部 4 种 ABI (arm64-v8a, armeabi-v7a, x86_64, x86)
 - 修复问题
 - 无须禁用「Xposed API 调用保护」
 - 大量新功能
@@ -27,7 +27,6 @@
 
 - 包名: `com.tencent.mm` 或以 `com.tencent.mm` 开头的任意包名
 - 版本: 非 Play: 8.0.65~8.0.69 (完美), < 8.0.65 (不提供支持) | Play: 8.0.68 (完美), < 8.0.68 (未测试)
-- 架构: arm64 或 x86_64
 - Android 版本: >= 10 (SDK >= 29)
 - Xposed API 版本: >= 51 (51~101)
 
@@ -69,7 +68,7 @@ sudo apt update -y && sudo apt full-upgrade -y
 sudo apt install gcc-multilib rustup
 rustup toolchain install stable
 rustup default stable
-rustup target add x86_64-linux-android aarch64-linux-android
+rustup target add x86_64-linux-android aarch64-linux-android armv7-linux-androideabi i686-linux-android
 $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "ndk;$(grep '^ndk' ./gradle/libs.versions.toml | sed 's/.*= "\(.*\)"/\1/')"
 ```
 
@@ -80,7 +79,7 @@ $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "ndk;$(grep '^ndk' ./gradle/li
 yay -Syu lib32-glibc rustup
 rustup toolchain install stable
 rustup default stable
-rustup target add x86_64-linux-android aarch64-linux-android
+rustup target add x86_64-linux-android aarch64-linux-android armv7-linux-androideabi i686-linux-android
 $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "ndk;$(grep '^ndk' ./gradle/libs.versions.toml | sed 's/.*= "\(.*\)"/\1/')"
 ```
 
@@ -92,8 +91,6 @@ $ANDROID_HOME/cmdline-tools/latest/bin/sdkmanager "ndk;$(grep '^ndk' ./gradle/li
 
 构建期间会自动编译 Rust 原生库, 无须手动编译
 
-构建产物支持 arm64 与 x86_64, 其他架构不受支持 (如需支持, 自行修改 [这里](./app/build.gradle.kts#L65-L69) 和 [这里](./app/build.gradle.kts#L301-L302))
-
 ```bash
 chmod +x ./gradlew
 ./gradlew :app:assembleRelease
@@ -103,12 +100,18 @@ chmod +x ./gradlew
 
 1. - Q: 我的微信突然卡得要死, 狂吃内存
    - A：尝试禁用「Xposed API 调用保护」和「隐藏应用列表」
-2. - Q: XXX
-   - A: [![问 DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/Ujhhgtg/WeKit)
-3. - Q: 模块数据在哪
+2. - Q: 模块数据在哪
    - A: /sdcard/Android/data/<宿主包名>/WeKit
-4. - Q: 不受支持的旧版本启动一直弹 DEX 缓存更新怎么办
+3. - Q: 不受支持的旧版本启动一直弹 DEX 缓存更新怎么办
    - A: 设置启用「禁用版本适配」或更新到 >= 8.0.65
+4. - Q: 「聊天/发送卡片消息」在哪里?
+   - A: 合并进了「聊天/聊天输入栏增强」
+5. - Q: LSPosed 提示「此模块是为较新的 Xposed 版本设计的, 因此某些功能可能无法使用」怎么办?
+   - A: 忽略即可; 模块支持全部 Xposed API 版本
+6. - Q: 怎么让我的界面恢复正常???? (愚人节彩蛋)
+   - A: 「模块设置 -> 投降」
+7. - Q: XXX
+   - A: [![问 DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/Ujhhgtg/WeKit)
 
 ## 注意
 

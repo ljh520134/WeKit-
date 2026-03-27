@@ -60,13 +60,39 @@ fun setCargoClang(androidHome: String) {
     val configToml = rootProject.file("app/src/main/rust/wekit-native/.cargo/config.toml")
 
     configToml.parentFile.mkdirs()
-    configToml.writeText(
-        """
+    configToml.writeText("""
         [target.aarch64-linux-android]
+        ar = "$ndkBinDir/llvm-ar"
         linker = "$ndkBinDir/aarch64-linux-android${minSdk}-clang$ext"
 
         [target.x86_64-linux-android]
+        ar = "$ndkBinDir/llvm-ar"
         linker = "$ndkBinDir/x86_64-linux-android${minSdk}-clang$ext"
+
+        [target.armv7-linux-androideabi]
+        ar = "$ndkBinDir/llvm-ar"
+        linker = "$ndkBinDir/armv7a-linux-androideabi${minSdk}-clang$ext"
+
+        [target.i686-linux-android]
+        ar = "$ndkBinDir/llvm-ar"
+        linker = "$ndkBinDir/i686-linux-android${minSdk}-clang$ext"
+
+        [env]
+        CC_aarch64_linux_android = "$ndkBinDir/aarch64-linux-android${minSdk}-clang$ext"
+        CXX_aarch64_linux_android = "$ndkBinDir/aarch64-linux-android${minSdk}-clang++$ext"
+        AR_aarch64_linux_android = "$ndkBinDir/llvm-ar"
+
+        CC_x86_64_linux_android = "$ndkBinDir/x86_64-linux-android${minSdk}-clang$ext"
+        CXX_x86_64_linux_android = "$ndkBinDir/x86_64-linux-android${minSdk}-clang++$ext"
+        AR_x86_64_linux_android = "$ndkBinDir/llvm-ar"
+
+        CC_armv7-linux-androideabi = "$ndkBinDir/armv7a-linux-androideabi${minSdk}-clang$ext"
+        CXX_armv7-linux-androideabi = "$ndkBinDir/armv7a-linux-androideabi${minSdk}-clang++$ext"
+        AR_armv7-linux-androideabi = "$ndkBinDir/llvm-ar"
+
+        CC_i686-linux-android = "$ndkBinDir/i686-linux-android${minSdk}-clang$ext"
+        CXX_i686-linux-android = "$ndkBinDir/i686-linux-android${minSdk}-clang++$ext"
+        AR_i686-linux-android = "$ndkBinDir/llvm-ar"
     """.trimIndent()
     )
     logger.lifecycle("Written .cargo/config.toml to ${configToml.absolutePath}")
@@ -83,7 +109,7 @@ configure<ApplicationExtension> {
         val isWindows = System.getProperty("os.name").orEmpty().contains("Windows", ignoreCase = true)
         val sdkmanager = "$androidHome/cmdline-tools/latest/bin/sdkmanager" + if (isWindows) ".bat" else ""
         providers.exec { commandLine(sdkmanager, "--install", "ndk;$ndkVer") }
-        logger.lifecycle("NDK $ndkVer installed.")
+        logger.lifecycle("NDK $ndkVer installed")
     }
 
     if (!rootProject.file("app/src/main/rust/wekit-native/.cargo/config.toml").exists()) {
@@ -127,7 +153,7 @@ configure<ApplicationExtension> {
         abi {
             isEnable = true
             reset()
-            include("arm64-v8a", "x86_64")
+            include("arm64-v8a", "x86_64", "armeabi-v7a", "x86")
             isUniversalApk = true
         }
     }
@@ -256,9 +282,9 @@ abstract class GenerateMethodHashesTask : DefaultTask() {
             val className = Regex("""(?:class|object)\s+(\w+)""").find(content)?.groupValues?.get(1) ?: return@forEach
             val fullClassName = if (packageName != null) "$packageName.$className" else className
 
-            val dexFindMatch = Regex("""override\s+fun\s+resolveDex\s*\(""").find(content)
-            if (dexFindMatch != null) {
-                val start = content.indexOf('{', dexFindMatch.range.last)
+            val resolveDexMatch = Regex("""override\s+fun\s+resolveDex\s*\(""").find(content)
+            if (resolveDexMatch != null) {
+                val start = content.indexOf('{', resolveDexMatch.range.last)
                 if (start != -1) {
                     var count = 0
                     for (i in start until content.length) {
@@ -300,6 +326,8 @@ val rustLibName = "libwekit_native.so"
 val abiToTarget = mapOf(
     "arm64-v8a" to "aarch64-linux-android",
     "x86_64" to "x86_64-linux-android",
+    "armeabi-v7a" to "armv7-linux-androideabi",
+    "x86" to "i686-linux-android"
 )
 val cargoTasks = abiToTarget.map { (abi, target) ->
     tasks.register<Exec>("cargoBuild_${abi.replace('-', '_')}") {
@@ -355,8 +383,6 @@ dependencies {
     implementation(libs.google.protobuf.java)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.mmkv)
-
-    implementation(libs.silkdecoder)
 
     compileOnly(libs.legacyxposed.api)
     compileOnly(project(":libs:common:libxposed-api"))

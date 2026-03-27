@@ -6,7 +6,7 @@ import dev.ujhhgtg.wekit.hooks.api.net.MsgIdPreviewer.generateClientMsgId
 import dev.ujhhgtg.wekit.hooks.api.net.MsgIdPreviewer.previewNextId
 import dev.ujhhgtg.wekit.hooks.api.net.abc.ISigner
 import dev.ujhhgtg.wekit.hooks.api.net.model.SignResult
-import dev.ujhhgtg.wekit.utils.logging.WeLogger
+import dev.ujhhgtg.wekit.utils.WeLogger
 import org.json.JSONObject
 
 /**

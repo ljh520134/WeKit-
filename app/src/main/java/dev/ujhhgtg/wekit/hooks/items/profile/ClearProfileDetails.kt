@@ -9,7 +9,7 @@ import dev.ujhhgtg.wekit.ui.content.AlertDialogContent
 import dev.ujhhgtg.wekit.ui.content.Button
 import dev.ujhhgtg.wekit.ui.content.TextButton
 import dev.ujhhgtg.wekit.ui.utils.showComposeDialog
-import dev.ujhhgtg.wekit.utils.logging.WeLogger
+import dev.ujhhgtg.wekit.utils.WeLogger
 
 @HookItem(path = "个人资料/清空资料信息", desc = "清空当前用户的地区与性别等资料信息")
 object ClearProfileDetails : ClickableHookItem() {
@@ -19,7 +19,7 @@ object ClearProfileDetails : ClickableHookItem() {
             AlertDialogContent(
                 title = { Text("清空资料信息") },
                 text = { Text("确定清空吗？清空后你仍然可以重新选择资料信息") },
-                dismissButton = { TextButton(onClick = dismiss) { Text("取消") } },
+                dismissButton = { TextButton(onClick = onDismiss) { Text("取消") } },
                 confirmButton = {
                     Button(onClick = {
                         val payload =
@@ -37,7 +37,7 @@ object ClearProfileDetails : ClickableHookItem() {
                                         title = { Text("发送成功, 响应结果:") },
                                         text = { Text(json) },
                                         confirmButton = {
-                                            TextButton(onClick = dismiss) { Text("关闭") }
+                                            TextButton(onClick = onDismiss) { Text("关闭") }
                                         }
                                     )
                                 }
@@ -49,13 +49,13 @@ object ClearProfileDetails : ClickableHookItem() {
                                         title = { Text("发送失败, 响应结果:") },
                                         text = { Text("type: $type, code: $code, msg: $msg") },
                                         confirmButton = {
-                                            TextButton(onClick = dismiss) { Text("关闭") }
+                                            TextButton(onClick = onDismiss) { Text("关闭") }
                                         }
                                     )
                                 }
                             }
                         }
-                        dismiss()
+                        onDismiss()
                     }) { Text("确定") }
                 })
         }

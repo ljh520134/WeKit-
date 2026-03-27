@@ -3,7 +3,7 @@ package dev.ujhhgtg.wekit.hooks.api.net
 import dev.ujhhgtg.wekit.constants.PreferenceKeys
 import dev.ujhhgtg.wekit.hooks.api.net.abc.IWePacketInterceptor
 import dev.ujhhgtg.wekit.preferences.WePrefs
-import dev.ujhhgtg.wekit.utils.logging.WeLogger
+import dev.ujhhgtg.wekit.utils.WeLogger
 import java.util.concurrent.CopyOnWriteArrayList
 
 object WePacketManager {

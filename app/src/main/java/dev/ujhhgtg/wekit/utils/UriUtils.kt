@@ -7,6 +7,7 @@ import android.content.Intent
 import android.graphics.BitmapFactory
 import android.net.Uri
 import androidx.browser.customtabs.CustomTabsIntent
+import dev.ujhhgtg.wekit.R
 import dev.ujhhgtg.wekit.constants.PackageNames
 
 fun Uri.openInSystem(
@@ -38,11 +39,11 @@ fun Uri.openInSystem(
             .setDownloadButtonEnabled(true)
             .setColorScheme(CustomTabsIntent.COLOR_SCHEME_SYSTEM)
             .apply {
-                if (context.packageName.startsWith(PackageNames.WECHAT)) {
+                if (PackageNames.isWeChat(context.packageName)) {
                     val forwardBitmap =
                         BitmapFactory.decodeResource(
                             ModuleRes.resources,
-                            ModuleRes.getId("forward_24px", "drawable")
+                            R.drawable.forward_24px
                         )
                     setActionButton(
                         forwardBitmap,

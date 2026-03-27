@@ -8,12 +8,17 @@ name = "wekit_native"
 crate-type = ["cdylib"]
 
 [dependencies]
-jni = { version = "0.22.4", default-features = false }
-libc = "0.2.183"
-markdown = "1.0.0"
-
-[build-dependencies]
-bindgen = "0.72.1"
+jni = { version = "0.22", default-features = false }
+libc = "0.2"
+markdown = "1"
+silk-v3-rs = { git = "https://github.com/Ujhhgtg/silk-v3-rs.git" }
+symphonia = { version = "0.5", features = [
+    "mp3",
+    "pcm",
+], default-features = false }
+mp3lame-encoder = "0.2"
+bytemuck = "1"
+anyhow = "1"
 
 [profile.release]
 opt-level = "z"

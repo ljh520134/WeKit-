@@ -12,7 +12,7 @@ import dev.ujhhgtg.wekit.hooks.api.core.WeMessageApi
 import dev.ujhhgtg.wekit.hooks.api.core.model.MessageInfo
 import dev.ujhhgtg.wekit.hooks.core.ApiHookItem
 import dev.ujhhgtg.wekit.hooks.core.HookItem
-import dev.ujhhgtg.wekit.utils.logging.WeLogger
+import dev.ujhhgtg.wekit.utils.WeLogger
 import org.luckypray.dexkit.DexKitBridge
 
 @SuppressLint("StaticFieldLeak")
@@ -45,15 +45,14 @@ object WeChatMessageContextMenuApi : ApiHookItem(), IResolvesDex {
     private val methodCreateMenu by dexMethod()
     private val methodSelectMenuItem by dexMethod()
     private val classChattingMessBox by dexClass()
-    private var currentView: View? =
-        null // selectMenu is guaranteed to be called after createMenu, so this will not cause NPE
+    private lateinit var currentView: View
 
     override fun onEnable() {
         methodCreateMenu.hookBefore { param ->
             val menu = param.args[0]
 
             currentView = param.args[1] as View
-            val tag = currentView!!.tag
+            val tag = currentView.tag
 
             val msgInfo = WeMessageApi.getMsgInfoInstanceFromTag(tag)
 
@@ -93,7 +92,7 @@ object WeChatMessageContextMenuApi : ApiHookItem(), IResolvesDex {
                 }
                 .get()!!
 
-            val tag = currentView!!.tag
+            val tag = currentView.tag
             val msgInfo = WeMessageApi.getMsgInfoInstanceFromTag(tag)
 
             val menuItem = param.args[0] as android.view.MenuItem
@@ -102,7 +101,7 @@ object WeChatMessageContextMenuApi : ApiHookItem(), IResolvesDex {
                 for (item in menuItems.values.flatten()) {
                     if (item.id == menuItem.itemId) {
                         item.onClick(
-                            currentView!!,
+                            currentView,
                             chattingContext,
                             msgInfoWrapper
                         )

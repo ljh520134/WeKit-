@@ -7,7 +7,7 @@ import dev.ujhhgtg.wekit.hooks.core.BaseHookItem
 import dev.ujhhgtg.wekit.preferences.WePrefs
 import dev.ujhhgtg.wekit.utils.KnownPaths
 import dev.ujhhgtg.wekit.utils.createDirectoriesNoThrow
-import dev.ujhhgtg.wekit.utils.logging.WeLogger
+import dev.ujhhgtg.wekit.utils.WeLogger
 import org.json.JSONObject
 import java.nio.file.Path
 import kotlin.io.path.deleteIfExists

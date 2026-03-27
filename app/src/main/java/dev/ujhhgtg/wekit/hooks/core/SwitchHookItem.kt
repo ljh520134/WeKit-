@@ -1,12 +1,21 @@
 package dev.ujhhgtg.wekit.hooks.core
 
 import android.content.Context
+import dev.ujhhgtg.nameof.nameof
 import dev.ujhhgtg.wekit.preferences.WePrefs
-import dev.ujhhgtg.wekit.utils.logging.WeLogger
+import dev.ujhhgtg.wekit.utils.TargetProcesses
+import dev.ujhhgtg.wekit.utils.WeLogger
 
 abstract class SwitchHookItem : BaseHookItem() {
 
-    private var _isEnabled = false
+    override fun startup(process: Int) {
+        if (process != TargetProcesses.PROC_MAIN) return
+        _isEnabled = WePrefs.getBoolOrFalse(path)
+        if (_isEnabled) enable()
+    }
+
+    protected var _isEnabled = false
+
     var isEnabled
         get() = _isEnabled
         set(value) {
@@ -14,20 +23,16 @@ abstract class SwitchHookItem : BaseHookItem() {
             _isEnabled = value
             if (!value) {
                 if (isLoaded) {
-                    WeLogger.i("disabling $path...")
+                    WeLogger.i(nameof(SwitchHookItem::class), "disabling $path...")
                     disable()
                     isLoaded = false
                 }
             } else {
-                WeLogger.i("enabling $path...")
+                WeLogger.i(nameof(SwitchHookItem::class), "enabling $path...")
                 enable()
                 isLoaded = true
             }
         }
-
-    fun setEnabledSilently(value: Boolean) {
-        _isEnabled = value
-    }
 
     private var isLoaded: Boolean = false
     private var toggleCompletionCallback: Runnable? = null

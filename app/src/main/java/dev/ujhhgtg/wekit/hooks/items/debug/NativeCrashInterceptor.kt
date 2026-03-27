@@ -5,10 +5,10 @@ import dev.ujhhgtg.wekit.hooks.core.HookItem
 import dev.ujhhgtg.wekit.hooks.core.SwitchHookItem
 import dev.ujhhgtg.wekit.utils.HostInfo
 import dev.ujhhgtg.wekit.utils.RuntimeConfig
-import dev.ujhhgtg.wekit.utils.ToastUtils
+import dev.ujhhgtg.wekit.utils.showToast
 import dev.ujhhgtg.wekit.utils.crash.CrashLogsManager
 import dev.ujhhgtg.wekit.utils.crash.NativeCrashHandler
-import dev.ujhhgtg.wekit.utils.logging.WeLogger
+import dev.ujhhgtg.wekit.utils.WeLogger
 
 @HookItem(
     path = "调试/崩溃拦截 (Native)",
@@ -38,7 +38,7 @@ object NativeCrashInterceptor : SwitchHookItem() {
                     TAG,
                     "pending native crash detected, will show dialog when Activity is ready"
                 )
-                ToastUtils.showToast("检测到上次 Native 崩溃, 正在准备崩溃报告...")
+                showToast("检测到上次 Native 崩溃, 正在准备崩溃报告...")
                 CrashInterceptorUtils.startActivityPolling(TAG) {
                     showPendingNativeCrashDialog()
                 }

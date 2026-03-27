@@ -33,11 +33,11 @@ import dev.ujhhgtg.wekit.ui.content.TextButton
 import dev.ujhhgtg.wekit.ui.utils.showComposeDialog
 import dev.ujhhgtg.wekit.utils.HostInfo
 import dev.ujhhgtg.wekit.utils.KnownPaths
-import dev.ujhhgtg.wekit.utils.ToastUtils.showToastSuspend
+import dev.ujhhgtg.wekit.utils.WeLogger
 import dev.ujhhgtg.wekit.utils.createDirectoriesNoThrow
 import dev.ujhhgtg.wekit.utils.enumValueOfClass
-import dev.ujhhgtg.wekit.utils.logging.WeLogger
 import dev.ujhhgtg.wekit.utils.polyfills.convToList
+import dev.ujhhgtg.wekit.utils.showToastSuspend
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -537,7 +537,7 @@ object StickersSync : ClickableHookItem(), IResolvesDex {
                     }
                 },
                 confirmButton = {
-                    TextButton(onClick = dismiss) { Text("关闭") }
+                    TextButton(onClick = onDismiss) { Text("关闭") }
                 })
         }
     }

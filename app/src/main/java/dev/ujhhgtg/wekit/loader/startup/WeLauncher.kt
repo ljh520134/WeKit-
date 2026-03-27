@@ -3,9 +3,8 @@ package dev.ujhhgtg.wekit.loader.startup
 import android.app.Activity
 import android.content.Context
 import android.os.Bundle
+import com.highcapable.kavaref.KavaRef.Companion.asResolver
 import com.highcapable.kavaref.extension.toClass
-import de.robv.android.xposed.XC_MethodHook
-import de.robv.android.xposed.XposedHelpers
 import dev.ujhhgtg.nameof.nameof
 import dev.ujhhgtg.wekit.constants.PackageNames
 import dev.ujhhgtg.wekit.dexkit.cache.DexCacheManager
@@ -15,7 +14,8 @@ import dev.ujhhgtg.wekit.loader.utils.ParcelableFixer
 import dev.ujhhgtg.wekit.utils.ModuleRes
 import dev.ujhhgtg.wekit.utils.RuntimeConfig
 import dev.ujhhgtg.wekit.utils.TargetProcesses
-import dev.ujhhgtg.wekit.utils.logging.WeLogger
+import dev.ujhhgtg.wekit.utils.hookAfterDirectly
+import dev.ujhhgtg.wekit.utils.WeLogger
 
 object WeLauncher {
 
@@ -44,26 +44,23 @@ object WeLauncher {
     private fun initMainProcessHooks() {
         val launcherUiClass = LAUNCHER_UI_CLASS_NAME.toClass()
 
-        XposedHelpers.findAndHookMethod(launcherUiClass, "onResume", object : XC_MethodHook() {
-            override fun afterHookedMethod(param: MethodHookParam) {
+        launcherUiClass.asResolver().apply {
+            firstMethod { name = "onResume" }.hookAfterDirectly { param ->
                 val activity = param.thisObject as Activity
                 ModuleRes.init(activity, PackageNames.THIS)
             }
-        })
 
-        XposedHelpers.findAndHookMethod(
-            launcherUiClass,
-            "onCreate",
-            Bundle::class.java,
-            object : XC_MethodHook() {
-                override fun afterHookedMethod(param: MethodHookParam) {
-                    val activity = param.thisObject as Activity
-                    RuntimeConfig.setLauncherUiActivity(activity)
-                    val sharedPreferences =
-                        activity.getSharedPreferences("com.tencent.mm_preferences", 0)
-                    RuntimeConfig.setMmPrefs(sharedPreferences)
-                }
-            })
+            firstMethod {
+                name = "onCreate"
+                parameters(Bundle::class)
+            }.hookAfterDirectly { param ->
+                val activity = param.thisObject as Activity
+                RuntimeConfig.setLauncherUiActivity(activity)
+                val sharedPreferences =
+                    activity.getSharedPreferences("com.tencent.mm_preferences", 0)
+                RuntimeConfig.setMmPrefs(sharedPreferences)
+            }
+        }
     }
 
     private const val LAUNCHER_UI_CLASS_NAME = "com.tencent.mm.ui.LauncherUI"

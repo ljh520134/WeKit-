@@ -42,11 +42,11 @@ import dev.ujhhgtg.wekit.ui.content.AlertDialogContent
 import dev.ujhhgtg.wekit.ui.content.Button
 import dev.ujhhgtg.wekit.ui.content.TextButton
 import dev.ujhhgtg.wekit.ui.utils.showComposeDialog
-import dev.ujhhgtg.wekit.utils.ToastUtils
+import dev.ujhhgtg.wekit.utils.showToast
 import dev.ujhhgtg.wekit.utils.crash.CrashLogsManager
 import dev.ujhhgtg.wekit.utils.formatBytesSize
 import dev.ujhhgtg.wekit.utils.formatEpoch
-import dev.ujhhgtg.wekit.utils.logging.WeLogger
+import dev.ujhhgtg.wekit.utils.WeLogger
 import java.nio.file.Path
 import kotlin.io.path.fileSize
 import kotlin.io.path.getLastModifiedTime
@@ -68,7 +68,7 @@ object CrashLogsViewer : ClickableHookItem() {
         val logFiles = CrashLogsManager.allCrashLogs
 
         if (logFiles.isEmpty()) {
-            ToastUtils.showToast(context, "暂无崩溃日志")
+            showToast(context, "暂无崩溃日志")
             return
         }
 
@@ -109,11 +109,11 @@ object CrashLogsViewer : ClickableHookItem() {
                 },
                 dismissButton = {
                     TextButton(onClick = {
-                        dismiss()
+                        onDismiss()
                         confirmDeleteAllLogs(context)
                     }) { Text("全部删除") }
                 },
-                confirmButton = { Button(dismiss) { Text("关闭") } }
+                confirmButton = { Button(onDismiss) { Text("关闭") } }
             )
         }
     }
@@ -147,13 +147,13 @@ object CrashLogsViewer : ClickableHookItem() {
                                 modifier = Modifier
                                     .fillMaxWidth()
                                     .clickable {
-                                        dismiss()
+                                        onDismiss()
                                         when (index) {
                                             0 -> showCrashLogDetail(context, logFile)
                                             1 -> {
                                                 val summary = buildCrashSummary(logFile)
                                                 copyTextToClipboard(context, summary)
-                                                ToastUtils.showToast(context, "简易信息已复制")
+                                                showToast(context, "简易信息已复制")
                                             }
 
                                             2 -> copyLogToClipboard(context, logFile)
@@ -187,7 +187,7 @@ object CrashLogsViewer : ClickableHookItem() {
                     }
                 },
                 confirmButton = {
-                    TextButton(dismiss) { Text("返回") }
+                    TextButton(onDismiss) { Text("返回") }
                 }
             )
         }
@@ -196,7 +196,7 @@ object CrashLogsViewer : ClickableHookItem() {
     private fun showCrashLogDetail(context: Context, logFile: Path) {
         try {
             val crashInfo = CrashLogsManager.readCrashLog(logFile) ?: run {
-                ToastUtils.showToast(context, "读取日志失败")
+                showToast(context, "读取日志失败")
                 return
             }
 
@@ -228,13 +228,13 @@ object CrashLogsViewer : ClickableHookItem() {
                     },
                     dismissButton = {
                         TextButton(onClick = {
-                            dismiss()
+                            onDismiss()
                             showCrashLogOptions(context, logFile)
                         }) { Text("返回") }
                     },
                     confirmButton = {
                         Button(onClick = {
-                            dismiss()
+                            onDismiss()
                             copyLogToClipboard(context, logFile)
                         }) { Text("复制") }
                     }
@@ -242,30 +242,30 @@ object CrashLogsViewer : ClickableHookItem() {
             }
         } catch (e: Throwable) {
             WeLogger.e(TAG, "Failed to show crash log detail", e)
-            ToastUtils.showToast(context, "显示详情失败: ${e.message}")
+            showToast(context, "显示详情失败: ${e.message}")
         }
     }
 
     private fun copyLogToClipboard(context: Context, logFile: Path) {
         try {
             val crashInfo = CrashLogsManager.readCrashLog(logFile) ?: run {
-                ToastUtils.showToast(context, "读取日志失败")
+                showToast(context, "读取日志失败")
                 return
             }
             val clipboard = context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
             clipboard.setPrimaryClip(ClipData.newPlainText("Crash Log", crashInfo))
             WeLogger.i(TAG, "crash log copied to clipboard: ${logFile.name}")
-            ToastUtils.showToast(context, "日志已复制到剪贴板")
+            showToast(context, "日志已复制到剪贴板")
         } catch (e: Throwable) {
             WeLogger.e(TAG, "failed to copy log to clipboard", e)
-            ToastUtils.showToast(context, "复制失败: ${e.message}")
+            showToast(context, "复制失败: ${e.message}")
         }
     }
 
     private fun shareLog(context: Context, logFile: Path) {
         try {
             val crashInfo = CrashLogsManager.readCrashLog(logFile) ?: run {
-                ToastUtils.showToast(context, "读取日志失败")
+                showToast(context, "读取日志失败")
                 return
             }
             val chooser = Intent.createChooser(
@@ -281,7 +281,7 @@ object CrashLogsViewer : ClickableHookItem() {
             WeLogger.i(TAG, "Sharing crash log: ${logFile.name}")
         } catch (e: Throwable) {
             WeLogger.e(TAG, "Failed to share log", e)
-            ToastUtils.showToast(context, "分享失败: ${e.message}")
+            showToast(context, "分享失败: ${e.message}")
         }
     }
 
@@ -293,13 +293,13 @@ object CrashLogsViewer : ClickableHookItem() {
                 confirmButton = {
                     Button(onClick = {
                         deleteLog(context, logFile)
-                        dismiss()
+                        onDismiss()
                     }) {
                         Text("删除")
                     }
                 },
                 dismissButton = {
-                    TextButton(onClick = dismiss) { Text("取消") }
+                    TextButton(onClick = onDismiss) { Text("取消") }
                 }
             )
         }
@@ -309,13 +309,13 @@ object CrashLogsViewer : ClickableHookItem() {
         try {
             if (CrashLogsManager.deleteCrashLog(logFile)) {
                 WeLogger.i(TAG, "Crash log deleted: ${logFile.name}")
-                ToastUtils.showToast(context, "日志已删除")
+                showToast(context, "日志已删除")
             } else {
-                ToastUtils.showToast(context, "删除失败")
+                showToast(context, "删除失败")
             }
         } catch (e: Throwable) {
             WeLogger.e(TAG, "Failed to delete log", e)
-            ToastUtils.showToast(context, "删除失败: ${e.message}")
+            showToast(context, "删除失败: ${e.message}")
         }
     }
 
@@ -327,13 +327,13 @@ object CrashLogsViewer : ClickableHookItem() {
                 confirmButton = {
                     Button(onClick = {
                         deleteAllLogs(context)
-                        dismiss()
+                        onDismiss()
                     }) {
                         Text("确定")
                     }
                 },
                 dismissButton = {
-                    TextButton(onClick = dismiss) { Text("取消") }
+                    TextButton(onClick = onDismiss) { Text("取消") }
                 }
             )
         }
@@ -343,10 +343,10 @@ object CrashLogsViewer : ClickableHookItem() {
         try {
             val count = CrashLogsManager.deleteAllCrashLogs()
             WeLogger.i(TAG, "Deleted $count crash logs")
-            ToastUtils.showToast(context, "已删除 $count 条日志")
+            showToast(context, "已删除 $count 条日志")
         } catch (e: Throwable) {
             WeLogger.e(TAG, "Failed to delete all logs", e)
-            ToastUtils.showToast(context, "删除失败: ${e.message}")
+            showToast(context, "删除失败: ${e.message}")
         }
     }
 
@@ -394,7 +394,7 @@ object CrashLogsViewer : ClickableHookItem() {
             WeLogger.i(TAG, "Text copied to clipboard")
         } catch (e: Throwable) {
             WeLogger.e(TAG, "Failed to copy text to clipboard", e)
-            ToastUtils.showToast(context, "复制失败: ${e.message}")
+            showToast(context, "复制失败: ${e.message}")
         }
     }
 

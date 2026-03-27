@@ -19,7 +19,7 @@ import dev.ujhhgtg.wekit.ui.content.Button
 import dev.ujhhgtg.wekit.ui.content.DefaultColumn
 import dev.ujhhgtg.wekit.ui.content.TextButton
 import dev.ujhhgtg.wekit.ui.utils.showComposeDialog
-import dev.ujhhgtg.wekit.utils.logging.WeLogger
+import dev.ujhhgtg.wekit.utils.WeLogger
 import org.json.JSONArray
 import org.json.JSONObject
 
@@ -116,15 +116,13 @@ object ModifyTransferWalletBalanceDisplay : ClickableHookItem(), IWePacketInterc
     }
 
     private fun updateBalanceText(item: JSONObject, newText: String) {
-        try {
+        runCatching {
             val field2 = item.optJSONObject("2") ?: return
             val subField1 = field2.optJSONObject("1") ?: return
             subField1.put("3", newText)
             val field11 = item.optJSONObject("11")
             field11?.optJSONObject("1")?.put("3", newText.replace(Regex("\\(.*?\\)"), ""))
-        } catch (e: Exception) {
-            WeLogger.e(e)
-        }
+        }.onFailure { WeLogger.e(TAG, "failed when updating balance text", it) }
     }
 
     override fun onDisable() {
@@ -169,10 +167,10 @@ object ModifyTransferWalletBalanceDisplay : ClickableHookItem(), IWePacketInterc
                             WePrefs.putString(KEY_LQT_BALANCE, lqtInput)
                         else
                             WePrefs.remove(KEY_LQT_BALANCE)
-                        dismiss()
+                        onDismiss()
                     }) { Text("确定") }
                 },
-                dismissButton = { TextButton(onClick = dismiss) { Text("取消") } }
+                dismissButton = { TextButton(onClick = onDismiss) { Text("取消") } }
             )
         }
     }

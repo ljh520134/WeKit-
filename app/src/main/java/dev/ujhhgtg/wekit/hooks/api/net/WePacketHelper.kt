@@ -14,7 +14,7 @@ import dev.ujhhgtg.wekit.dexkit.dsl.dexMethod
 import dev.ujhhgtg.wekit.hooks.api.net.abc.WeRequestCallback
 import dev.ujhhgtg.wekit.hooks.core.ApiHookItem
 import dev.ujhhgtg.wekit.hooks.core.HookItem
-import dev.ujhhgtg.wekit.utils.logging.WeLogger
+import dev.ujhhgtg.wekit.utils.WeLogger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -323,7 +323,7 @@ object WePacketHelper : ApiHookItem(), IResolvesDex {
                         isExtendsBaseProtoBuf(type)
             }?.type ?: throw NoSuchElementException("在 Wrapper 类中未找到实体字段")
 
-            WeLogger.i("oplog 定位成功 ${realProtoClass.name}")
+            WeLogger.i(TAG, "oplog 定位成功 ${realProtoClass.name}")
             classOplogReq.setDescriptor(realProtoClass.name)
         }
 

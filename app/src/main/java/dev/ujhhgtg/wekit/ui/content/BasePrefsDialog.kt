@@ -51,14 +51,14 @@ import com.google.accompanist.drawablepainter.rememberDrawablePainter
 import dev.ujhhgtg.wekit.preferences.WePrefs
 import dev.ujhhgtg.wekit.ui.utils.showComposeDialog
 import dev.ujhhgtg.wekit.utils.ModuleRes
-import dev.ujhhgtg.wekit.utils.logging.WeLogger
+import dev.ujhhgtg.wekit.utils.WeLogger
 
 // ---------------------------------------------------------------------------
 //  Icon source – either a resource name resolved via ModuleRes, or a vector
 // ---------------------------------------------------------------------------
 
 sealed class PrefIcon {
-    data class NamedRes(val name: String) : PrefIcon()
+    data class ResId(val id: Int) : PrefIcon()
     data class Vector(val imageVector: ImageVector) : PrefIcon()
 }
 
@@ -155,7 +155,7 @@ abstract class BasePrefsDialog(
         initPreferences()
 
         showComposeDialog(context) {
-            _dismissCallback = dismiss
+            _dismissCallback = onDismiss
             DialogContent(
                 title = title,
                 rows = rows,
@@ -182,8 +182,8 @@ abstract class BasePrefsDialog(
         key: String,
         title: String,
         summary: String,
-        icon: String? = null,
-    ): String = addSwitchPreference(key, title, summary, icon?.let { PrefIcon.NamedRes(it) })
+        icon: Int? = null,
+    ): String = addSwitchPreference(key, title, summary, icon?.let { PrefIcon.ResId(it) })
 
     protected fun addSwitchPreference(
         key: String,
@@ -231,9 +231,9 @@ abstract class BasePrefsDialog(
     protected fun addPreference(
         title: String,
         summary: String? = null,
-        icon: String? = null,
+        icon: Int? = null,
         onClick: (() -> Unit)? = null,
-    ) = addPreference(title, summary, icon?.let { PrefIcon.NamedRes(it) }, onClick)
+    ) = addPreference(title, summary, icon?.let { PrefIcon.ResId(it) }, onClick)
 
     protected fun addPreference(
         title: String,
@@ -515,8 +515,8 @@ private fun DialogContent(
 private fun PrefIconSlot(icon: PrefIcon?) {
     if (icon == null) return
     when (icon) {
-        is PrefIcon.NamedRes -> {
-            val drawable = remember(icon.name) { ModuleRes.getDrawable(icon.name) }
+        is PrefIcon.ResId -> {
+            val drawable = remember(icon.id) { ModuleRes.getDrawable(icon.id) }
             if (drawable != null) {
                 Icon(
                     painter = rememberDrawablePainter(drawable),

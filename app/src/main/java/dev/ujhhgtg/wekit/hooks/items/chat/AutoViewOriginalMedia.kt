@@ -36,25 +36,25 @@ object AutoViewOriginalMedia : SwitchHookItem(), IResolvesDex {
             methodSetImageHdImgBtnVisibility,
             methodCheckNeedShowOriginVideoBtn
         ).forEach { method ->
-            runCatching {
-                method.hookAfter { param ->
-                    param.thisObject.asResolver().field {
-                        type = Button::class
-                    }.forEach {
-                        it.get<Button>()?.let { imgBtn ->
-                            if (imgBtn.isVisible) {
-                                val keywords = listOf(
-                                    "查看原图", "Full Image",
-                                    "查看原视频", "Original quality",
-                                )
-                                if (keywords.any { text ->
-                                        imgBtn.text.contains(
-                                            text,
-                                            ignoreCase = true
-                                        )
-                                    }) {
-                                    imgBtn.performClick()
-                                }
+            if (method.isPlaceholder) return@forEach
+
+            method.hookAfter { param ->
+                param.thisObject.asResolver().field {
+                    type = Button::class
+                }.forEach {
+                    it.get<Button>()?.let { imgBtn ->
+                        if (imgBtn.isVisible) {
+                            val keywords = listOf(
+                                "查看原图", "Full Image",
+                                "查看原视频", "Original quality",
+                            )
+                            if (keywords.any { text ->
+                                    imgBtn.text.contains(
+                                        text,
+                                        ignoreCase = true
+                                    )
+                                }) {
+                                imgBtn.performClick()
                             }
                         }
                     }

@@ -1,6 +1,5 @@
 package dev.ujhhgtg.wekit.hooks.items.chat
 
-import android.annotation.SuppressLint
 import android.content.Context
 import android.view.HapticFeedbackConstants
 import android.view.MotionEvent
@@ -26,7 +25,6 @@ import kotlin.math.abs
 import kotlin.math.cos
 import kotlin.math.exp
 
-@SuppressLint("StaticFieldLeak")
 @HookItem(path = "聊天/左划引用消息", desc = "在消息上左划以引用")
 object SwipeToQuote : SwitchHookItem(), IResolvesDex,
     WeChatMessageViewApi.ICreateViewListener {

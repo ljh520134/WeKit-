@@ -45,7 +45,7 @@ object UpdateDownloader {
             }
 
             ZipFile(zipFile.toFile()).use { zip ->
-                val entry = zip.entries().asSequence().first { it.name.endsWith(".apk") }
+                val entry = zip.entries().asSequence().first { it.name.contains("universal") }
                 zip.getInputStream(entry).use { input ->
                     apkFile.outputStream().use { input.copyTo(it) }
                 }

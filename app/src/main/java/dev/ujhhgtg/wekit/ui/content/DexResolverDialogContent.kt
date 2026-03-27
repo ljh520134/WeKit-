@@ -37,7 +37,7 @@ import dev.ujhhgtg.nameof.nameof
 import dev.ujhhgtg.wekit.dexkit.abc.IResolvesDex
 import dev.ujhhgtg.wekit.dexkit.cache.DexCacheManager
 import dev.ujhhgtg.wekit.hooks.core.BaseHookItem
-import dev.ujhhgtg.wekit.utils.logging.WeLogger
+import dev.ujhhgtg.wekit.utils.WeLogger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.async
@@ -83,17 +83,11 @@ fun DexResolverDialogContent(
 ) {
     var phase by remember { mutableStateOf<DialogPhase>(DialogPhase.Idle) }
     var currentTask by remember { mutableStateOf("") }
-    var taskCounter by remember { mutableIntStateOf(0) }
     var completed by remember { mutableIntStateOf(0) }
     val scanResults = remember { mutableStateMapOf<String, ScanResult>() }
 
     fun updateProgress(progress: ScanProgress) {
         when (progress) {
-            is ScanProgress.Start -> {
-                taskCounter++
-                currentTask = "正在适配: ${progress.path}"
-            }
-
             is ScanProgress.Complete -> {
                 scanResults[progress.path] = ScanResult.Success(progress.path)
                 completed = scanResults.size
@@ -105,6 +99,8 @@ fun DexResolverDialogContent(
                 completed = scanResults.size
                 currentTask = "失败: ${progress.path}"
             }
+
+            else -> {}
         }
     }
 
@@ -121,7 +117,7 @@ fun DexResolverDialogContent(
             progressChannel.send(ScanProgress.Complete(path))
             ScanResult.Success(path)
         } catch (e: Exception) {
-            WeLogger.e(TAG, "Failed to scan: $path", e)
+            WeLogger.e(TAG, "failed to scan: $path", e)
             progressChannel.send(ScanProgress.Failed(path, e))
             ScanResult.Failed(path, e)
         }
@@ -163,7 +159,7 @@ fun DexResolverDialogContent(
                     dialog.setCancelable(true)
                 }
             } catch (e: Exception) {
-                WeLogger.e(TAG, "Scanning failed", e)
+                WeLogger.e(TAG, "scanning failed", e)
                 phase = DialogPhase.Error("扫描过程中发生未知错误: ${e.message}")
             }
         }
@@ -216,13 +212,13 @@ fun DexResolverDialogContent(
             // Tip text
             val tipText = when (val p = phase) {
                 is DialogPhase.Idle ->
-                    "检测到 ${outdatedItems.size} 个功能需要更新 DEX 缓存，点击开始适配后将自动扫描并更新。" +
-                            "若直接关闭窗口，相关功能将不会被加载"
+                    "检测到 ${outdatedItems.size} 个功能需要更新 DEX 缓存, 开始适配后将自动扫描并更新。" +
+                            "若直接关闭对话框, 相关功能将不会被加载"
 
                 is DialogPhase.Scanning -> null
                 is DialogPhase.Done ->
-                    if (p.failed.isEmpty()) "适配完成！所有功能已成功更新 DEX 缓存"
-                    else "适配完成，但有 ${p.failed.size} 个功能失败 (不影响其他功能使用)"
+                    if (p.failed.isEmpty()) "适配完成! 所有功能已成功更新 DEX 缓存"
+                    else "适配完成, 但有 ${p.failed.size} 个功能失败 (不影响其他功能使用)"
 
                 is DialogPhase.Error -> p.message
             }

@@ -7,6 +7,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import com.highcapable.kavaref.KavaRef.Companion.asResolver
+import dev.ujhhgtg.wekit.R
 import dev.ujhhgtg.wekit.hooks.api.ui.WeChatMessageContextMenuApi
 import dev.ujhhgtg.wekit.hooks.core.HookItem
 import dev.ujhhgtg.wekit.hooks.core.SwitchHookItem
@@ -35,7 +36,7 @@ object ModifyTextMessageDisplay : SwitchHookItem(),
             WeChatMessageContextMenuApi.MenuItem(
                 777002,
                 "修改内容",
-                { ModuleRes.getDrawable("edit_24px")!! },
+                { ModuleRes.getDrawable(R.drawable.edit_24px)!! },
                 { msgInfo -> msgInfo.isText }
             ) { view, _, _ ->
                 showComposeDialog(view.context) {
@@ -56,13 +57,13 @@ object ModifyTextMessageDisplay : SwitchHookItem(),
                                         parameters(CharSequence::class)
                                     }
                                     .invoke(input)
-                                dismiss()
+                                onDismiss()
                             }) {
                                 Text("确定")
                             }
                         },
                         dismissButton = {
-                            TextButton(onClick = { dismiss() }) {
+                            TextButton(onClick = { onDismiss() }) {
                                 Text("取消")
                             }
                         })

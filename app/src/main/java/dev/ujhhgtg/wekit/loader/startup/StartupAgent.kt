@@ -9,7 +9,7 @@ import dev.ujhhgtg.wekit.loader.abc.ILoaderService
 import dev.ujhhgtg.wekit.loader.utils.LibXposedApiByteCodeGenerator
 import dev.ujhhgtg.wekit.loader.utils.NativeLoader
 import dev.ujhhgtg.wekit.utils.HostInfo
-import dev.ujhhgtg.wekit.utils.logging.WeLogger
+import dev.ujhhgtg.wekit.utils.WeLogger
 import org.lsposed.hiddenapibypass.HiddenApiBypass
 import java.io.File
 import java.lang.reflect.Field
@@ -30,7 +30,6 @@ object StartupAgent {
         if (sInitialized) return
         sInitialized = true
 
-        StartupInfo.modulePath = modulePath
         StartupInfo.loaderService = loaderService
 
         ensureHiddenApiAccess()
@@ -38,7 +37,6 @@ object StartupAgent {
 
         val ctx = getBaseApplication()
         HostInfo.init(ctx)
-        // from this point onward, WeLogger can be called
         LibXposedApiByteCodeGenerator.init()
         NativeLoader.init(ctx)
         WeLauncher.init(ctx.classLoader, ctx)

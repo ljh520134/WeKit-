@@ -1,6 +1,5 @@
 package dev.ujhhgtg.wekit.hooks.items.miniapps
 
-import android.content.Context
 import dev.ujhhgtg.wekit.dexkit.abc.IResolvesDex
 import dev.ujhhgtg.wekit.dexkit.dsl.dexMethod
 import dev.ujhhgtg.wekit.hooks.core.HookItem
@@ -15,16 +14,22 @@ object RemoveMiniAppMenuLimits : SwitchHookItem(), IResolvesDex {
     private lateinit var showAndClickableEnumValue: Any
 
     override fun onEnable() {
-        methodGetMenuItemVisibility1.hookBefore { param ->
-            val returnType = methodGetMenuItemVisibility1.method.returnType
-            if (!::showAndClickableEnumValue.isInitialized) {
-                showAndClickableEnumValue = enumValueOfClass(returnType, "SHOW_CLICKABLE")
+        listOf(
+            methodGetMenuItemVisibility1,
+            methodGetMenuItemVisibility2
+        ).forEach {
+            it.hookBefore { param ->
+                if (!::showAndClickableEnumValue.isInitialized) {
+                    val returnType = methodGetMenuItemVisibility1.method.returnType
+                    showAndClickableEnumValue = enumValueOfClass(returnType, "SHOW_CLICKABLE")
+                }
+                param.result = showAndClickableEnumValue
             }
-            param.result = showAndClickableEnumValue
         }
     }
 
     private val methodGetMenuItemVisibility1 by dexMethod()
+    private val methodGetMenuItemVisibility2 by dexMethod()
 
     override fun resolveDex(dexKit: DexKitBridge) {
         methodGetMenuItemVisibility1.find(dexKit) {
@@ -35,10 +40,19 @@ object RemoveMiniAppMenuLimits : SwitchHookItem(), IResolvesDex {
                         usingNumbers(39)
                     }
                 }
-                addParamType(Context::class.java)
-                addParamType {
-                    className("com.tencent.mm.plugin.appbrand.page", StringMatchType.Contains)
+                returnType("com.tencent.mm.plugin.appbrand.menu", StringMatchType.Contains)
+            }
+        }
+
+        methodGetMenuItemVisibility2.find(dexKit) {
+            searchPackages("com.tencent.mm.plugin.appbrand.menu")
+            matcher {
+                declaredClass {
+                    addMethod {
+                        usingNumbers(30)
+                    }
                 }
+                returnType("com.tencent.mm.plugin.appbrand.menu", StringMatchType.Contains)
             }
         }
     }

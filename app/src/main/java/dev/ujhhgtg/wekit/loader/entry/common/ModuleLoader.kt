@@ -1,11 +1,10 @@
 package dev.ujhhgtg.wekit.loader.entry.common
 
-import android.util.Log
 import dev.ujhhgtg.nameof.nameof
-import dev.ujhhgtg.wekit.BuildConfig
 import dev.ujhhgtg.wekit.loader.abc.IHookBridge
 import dev.ujhhgtg.wekit.loader.abc.ILoaderService
 import dev.ujhhgtg.wekit.loader.startup.UnifiedEntryPoint
+import dev.ujhhgtg.wekit.utils.WeLogger
 
 object ModuleLoader {
 
@@ -24,7 +23,7 @@ object ModuleLoader {
         if (isInitialized) return
         isInitialized = true
 
-        Log.i(BuildConfig.TAG, "$TAG: initializing from entry point ${loaderService.entryPointName}")
+        WeLogger.i(TAG, "initializing from entry point ${loaderService.entryPointName}")
         UnifiedEntryPoint.entry(loaderService, hostClassLoader, modulePath)
     }
 }

@@ -18,10 +18,10 @@ object BeautifyViewPressEffect : SwitchHookItem() {
             }
             .hookBefore { param ->
                 val view = param.thisObject as View
-                val original = param.args[0] as? Drawable ?: return@hookBefore
+                val original = param.args[0] as Drawable
 
                 // 只针对微信的组件，避开系统组件
-                if (!view.javaClass.name.startsWith("com.tencent.mm")) return@hookBefore
+//                if (!view.javaClass.name.startsWith(PackageNames.WECHAT)) return@hookBefore
 
                 // 如果已经是 RippleDrawable 或者正在设置 Ripple，跳过
                 if (original is RippleDrawable) return@hookBefore
@@ -30,6 +30,7 @@ object BeautifyViewPressEffect : SwitchHookItem() {
                     val rippleColor = ColorStateList.valueOf(0x1F000000)
                     val newRipple = RippleDrawable(rippleColor, original, null)
                     param.args[0] = newRipple
+                    param.result = null
                 }
             }
     }

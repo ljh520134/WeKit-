@@ -56,7 +56,6 @@ import com.composables.icons.materialsymbols.outlinedfilled.Update
 import com.composables.icons.materialsymbols.outlinedfilled.Wallet
 import com.highcapable.kavaref.KavaRef.Companion.asResolver
 import dev.ujhhgtg.nameof.nameof
-import dev.ujhhgtg.wekit.constants.PackageNames
 import dev.ujhhgtg.wekit.hooks.api.core.WeConversationApi
 import dev.ujhhgtg.wekit.hooks.api.ui.WeMainActivityBeautifyApi
 import dev.ujhhgtg.wekit.hooks.core.HookItem
@@ -64,8 +63,8 @@ import dev.ujhhgtg.wekit.hooks.core.SwitchHookItem
 import dev.ujhhgtg.wekit.ui.content.MainSettingsDialog
 import dev.ujhhgtg.wekit.ui.utils.LifecycleOwnerProvider
 import dev.ujhhgtg.wekit.ui.utils.setLifecycleOwner
-import dev.ujhhgtg.wekit.utils.ToastUtils
-import dev.ujhhgtg.wekit.utils.logging.WeLogger
+import dev.ujhhgtg.wekit.utils.WeLogger
+import dev.ujhhgtg.wekit.utils.showToast
 import java.util.concurrent.CopyOnWriteArrayList
 
 @HookItem(path = "界面美化/主屏幕添加 FAB", desc = "向应用主屏幕添加浮动操作按钮")
@@ -92,7 +91,7 @@ object AddMainScreenFab : SwitchHookItem() {
 
     private fun startActivityByName(context: Context, className: String) {
         val intent = Intent().apply {
-            setClassName(PackageNames.WECHAT, className)
+            setClassName(context.packageName, className)
             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
         }
         context.startActivity(intent)
@@ -145,7 +144,7 @@ object AddMainScreenFab : SwitchHookItem() {
                 }),
                 "全部已读" to (MaterialSymbols.OutlinedFilled.Update to {
                     WeConversationApi.markAllAsRead()
-                    ToastUtils.showToast("已将全部未读消息标为已读")
+                    showToast("已将全部未读消息标为已读")
                 })
             )
 

@@ -22,7 +22,7 @@ import dev.ujhhgtg.wekit.ui.content.AlertDialogContent
 import dev.ujhhgtg.wekit.ui.content.Button
 import dev.ujhhgtg.wekit.ui.content.DefaultColumn
 import dev.ujhhgtg.wekit.ui.utils.showComposeDialog
-import dev.ujhhgtg.wekit.utils.logging.WeLogger
+import dev.ujhhgtg.wekit.utils.WeLogger
 
 @HookItem(path = "调试/重定向宿主日志", desc = "将宿主日志打印至模块日志")
 object RedirectHostLogs : ClickableHookItem() {
@@ -155,7 +155,7 @@ object RedirectHostLogs : ClickableHookItem() {
                     }
                 },
                 confirmButton = {
-                    Button(dismiss) { Text("确定") }
+                    Button(onDismiss) { Text("确定") }
                 })
         }
     }

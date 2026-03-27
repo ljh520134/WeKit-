@@ -1,7 +1,7 @@
 package dev.ujhhgtg.wekit.hooks.api.net
 
 import android.annotation.SuppressLint
-import dev.ujhhgtg.wekit.utils.logging.WeLogger
+import dev.ujhhgtg.wekit.utils.WeLogger
 import java.security.MessageDigest
 import java.text.SimpleDateFormat
 import java.util.Date

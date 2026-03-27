@@ -81,10 +81,10 @@ object ModifyWalletBalanceDisplay : ClickableHookItem(), IResolvesDex {
                             WePrefs.putString(KEY_BALANCE, input)
                         else
                             WePrefs.remove(KEY_BALANCE)
-                        dismiss()
+                        onDismiss()
                     }) { Text("确定") }
                 },
-                dismissButton = { TextButton(onClick = dismiss) { Text("取消") } }
+                dismissButton = { TextButton(onClick = onDismiss) { Text("取消") } }
             )
         }
     }

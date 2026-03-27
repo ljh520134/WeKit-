@@ -22,7 +22,7 @@ import dev.ujhhgtg.wekit.ui.utils.showComposeDialog
 import dev.ujhhgtg.wekit.utils.RuntimeConfig
 import dev.ujhhgtg.wekit.utils.copyToClipboard
 import dev.ujhhgtg.wekit.utils.crash.CrashLogsManager
-import dev.ujhhgtg.wekit.utils.logging.WeLogger
+import dev.ujhhgtg.wekit.utils.WeLogger
 import java.io.File
 import java.nio.file.Path
 
@@ -126,13 +126,13 @@ internal object CrashInterceptorUtils {
                         TextButton(onClick = {
                             val fullCrashInfo = CrashLogsManager.readFullCrashLog(crashLogFile) ?: crashInfo
                             copyToClipboard(activity, fullCrashInfo)
-                            dismiss()
+                            onDismiss()
                             clearPendingFlag()
                         }) { Text("复制完整日志") }
                     },
                     dismissButton = {
                         TextButton(onClick = {
-                            dismiss()
+                            onDismiss()
                             clearPendingFlag()
                         }) { Text("关闭") }
                     }
@@ -154,7 +154,7 @@ internal object CrashInterceptorUtils {
                     },
                     dismissButton = {
                         TextButton(onClick = {
-                            dismiss()
+                            onDismiss()
                             clearPendingFlag()
                         }) { Text("忽略") }
                     }

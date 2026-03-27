@@ -10,7 +10,7 @@ import dev.ujhhgtg.wekit.hooks.api.ui.WeContactPrefsScreenApi.ContactInfoItem
 import dev.ujhhgtg.wekit.hooks.api.ui.WeContactPrefsScreenApi.IContactInfoProvider
 import dev.ujhhgtg.wekit.hooks.core.HookItem
 import dev.ujhhgtg.wekit.hooks.core.SwitchHookItem
-import dev.ujhhgtg.wekit.utils.ToastUtils
+import dev.ujhhgtg.wekit.utils.showToast
 
 @HookItem(
     path = "联系人与群组/显示微信 ID",
@@ -47,7 +47,7 @@ object ShowWxIdInContactDetails : SwitchHookItem(), IContactInfoProvider {
         val wxId = key.substringAfter(SEPARATOR)
         val clipboard = activity.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
         clipboard.setPrimaryClip(ClipData.newPlainText("WxId", wxId))
-        ToastUtils.showToast(activity, "已复制")
+        showToast(activity, "已复制")
         return true
     }
 

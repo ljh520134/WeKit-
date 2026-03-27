@@ -39,9 +39,9 @@ import dev.ujhhgtg.wekit.ui.content.Button
 import dev.ujhhgtg.wekit.ui.content.TextButton
 import dev.ujhhgtg.wekit.ui.utils.showComposeDialog
 import dev.ujhhgtg.wekit.utils.RuntimeConfig
-import dev.ujhhgtg.wekit.utils.ToastUtils
+import dev.ujhhgtg.wekit.utils.showToast
 import dev.ujhhgtg.wekit.utils.invokeOriginal
-import dev.ujhhgtg.wekit.utils.logging.WeLogger
+import dev.ujhhgtg.wekit.utils.WeLogger
 import org.luckypray.dexkit.DexKitBridge
 import org.luckypray.dexkit.query.enums.MatchType
 import kotlin.random.Random
@@ -173,11 +173,7 @@ object EmojiGameControl : SwitchHookItem(), IResolvesDex {
                         if (isSingle) {
                             if (isDice) valDice = Random.nextInt(0, 6)
                             else valMorra = Random.nextInt(0, 3)
-                            XposedBridge.invokeOriginalMethod(
-                                param.method,
-                                param.thisObject,
-                                param.args
-                            )
+                            param.invokeOriginal()
                         } else {
                             val count = if (isDice) Random.nextInt(3, 10) else Random.nextInt(3, 8)
                             val values = List(count) {
@@ -190,7 +186,7 @@ object EmojiGameControl : SwitchHookItem(), IResolvesDex {
                         Toast.makeText(activity, "发送失败", Toast.LENGTH_SHORT).show()
                     }
                 },
-                onDismiss = dismiss
+                onDismiss = onDismiss
             )
         }
     }
@@ -318,7 +314,7 @@ object EmojiGameControl : SwitchHookItem(), IResolvesDex {
                         valMorra = value
                     }
 
-                    XposedBridge.invokeOriginalMethod(param.method, param.thisObject, param.args)
+                    param.invokeOriginal()
 
                     // Add delay between sends (except for the last one)
                     if (index < values.size - 1) {
@@ -327,13 +323,13 @@ object EmojiGameControl : SwitchHookItem(), IResolvesDex {
                 } catch (e: Throwable) {
                     WeLogger.e(TAG, "failed to send at index $index", e)
                     activity.runOnUiThread {
-                        ToastUtils.showToast(activity, "第 ${index + 1} 次发送失败")
+                        showToast(activity, "第 ${index + 1} 次发送失败")
                     }
                 }
             }
 
             activity.runOnUiThread {
-                ToastUtils.showToast(activity, "已发送 ${values.size} 次")
+                showToast(activity, "已发送 ${values.size} 次")
             }
         }.start()
     }

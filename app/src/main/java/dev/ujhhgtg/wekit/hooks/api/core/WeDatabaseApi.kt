@@ -14,7 +14,7 @@ import dev.ujhhgtg.wekit.hooks.api.core.model.WeMessage
 import dev.ujhhgtg.wekit.hooks.api.core.model.WeOfficial
 import dev.ujhhgtg.wekit.hooks.core.ApiHookItem
 import dev.ujhhgtg.wekit.hooks.core.HookItem
-import dev.ujhhgtg.wekit.utils.logging.WeLogger
+import dev.ujhhgtg.wekit.utils.WeLogger
 import org.luckypray.dexkit.DexKitBridge
 import java.lang.reflect.Method
 import java.lang.reflect.Modifier

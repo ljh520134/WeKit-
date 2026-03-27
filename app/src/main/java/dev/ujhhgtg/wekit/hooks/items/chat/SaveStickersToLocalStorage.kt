@@ -4,6 +4,7 @@ import com.highcapable.kavaref.KavaRef.Companion.asResolver
 import com.highcapable.kavaref.condition.type.Modifiers
 import com.highcapable.kavaref.extension.toClass
 import dev.ujhhgtg.nameof.nameof
+import dev.ujhhgtg.wekit.R
 import dev.ujhhgtg.wekit.dexkit.abc.IResolvesDex
 import dev.ujhhgtg.wekit.dexkit.dsl.dexClass
 import dev.ujhhgtg.wekit.hooks.api.core.model.MessageType
@@ -12,8 +13,8 @@ import dev.ujhhgtg.wekit.hooks.core.HookItem
 import dev.ujhhgtg.wekit.hooks.core.SwitchHookItem
 import dev.ujhhgtg.wekit.utils.KnownPaths
 import dev.ujhhgtg.wekit.utils.ModuleRes
-import dev.ujhhgtg.wekit.utils.ToastUtils
-import dev.ujhhgtg.wekit.utils.logging.WeLogger
+import dev.ujhhgtg.wekit.utils.showToast
+import dev.ujhhgtg.wekit.utils.WeLogger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -59,7 +60,7 @@ object SaveStickersToLocalStorage : SwitchHookItem(), IResolvesDex,
             WeChatMessageContextMenuApi.MenuItem(
                 777001,
                 "存本地",
-                { ModuleRes.getDrawable("download_24px")!! },
+                { ModuleRes.getDrawable(R.drawable.download_24px)!! },
                 { msgInfo -> msgInfo.isType(MessageType.STICKER) }
             ) { _, _, msgInfo ->
                 val md5 = msgInfo.imagePath
@@ -90,12 +91,12 @@ object SaveStickersToLocalStorage : SwitchHookItem(), IResolvesDex,
                         }
                     }.onSuccess {
                         withContext(Dispatchers.Main) {
-                            ToastUtils.showToast("已将贴纸保存到 /sdcard/Download/WeKit/$fileName")
+                            showToast("已将贴纸保存到 /sdcard/Download/WeKit/$fileName")
                         }
                     }.onFailure { e ->
                         WeLogger.e(TAG, "failed to save sticker $fileName", e)
                         withContext(Dispatchers.Main) {
-                            ToastUtils.showToast("贴纸保存失败! 查看日志以了解错误详情")
+                            showToast("贴纸保存失败! 查看日志以了解错误详情")
                         }
                     }
                 }

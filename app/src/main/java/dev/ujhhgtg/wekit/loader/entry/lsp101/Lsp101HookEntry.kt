@@ -20,8 +20,7 @@ class Lsp101HookEntry(private val self: XposedModule) : Lsp10xHookEntryHandler {
     }
 
     fun onPackageReady(param: PackageReadyParam) {
-        val packageName = param.getPackageName()
-        if (packageName.startsWith(PackageNames.WECHAT)) {
+        if (PackageNames.isWeChat(param.packageName)) {
             if (param.isFirstPackage()) {
                 val ai = param.applicationInfo
                 ModuleLoader.init(

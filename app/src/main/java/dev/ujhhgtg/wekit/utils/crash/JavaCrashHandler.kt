@@ -4,7 +4,7 @@ import android.os.Process
 import dev.ujhhgtg.nameof.nameof
 import dev.ujhhgtg.wekit.utils.HostInfo
 import dev.ujhhgtg.wekit.utils.crash.CrashInfoCollector.collectCrashInfo
-import dev.ujhhgtg.wekit.utils.logging.WeLogger
+import dev.ujhhgtg.wekit.utils.WeLogger
 import dev.ujhhgtg.wekit.utils.polyfills.getThreadId
 
 object JavaCrashHandler : Thread.UncaughtExceptionHandler {

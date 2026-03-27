@@ -1,6 +1,5 @@
 package dev.ujhhgtg.wekit.hooks.api.ui
 
-import android.annotation.SuppressLint
 import android.graphics.drawable.Drawable
 import android.view.ContextMenu
 import com.highcapable.kavaref.KavaRef.Companion.asResolver
@@ -13,7 +12,6 @@ import org.json.JSONObject
 import org.luckypray.dexkit.DexKitBridge
 import java.util.LinkedList
 
-@SuppressLint("StaticFieldLeak")
 @HookItem(path = "API/视频号分享菜单扩展", desc = "为视频号分享菜单提供添加菜单项功能")
 object WeShortVideosShareMenuApi : ApiHookItem(), IResolvesDex {
 

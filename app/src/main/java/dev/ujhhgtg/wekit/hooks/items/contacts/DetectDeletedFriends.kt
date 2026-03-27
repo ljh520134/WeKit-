@@ -29,7 +29,7 @@ import dev.ujhhgtg.wekit.ui.content.Button
 import dev.ujhhgtg.wekit.ui.content.DefaultColumn
 import dev.ujhhgtg.wekit.ui.content.TextButton
 import dev.ujhhgtg.wekit.ui.utils.showComposeDialog
-import dev.ujhhgtg.wekit.utils.logging.WeLogger
+import dev.ujhhgtg.wekit.utils.WeLogger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
@@ -155,7 +155,7 @@ object DetectDeletedFriends : ClickableHookItem() {
                 dismissButton = when (phase) {
                     is DialogPhase.Idle -> {
                         @Composable {
-                            TextButton(dismiss) { Text("取消") }
+                            TextButton(onDismiss) { Text("取消") }
                         }
                     }
 
@@ -173,7 +173,7 @@ object DetectDeletedFriends : ClickableHookItem() {
                     }
 
                     is DialogPhase.Done -> {
-                        { Button(dismiss) { Text("关闭") } }
+                        { Button(onDismiss) { Text("关闭") } }
                     }
 
                     else -> null

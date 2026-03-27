@@ -90,7 +90,7 @@ abstract class BaseSettingsDialog(
         initList()
 
         showComposeDialog(context) {
-            _dismissCallback = dismiss
+            _dismissCallback = onDismiss
             BaseSettingsDialogContent(
                 title = title,
                 rows = rows,

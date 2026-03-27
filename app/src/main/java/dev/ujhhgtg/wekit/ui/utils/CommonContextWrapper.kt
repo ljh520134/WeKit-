@@ -8,8 +8,8 @@ import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
 import dev.ujhhgtg.nameof.nameof
+import dev.ujhhgtg.wekit.R
 import dev.ujhhgtg.wekit.utils.ModuleRes
-import dev.ujhhgtg.wekit.utils.logging.WeLogger
 import java.lang.reflect.Constructor
 
 /**
@@ -46,14 +46,7 @@ class CommonContextWrapper(base: Context?, themeResId: Int) : ContextWrapper(bas
             this.mTheme.applyStyle(themeResId, true)
         } else {
             // 尝试自动获取默认 Theme
-            val defaultTheme = runCatching {
-                ModuleRes.getId("Theme.WeKit", "style")
-            }.getOrDefault(0)
-            if (defaultTheme != 0) {
-                this.mTheme.applyStyle(defaultTheme, true)
-            } else {
-                WeLogger.w(TAG, "Theme.WeKit not found!")
-            }
+            this.mTheme.applyStyle(R.style.Theme_WeKit, true)
         }
     }
 
@@ -180,8 +173,7 @@ class CommonContextWrapper(base: Context?, themeResId: Int) : ContextWrapper(bas
             if (ModuleRes.moduleContext == null) {
                 return base
             }
-            val themeId = ModuleRes.getId("Theme.WeKit", "style")
-            return CommonContextWrapper(base, themeId)
+            return CommonContextWrapper(base, R.style.Theme_WeKit)
         }
     }
 }

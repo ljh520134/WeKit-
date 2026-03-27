@@ -40,13 +40,13 @@ object ForceTabletMode : SwitchHookItem(), IResolvesDex {
                     confirmButton = {
                         Button(onClick = {
                             applyToggle(true)
-                            dismiss()
+                            onDismiss()
                         }) {
                             Text("确定")
                         }
                     },
                     dismissButton = {
-                        TextButton(dismiss) {
+                        TextButton(onDismiss) {
                             Text("取消")
                         }
                     }

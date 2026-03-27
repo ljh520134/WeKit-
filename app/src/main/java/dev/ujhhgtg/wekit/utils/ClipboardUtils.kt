@@ -5,7 +5,7 @@ import android.content.ClipboardManager
 import android.content.Context
 import dev.ujhhgtg.nameof.nameof
 import dev.ujhhgtg.wekit.BuildConfig
-import dev.ujhhgtg.wekit.utils.logging.WeLogger
+import dev.ujhhgtg.wekit.utils.WeLogger
 
 fun copyToClipboard(context: Context, content: String, label: String = BuildConfig.TAG) {
     val clipboard =

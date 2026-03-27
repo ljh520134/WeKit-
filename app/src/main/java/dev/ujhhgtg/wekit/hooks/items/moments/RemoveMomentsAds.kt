@@ -5,7 +5,7 @@ import com.highcapable.kavaref.extension.toClass
 import dev.ujhhgtg.nameof.nameof
 import dev.ujhhgtg.wekit.hooks.core.HookItem
 import dev.ujhhgtg.wekit.hooks.core.SwitchHookItem
-import dev.ujhhgtg.wekit.utils.logging.WeLogger
+import dev.ujhhgtg.wekit.utils.WeLogger
 
 @HookItem(path = "朋友圈/拦截朋友圈广告", desc = "拦截朋友圈广告")
 object RemoveMomentsAds : SwitchHookItem() {

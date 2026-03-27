@@ -1,7 +1,7 @@
 package dev.ujhhgtg.wekit.utils.crash
 
 import dev.ujhhgtg.nameof.nameof
-import dev.ujhhgtg.wekit.utils.logging.WeLogger
+import dev.ujhhgtg.wekit.utils.WeLogger
 
 object NativeCrashHandler {
 

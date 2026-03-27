@@ -47,8 +47,8 @@ import dev.ujhhgtg.wekit.ui.content.AlertDialogContent
 import dev.ujhhgtg.wekit.ui.content.TextButton
 import dev.ujhhgtg.wekit.ui.utils.showComposeDialog
 import dev.ujhhgtg.wekit.utils.HostInfo
-import dev.ujhhgtg.wekit.utils.ToastUtils
-import dev.ujhhgtg.wekit.utils.logging.WeLogger
+import dev.ujhhgtg.wekit.utils.showToast
+import dev.ujhhgtg.wekit.utils.WeLogger
 import dev.ujhhgtg.wekit.utils.openInSystem
 
 @HookItem(
@@ -131,14 +131,14 @@ object LinkExternalAppJump : SwitchHookItem(),
                         items(resolveInfos) { info ->
                             AppItemRow(info, pm) {
                                 launchApp(context, info, url)
-                                dismiss()
+                                onDismiss()
                             }
                         }
 
                         item {
                             CustomTabsRow {
                                 url.openInSystem(context, true)
-                                dismiss()
+                                onDismiss()
                             }
                         }
 
@@ -153,7 +153,7 @@ object LinkExternalAppJump : SwitchHookItem(),
                                 } catch (e: Exception) {
                                     WeLogger.e(TAG, "failed to open internal webview", e)
                                 }
-                                dismiss()
+                                onDismiss()
                             }
                         }
                     }
@@ -164,11 +164,11 @@ object LinkExternalAppJump : SwitchHookItem(),
                             context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                         val clip = ClipData.newPlainText("WeKit_Link", url.toString())
                         clipboard.setPrimaryClip(clip)
-                        ToastUtils.showToast(context, "已复制链接")
-                        dismiss()
+                        showToast(context, "已复制链接")
+                        onDismiss()
                     }) { Text("复制链接") }
                 },
-                confirmButton = { TextButton(onClick = dismiss) { Text("取消") } })
+                confirmButton = { TextButton(onClick = onDismiss) { Text("取消") } })
         }
 
         param.result = null

@@ -16,7 +16,7 @@ import dev.ujhhgtg.wekit.ui.content.Button
 import dev.ujhhgtg.wekit.ui.content.DefaultColumn
 import dev.ujhhgtg.wekit.ui.content.TextButton
 import dev.ujhhgtg.wekit.ui.utils.showComposeDialog
-import dev.ujhhgtg.wekit.utils.ToastUtils
+import dev.ujhhgtg.wekit.utils.showToast
 import io.ktor.http.HttpHeaders
 import io.ktor.http.HttpMethod
 import io.ktor.http.HttpStatusCode
@@ -470,13 +470,13 @@ object ApiServer : ClickableHookItem() {
         netServer = embeddedServer(Netty, host = addr, port = SERVER_PORT) {
             configureServer()
         }.start(wait = false)
-        ToastUtils.showToast("MCP 服务器启动于 http://$addr:$SERVER_PORT/mcp")
-        ToastUtils.showToast("REST API 服务器启动于 http://$addr:$SERVER_PORT/api")
+        showToast("MCP 服务器启动于 http://$addr:$SERVER_PORT/mcp")
+        showToast("REST API 服务器启动于 http://$addr:$SERVER_PORT/api")
     }
 
     override fun onDisable() {
         netServer.stop(1000, 2000)
-        ToastUtils.showToast("服务器已停止")
+        showToast("服务器已停止")
     }
 
     override fun onClick(context: Context) {
@@ -498,18 +498,18 @@ object ApiServer : ClickableHookItem() {
                             label = { Text("端口") })
                     }
                 },
-                dismissButton = { TextButton(dismiss) { Text("取消") } },
+                dismissButton = { TextButton(onDismiss) { Text("取消") } },
                 confirmButton = {
                     Button(onClick = {
                         val serverPort = serverPortInput.toIntOrNull()
                         if (serverPort == null || serverPort < 1024 || serverPort > 65536) {
-                            ToastUtils.showToast("端口格式不正确!")
+                            showToast("端口格式不正确!")
                             return@Button
                         }
 
                         WePrefs.putInt(KEY_SERVER_PORT, serverPort)
                         WePrefs.putString(KEY_AUTH_TOKEN, authToken)
-                        dismiss()
+                        onDismiss()
                     }) { Text("确定") }
                 })
         }

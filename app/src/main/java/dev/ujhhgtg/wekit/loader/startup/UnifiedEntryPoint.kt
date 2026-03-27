@@ -1,14 +1,12 @@
 package dev.ujhhgtg.wekit.loader.startup
 
-import android.app.Application
 import android.app.Instrumentation
-import android.util.Log
 import com.highcapable.kavaref.KavaRef.Companion.asResolver
 import com.highcapable.kavaref.extension.ClassLoaderProvider
 import com.highcapable.kavaref.extension.toClass
 import dev.ujhhgtg.nameof.nameof
-import dev.ujhhgtg.wekit.BuildConfig
 import dev.ujhhgtg.wekit.loader.abc.ILoaderService
+import dev.ujhhgtg.wekit.utils.WeLogger
 import dev.ujhhgtg.wekit.utils.hookAfterDirectly
 
 object UnifiedEntryPoint {
@@ -31,16 +29,13 @@ object UnifiedEntryPoint {
                     .firstMethod {
                         name = "callApplicationOnCreate"
                     }
-                    .hookAfterDirectly { param ->
-                        val hostApp = param.args[0] as Application
-                        StartupInfo.hostApplication = hostApp
-
+                    .hookAfterDirectly { _ ->
                         runCatching {
                             StartupAgent.startup(
                                 modulePath,
                                 loaderService
                             )
-                        }.onFailure { e -> Log.e(BuildConfig.TAG, "$TAG: StartupAgent failed", e) }
+                        }.onFailure { WeLogger.e(TAG, "StartupAgent failed", it) }
                     }
             }
     }

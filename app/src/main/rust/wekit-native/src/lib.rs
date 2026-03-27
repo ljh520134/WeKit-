@@ -1,17 +1,15 @@
 //! JNI entry points
 
-#![allow(non_upper_case_globals)]
-#![allow(non_camel_case_types)]
-#![allow(non_snake_case)]
-include!(concat!(env!("OUT_DIR"), "/bindings.rs"));
-
 mod crash_handler;
 mod crash_triggerer;
 mod logging;
 mod shared;
+mod silk_codec;
 mod utils;
 
-use std::ffi::CString;
+use std::{ffi::CString, fs::File};
+
+use anyhow::Result;
 
 use crash_handler::{install_crash_handler, uninstall_crash_handler};
 use crash_triggerer::trigger_test_crash;
@@ -22,7 +20,10 @@ use jni::sys::{
 };
 use libc::c_void;
 
-use crate::utils::with_jstring;
+use crate::{
+    silk_codec::{mp3_to_pcm_mono, pcm_bytes_2_silk, resample_to},
+    utils::with_jstring,
+};
 
 // ─────────────────────────────────────────────────────────────────────────────
 // JNI exports
@@ -92,65 +93,88 @@ pub unsafe extern "C" fn Java_dev_ujhhgtg_wekit_hooks_items_chat_MarkdownRenderi
     }
 }
 
-// static HOOK_FUNC: OnceLock<HookFunType> = OnceLock::new();
+#[unsafe(no_mangle)]
+pub extern "C" fn Java_dev_ujhhgtg_wekit_utils_SilkCodec_mp3ToSilk(
+    env: *mut RawJNIEnv,
+    _thiz: jobject,
+    mp3_path: jstring,
+    silk_path: jstring,
+) -> jboolean {
+    logi!("running mp3ToSilk...");
+    with_jstring(env, mp3_path, |mp3| {
+        with_jstring(env, silk_path, |silk| {
+            logi!("converting {} to {}", mp3, silk);
+            match mp3_to_silk(mp3, silk) {
+                Ok(_) => {
+                    logi!("mp3ToSilk succeeded");
+                    JNI_TRUE
+                }
+                Err(err) => {
+                    logi!("mp3ToSilk failed: {:?}", err);
+                    JNI_FALSE
+                }
+            }
+        })
+    })
+}
 
-// fn hook_func() -> HookFunType {
-//     *HOOK_FUNC.get().expect("native_init not called yet")
-// }
+#[unsafe(no_mangle)]
+pub extern "C" fn Java_dev_ujhhgtg_wekit_utils_SilkCodec_silkToPcm(
+    env: *mut RawJNIEnv,
+    _thiz: jobject,
+    silk_path: jstring,
+    pcm_path: jstring,
+) -> jboolean {
+    logi!("running silkToPcm...");
+    with_jstring(env, silk_path, |silk| {
+        with_jstring(env, pcm_path, |pcm| {
+            logi!("converting {} to {}", silk, pcm);
+            match silk_codec::silk_to_pcm(silk, pcm, 24000) {
+                Ok(_) => {
+                    logi!("silkToPcm succeeded");
+                    JNI_TRUE
+                }
+                Err(err) => {
+                    logi!("silkToPcm failed: {:?}", err);
+                    JNI_FALSE
+                }
+            }
+        })
+    })
+}
 
-// unsafe extern "C" fn on_library_loaded(name: *const c_char, handle: *mut c_void) {
-//     unsafe {
-//         let lib_name = CStr::from_ptr(name).to_string_lossy();
+#[unsafe(no_mangle)]
+pub extern "C" fn Java_dev_ujhhgtg_wekit_utils_SilkCodec_pcmToMp3(
+    env: *mut RawJNIEnv,
+    _thiz: jobject,
+    pcm_path: jstring,
+    mp3_path: jstring,
+) -> jboolean {
+    logi!("running pcmToMp3...");
+    with_jstring(env, pcm_path, |pcm| {
+        with_jstring(env, mp3_path, |mp3| {
+            logi!("converting {} to {}", pcm, mp3);
+            if silk_codec::pcm_to_mp3(pcm, mp3, 24000, 128) {
+                logi!("pcmToMp3 succeeded");
+                JNI_TRUE
+            } else {
+                logi!("pcmToMp3 failed");
+                JNI_FALSE
+            }
+        })
+    })
+}
 
-//         if lib_name.ends_with("libtarget.so") {
-//             let sym = b"target_fun\0";
-//             let target = libc::dlsym(handle, sym.as_ptr() as *const c_char);
-//             if !target.is_null() {
-//                 if let Some(hook) = hook_func() {
-//                     let mut backup: *mut c_void = ptr::null_mut();
-//                     hook(target, fake_target as *mut c_void, &mut backup);
-//                     BACKUP_TARGET = std::mem::transmute(backup);
-//                 }
-//             }
-//         }
-//     }
-// }
-
-// // --- target_fun hook ---
-
-// static mut BACKUP_TARGET: Option<unsafe extern "C" fn() -> c_int> = None;
-
-// unsafe extern "C" fn fake_target() -> c_int {
-//     (unsafe { BACKUP_TARGET.unwrap()() }) + 1
-// }
-
-// static mut ORIG_FOPEN: Option<unsafe extern "C" fn(*const c_char, *const c_char) -> *mut c_void> =
-//     None;
-
-// unsafe extern "C" fn fake_fopen(filename: *const c_char, mode: *const c_char) -> *mut c_void {
-//     let name = unsafe { CStr::from_ptr(filename).to_bytes() };
-//     if name.windows(6).any(|w| w == b"banned") {
-//         return ptr::null_mut();
-//     }
-//     unsafe { ORIG_FOPEN.unwrap()(filename, mode) }
-// }
-
-// #[unsafe(no_mangle)]
-// pub unsafe extern "C" fn native_init(entries: *const NativeAPIEntries) -> NativeOnModuleLoaded {
-//     let hook = (unsafe { *entries }).hook_func;
-//     HOOK_FUNC.set(hook).ok();
-
-//     if let Some(hook_fn) = hook {
-//         let fopen_ptr = libc::fopen as *mut c_void;
-//         let mut backup: *mut c_void = ptr::null_mut();
-//         unsafe {
-//             hook_fn(fopen_ptr, fake_fopen as *mut c_void, &mut backup);
-//             ORIG_FOPEN = Some(std::mem::transmute(backup));
-//         }
-//     }
-
-//     Some(on_library_loaded)
-// }
+fn mp3_to_silk(mp3_path: &str, silk_path: &str) -> Result<()> {
+    let (pcm, src_rate) = mp3_to_pcm_mono(mp3_path)?;
+    logi!("mp3_to_pcm_mono done");
+    let pcm = resample_to(&pcm, src_rate, 24000);
+    logi!("resample_to done");
+    let out_file = File::create(silk_path)?;
+    pcm_bytes_2_silk(&pcm, out_file)?;
+    logi!("encode_to_silk done");
+    Ok(())
+}
 
 /// Required JNI library entry point — returns the JNI version we target.
 #[unsafe(no_mangle)]

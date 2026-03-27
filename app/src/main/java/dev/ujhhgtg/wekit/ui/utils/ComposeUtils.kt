@@ -3,10 +3,8 @@ package dev.ujhhgtg.wekit.ui.utils
 import android.app.Dialog
 import android.content.Context
 import android.graphics.Color
-import android.os.Build
 import android.view.View
 import android.view.Window
-import android.view.WindowManager
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.wrapContentSize
 import androidx.compose.runtime.Composable
@@ -21,9 +19,7 @@ import androidx.lifecycle.setViewTreeViewModelStoreOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
 import dev.ujhhgtg.nameof.nameof
 import dev.ujhhgtg.wekit.hooks.items.beautify.ApplyDialogBackgroundBlur
-import dev.ujhhgtg.wekit.preferences.WePrefs
 import dev.ujhhgtg.wekit.utils.HostInfo
-import dev.ujhhgtg.wekit.utils.logging.WeLogger
 
 private val TAG = nameof(::showComposeDialog)
 
@@ -58,15 +54,15 @@ fun showComposeDialog(
             }
 
             requestFeature(Window.FEATURE_NO_TITLE)
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                addFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND)
-                attributes.blurBehindRadius = WePrefs.getIntOrDef(
-                    ApplyDialogBackgroundBlur.KEY_BLUR_RADIUS,
-                    ApplyDialogBackgroundBlur.DEFAULT_BLUR_RADIUS
-                )
-            } else {
-                WeLogger.w(TAG, "sdk < 31, not applying blur behind dialog")
-            }
+//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+//                addFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND)
+//                attributes.blurBehindRadius = WePrefs.getIntOrDef(
+//                    ApplyDialogBackgroundBlur.KEY_BLUR_RADIUS,
+//                    ApplyDialogBackgroundBlur.DEFAULT_BLUR_RADIUS
+//                )
+//            } else {
+//                WeLogger.w(TAG, "sdk < 31, not applying blur behind dialog")
+//            }
         }
 
         // FIXME: this doesn't work:
@@ -104,7 +100,7 @@ class ShowComposeDialogScope(
     val context: Context,
     val dialog: Dialog,
     val window: Window,
-    val dismiss: () -> Unit
+    val onDismiss: () -> Unit
 )
 
 fun View.setLifecycleOwner(lifecycleOwner: XposedLifecycleOwner) {

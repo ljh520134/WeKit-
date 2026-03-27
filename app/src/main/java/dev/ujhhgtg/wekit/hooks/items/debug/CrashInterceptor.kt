@@ -1,21 +1,19 @@
 package dev.ujhhgtg.wekit.hooks.items.debug
 
-import android.annotation.SuppressLint
 import android.app.Activity
 import dev.ujhhgtg.nameof.nameof
 import dev.ujhhgtg.wekit.hooks.core.HookItem
 import dev.ujhhgtg.wekit.hooks.core.SwitchHookItem
 import dev.ujhhgtg.wekit.utils.HostInfo
-import dev.ujhhgtg.wekit.utils.ToastUtils
+import dev.ujhhgtg.wekit.utils.showToast
+import dev.ujhhgtg.wekit.utils.WeLogger
 import dev.ujhhgtg.wekit.utils.crash.CrashLogsManager
 import dev.ujhhgtg.wekit.utils.crash.JavaCrashHandler
-import dev.ujhhgtg.wekit.utils.logging.WeLogger
 
 @HookItem(
     path = "调试/崩溃拦截",
     desc = "拦截 Java 层崩溃并记录详细信息，支持查看和导出日志"
 )
-@SuppressLint("StaticFieldLeak")
 object CrashInterceptor : SwitchHookItem() {
 
     private val TAG = nameof(CrashInterceptor)
@@ -37,7 +35,7 @@ object CrashInterceptor : SwitchHookItem() {
                     TAG,
                     "pending Java crash detected, will show dialog when Activity is ready"
                 )
-                ToastUtils.showToast("检测到上次 Java 崩溃, 正在准备崩溃报告...")
+                showToast("检测到上次 Java 崩溃, 正在准备崩溃报告...")
                 CrashInterceptorUtils.startActivityPolling(TAG) { activity ->
                     showPendingJavaCrashDialog(activity)
                 }

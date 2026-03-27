@@ -18,7 +18,7 @@ import dev.ujhhgtg.wekit.ui.content.Button
 import dev.ujhhgtg.wekit.ui.content.TextButton
 import dev.ujhhgtg.wekit.ui.utils.showComposeDialog
 import dev.ujhhgtg.wekit.utils.crash.NativeCrashHandler
-import dev.ujhhgtg.wekit.utils.logging.WeLogger
+import dev.ujhhgtg.wekit.utils.WeLogger
 
 @HookItem(
     path = "调试/测试崩溃",
@@ -109,7 +109,7 @@ object TriggerCrash : ClickableHookItem() {
                                     containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
                                 ),
                                 modifier = Modifier.clickable {
-                                    dismiss()
+                                    onDismiss()
                                     onSelect(index)
                                 }
                             )
@@ -119,9 +119,9 @@ object TriggerCrash : ClickableHookItem() {
                 },
                 confirmButton = {
                     if (onBack != null) {
-                        TextButton(onClick = { dismiss(); onBack() }) { Text("返回") }
+                        TextButton(onClick = { onDismiss(); onBack() }) { Text("返回") }
                     } else {
-                        TextButton(onClick = dismiss) { Text("取消") }
+                        TextButton(onClick = onDismiss) { Text("取消") }
                     }
                 }
             )
@@ -135,7 +135,7 @@ object TriggerCrash : ClickableHookItem() {
                 text = { Text("确定要触发 $category 测试崩溃吗?\n这可能导致微信数据丢失") },
                 confirmButton = {
                     Button(onClick = {
-                        dismiss()
+                        onDismiss()
                         when (category) {
                             "Java" -> triggerJavaCrash(crashType)
                             "Native" -> NativeCrashHandler.triggerCrash(crashType)
@@ -145,7 +145,7 @@ object TriggerCrash : ClickableHookItem() {
                     }
                 },
                 dismissButton = {
-                    TextButton(onClick = dismiss) { Text("取消") }
+                    TextButton(onClick = onDismiss) { Text("取消") }
                 }
             )
         }

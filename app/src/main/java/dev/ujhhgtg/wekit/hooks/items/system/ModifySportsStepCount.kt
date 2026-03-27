@@ -17,7 +17,7 @@ import dev.ujhhgtg.wekit.ui.content.AlertDialogContent
 import dev.ujhhgtg.wekit.ui.content.Button
 import dev.ujhhgtg.wekit.ui.content.TextButton
 import dev.ujhhgtg.wekit.ui.utils.showComposeDialog
-import dev.ujhhgtg.wekit.utils.ToastUtils
+import dev.ujhhgtg.wekit.utils.showToast
 import org.luckypray.dexkit.DexKitBridge
 
 @HookItem(path = "系统与隐私/修改运动步数", desc = "修改宿主获取到的或手动上传运动步数")
@@ -70,28 +70,28 @@ object ModifySportsStepCount : ClickableHookItem(), IResolvesDex {
                 confirmButton = {
                     Button(onClick = {
                         val count = stepCount.toLongOrNull() ?: run {
-                            ToastUtils.showToast("格式不正确!")
+                            showToast("格式不正确!")
                             return@Button
                         }
                         WePrefs.putLong(KEY_STEP_COUNT, count)
-                        dismiss()
+                        onDismiss()
                     }) {
                         Text("保存")
                     }
                 },
                 dismissButton = {
-                    TextButton(dismiss) {
+                    TextButton(onDismiss) {
                         Text("取消")
                     }
 
                     TextButton(onClick = {
                         val count = stepCount.toLongOrNull() ?: run {
-                            ToastUtils.showToast("格式不正确!")
+                            showToast("格式不正确!")
                             return@TextButton
                         }
                         val sportsMan = methodUploadSteps.method.declaringClass.createInstance()
                         val result = methodUploadSteps.method.invoke(sportsMan, count) as Boolean
-                        ToastUtils.showToast("已上传! 返回结果: ${if (result) "成功" else "失败"}")
+                        showToast("已上传! 返回结果: ${if (result) "成功" else "失败"}")
                     }) {
                         Text("立即上传")
                     }
@@ -109,13 +109,13 @@ object ModifySportsStepCount : ClickableHookItem(), IResolvesDex {
                     confirmButton = {
                         Button(onClick = {
                             applyToggle(true)
-                            dismiss()
+                            onDismiss()
                         }) {
                             Text("确定")
                         }
                     },
                     dismissButton = {
-                        TextButton(dismiss) {
+                        TextButton(onDismiss) {
                             Text("取消")
                         }
                     }

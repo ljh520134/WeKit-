@@ -1,5 +1,6 @@
 package dev.ujhhgtg.wekit.loader.entry.lsp10x
 
+import androidx.annotation.Keep
 import dev.ujhhgtg.wekit.loader.entry.lsp100.Lsp100HookEntry
 import dev.ujhhgtg.wekit.loader.entry.lsp101.Lsp101HookEntry
 import io.github.libxposed.api.XposedInterface
@@ -10,6 +11,7 @@ import io.github.libxposed.api.XposedModuleInterface.PackageReadyParam
 import io.github.libxposed.api.annotations.XposedApiExact
 import io.github.libxposed.api.annotations.XposedApiMin
 
+@Keep
 class Lsp10xUnifiedHookEntry : XposedModule {
     private val mHandler: Lsp10xHookEntryHandler
 

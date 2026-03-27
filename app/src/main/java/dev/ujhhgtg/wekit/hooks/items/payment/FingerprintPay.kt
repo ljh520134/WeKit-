@@ -45,8 +45,8 @@ import dev.ujhhgtg.wekit.ui.utils.showComposeDialog
 import dev.ujhhgtg.wekit.utils.CryptoManager
 import dev.ujhhgtg.wekit.utils.EncryptedData
 import dev.ujhhgtg.wekit.utils.HostInfo
-import dev.ujhhgtg.wekit.utils.ToastUtils
-import dev.ujhhgtg.wekit.utils.logging.WeLogger
+import dev.ujhhgtg.wekit.utils.showToast
+import dev.ujhhgtg.wekit.utils.WeLogger
 
 
 @HookItem(path = "红包与支付/指纹支付", desc = "使用指纹快捷确认支付")
@@ -87,13 +87,13 @@ object FingerprintPay : ClickableHookItem() {
                             val orderedDigits = listOf(digitViews.last()) + digitViews.dropLast(1)
 
                             val rawEncData = WePrefs.getString(KEY_ENCRYPTED_DATA) ?: run {
-                                ToastUtils.showToast("支付密码未设置, 指纹支付不会生效!")
+                                showToast("支付密码未设置, 指纹支付不会生效!")
                                 return@hookBefore
                             }
                             val splitRawEncData = rawEncData.split(SPLIT_CHAR)
                             val encData = EncryptedData(splitRawEncData[0], splitRawEncData[1])
                             decryptWithBiometric(encData) { plaintext ->
-                                ToastUtils.showToast("支付密码解密成功!")
+                                showToast("支付密码解密成功!")
                                 for (char in plaintext) {
                                     val digit = char.digitToInt()
                                     orderedDigits[digit].performClick()
@@ -124,7 +124,7 @@ object FingerprintPay : ClickableHookItem() {
 
     override fun onClick(context: Context) {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
-            ToastUtils.showToast("Android 版本过低 (< Android 11), 无法使用指纹验证!")
+            showToast("Android 版本过低 (< Android 11), 无法使用指纹验证!")
             return
         }
 
@@ -155,29 +155,29 @@ object FingerprintPay : ClickableHookItem() {
                     )
                 },
                 dismissButton = {
-                    TextButton(dismiss) { Text("取消") }
+                    TextButton(onDismiss) { Text("取消") }
                     TextButton(onClick = {
                         val rawEncData = WePrefs.getString(KEY_ENCRYPTED_DATA) ?: run {
-                            ToastUtils.showToast("支付密码未设置!")
+                            showToast("支付密码未设置!")
                             return@TextButton
                         }
                         val splitRawEncData = rawEncData.split(SPLIT_CHAR)
                         val encData = EncryptedData(splitRawEncData[0], splitRawEncData[1])
                         decryptWithBiometric(encData) { plaintext ->
-                            ToastUtils.showToast("支付密码解密成功! 内容: ${plaintext.first()}****${plaintext.last()}")
+                            showToast("支付密码解密成功! 内容: ${plaintext.first()}****${plaintext.last()}")
                         }
                     }) { Text("测试解密") }
                 },
                 confirmButton = {
                     Button(onClick = {
                         if (plaintext.length != 6) {
-                            ToastUtils.showToast("密码长度不正确!")
+                            showToast("密码长度不正确!")
                             return@Button
                         }
-                        dismiss()
+                        onDismiss()
                         encryptWithBiometric(plaintext) { encData ->
                             WePrefs.putString(KEY_ENCRYPTED_DATA, "${encData.ciphertext}${SPLIT_CHAR}${encData.iv}")
-                            ToastUtils.showToast("支付密码加密并保存成功!")
+                            showToast("支付密码加密并保存成功!")
                         }
                     }) { Text("确定") }
                 })
@@ -200,7 +200,7 @@ object FingerprintPay : ClickableHookItem() {
                 }
 
                 override fun onAuthenticationError(code: Int, msg: CharSequence) {
-                    ToastUtils.showToast("验证失败! 错因: $msg")
+                    showToast("验证失败! 错因: $msg")
                     if (code == BiometricPrompt.ERROR_CANCELED ||
                         code == BiometricPrompt.ERROR_USER_CANCELED
                     ) activity.finish()
@@ -226,17 +226,17 @@ object FingerprintPay : ClickableHookItem() {
         val cipher = try {
             CryptoManager.getEncryptCipher()
         } catch (_: KeyPermanentlyInvalidatedException) {
-            ToastUtils.showToast("检测到新生物特征, 密钥已重置, 请在模块设置中重新加密支付密码!")
+            showToast("检测到新生物特征, 密钥已重置, 请在模块设置中重新加密支付密码!")
             return
         } catch (e: Exception) {
-            ToastUtils.showToast("捕获到未处理的异常! 请向模块作者报告问题")
+            showToast("捕获到未处理的异常! 请向模块作者报告问题")
             WeLogger.e(TAG, "unhandled exception", e)
             return
         }
         StubFragmentActivity.launch(HostInfo.application) {
             buildPrompt(this) { result ->
                 val authorizedCipher = result.cryptoObject?.cipher ?: run {
-                    ToastUtils.showToast("指纹验证成功, 但无法获取密文对象! 请向模块作者报告问题")
+                    showToast("指纹验证成功, 但无法获取密文对象! 请向模块作者报告问题")
                     return@buildPrompt
                 }
                 onSuccess(CryptoManager.encrypt(plaintext, authorizedCipher))
@@ -251,17 +251,17 @@ object FingerprintPay : ClickableHookItem() {
         val cipher = try {
             CryptoManager.getDecryptCipher(iv)
         } catch (_: KeyPermanentlyInvalidatedException) {
-            ToastUtils.showToast("检测到新生物特征, 密钥已重置, 请在模块设置中重新加密支付密码!")
+            showToast("检测到新生物特征, 密钥已重置, 请在模块设置中重新加密支付密码!")
             return
         } catch (e: Exception) {
-            ToastUtils.showToast("捕获到未处理的异常! 请向模块作者报告问题")
+            showToast("捕获到未处理的异常! 请向模块作者报告问题")
             WeLogger.e(TAG, "unhandled exception", e)
             return
         }
         StubFragmentActivity.launch(HostInfo.application) {
             buildPrompt(this) { result ->
                 val authorizedCipher = result.cryptoObject?.cipher ?: run {
-                    ToastUtils.showToast("指纹验证成功, 但无法获取密文对象! 请向模块作者报告问题")
+                    showToast("指纹验证成功, 但无法获取密文对象! 请向模块作者报告问题")
                     return@buildPrompt
                 }
                 val plaintext = CryptoManager.decrypt(encryptedData, authorizedCipher)
@@ -283,10 +283,10 @@ object FingerprintPay : ClickableHookItem() {
                                         "如确实需要此功能, 可使用第三方项目 eritpchy/FingerprintPay"
                         )
                     },
-                    confirmButton = { Button(dismiss) { Text("关闭") } }
+                    confirmButton = { Button(onDismiss) { Text("关闭") } }
                 )
             }
-            ToastUtils.showToast("Android 版本过低 (< Android 11), 无法使用指纹验证!")
+            showToast("Android 版本过低 (< Android 11), 无法使用指纹验证!")
             return false
         }
 
@@ -298,10 +298,10 @@ object FingerprintPay : ClickableHookItem() {
                     confirmButton = {
                         Button(onClick = {
                             applyToggle(true)
-                            dismiss()
+                            onDismiss()
                         }) { Text("确定") }
                     },
-                    dismissButton = { TextButton(dismiss) { Text("取消") } }
+                    dismissButton = { TextButton(onDismiss) { Text("取消") } }
                 )
             }
             return false

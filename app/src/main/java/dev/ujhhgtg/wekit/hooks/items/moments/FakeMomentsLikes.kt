@@ -20,6 +20,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.highcapable.kavaref.extension.toClass
 import dev.ujhhgtg.nameof.nameof
+import dev.ujhhgtg.wekit.R
 import dev.ujhhgtg.wekit.hooks.api.core.WeDatabaseApi
 import dev.ujhhgtg.wekit.hooks.api.core.WeDatabaseListenerApi
 import dev.ujhhgtg.wekit.hooks.api.ui.WeMomentsContextMenuApi
@@ -30,8 +31,8 @@ import dev.ujhhgtg.wekit.ui.content.Button
 import dev.ujhhgtg.wekit.ui.content.TextButton
 import dev.ujhhgtg.wekit.ui.utils.showComposeDialog
 import dev.ujhhgtg.wekit.utils.ModuleRes
-import dev.ujhhgtg.wekit.utils.ToastUtils
-import dev.ujhhgtg.wekit.utils.logging.WeLogger
+import dev.ujhhgtg.wekit.utils.showToast
+import dev.ujhhgtg.wekit.utils.WeLogger
 import java.lang.reflect.Field
 import java.lang.reflect.Method
 import java.util.LinkedList
@@ -74,7 +75,7 @@ object FakeMomentsLikes : SwitchHookItem(), WeMomentsContextMenuApi.IMenuItemsPr
             WeMomentsContextMenuApi.MenuItem(
                 777006,
                 "伪点赞",
-                { ModuleRes.getDrawable("star_24px")!! },
+                { ModuleRes.getDrawable(R.drawable.star_24px)!! },
                 { _, _ -> true }) { moments ->
                 val allFriends = WeDatabaseApi.getContacts()
 
@@ -138,7 +139,7 @@ object FakeMomentsLikes : SwitchHookItem(), WeMomentsContextMenuApi.IMenuItemsPr
                             }
                         },
                         dismissButton = {
-                            TextButton(onClick = { dismiss() }) {
+                            TextButton(onClick = { onDismiss() }) {
                                 Text("取消")
                             }
                         },
@@ -147,12 +148,12 @@ object FakeMomentsLikes : SwitchHookItem(), WeMomentsContextMenuApi.IMenuItemsPr
                                 val selectedWxids = selectedIndices.map { allFriends[it].wxId }.toSet()
                                 if (selectedWxids.isEmpty()) {
                                     fakeLikeWxIds.remove(snsId)
-                                    ToastUtils.showToast("已清除朋友圈的伪点赞配置")
+                                    showToast("已清除朋友圈的伪点赞配置")
                                 } else {
                                     fakeLikeWxIds[snsId] = selectedWxids
-                                    ToastUtils.showToast("已设置朋友圈的 ${selectedWxids.size} 个伪点赞")
+                                    showToast("已设置朋友圈的 ${selectedWxids.size} 个伪点赞")
                                 }
-                                dismiss()
+                                onDismiss()
                             }) {
                                 Text("确定")
                             }

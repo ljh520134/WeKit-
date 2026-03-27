@@ -52,14 +52,14 @@ import dev.ujhhgtg.wekit.ui.utils.findViewsWhich
 import dev.ujhhgtg.wekit.ui.utils.setLifecycleOwner
 import dev.ujhhgtg.wekit.ui.utils.showComposeDialog
 import dev.ujhhgtg.wekit.utils.KnownPaths
-import dev.ujhhgtg.wekit.utils.ToastUtils
-import dev.ujhhgtg.wekit.utils.ToastUtils.showToastSuspend
+import dev.ujhhgtg.wekit.utils.SilkCodec
 import dev.ujhhgtg.wekit.utils.coerceToInt
+import dev.ujhhgtg.wekit.utils.showToast
+import dev.ujhhgtg.wekit.utils.showToastSuspend
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import java.lang.reflect.Method
-import java.util.concurrent.CopyOnWriteArrayList
 import kotlin.io.path.absolutePathString
 import kotlin.io.path.deleteIfExists
 import kotlin.io.path.div
@@ -72,23 +72,8 @@ import android.widget.Button as AndroidButton
 )
 object ChatInputBarEnhancements : SwitchHookItem() {
 
-    interface IChatMenuItemProvider {
-        @Composable
-        fun Content(chatFooter: Any, dismiss: () -> Unit)
-    }
-
     var currentConv: String? = null
     private lateinit var methodGetLastText: Method
-
-    private val providers = CopyOnWriteArrayList<IChatMenuItemProvider>()
-
-    fun addProvider(provider: IChatMenuItemProvider) {
-        providers.addIfAbsent(provider)
-    }
-
-    fun removeProvider(provider: IChatMenuItemProvider) {
-        providers.remove(provider)
-    }
 
     override fun onEnable() {
         "com.tencent.mm.pluginsdk.ui.chat.ChatFooter".toClass().asResolver().apply {
@@ -116,7 +101,7 @@ object ChatInputBarEnhancements : SwitchHookItem() {
                         val context = view.context
                         val currentConv = currentConv
                         if (currentConv.isNullOrBlank()) {
-                            ToastUtils.showToast("当前聊天对象获取失败!")
+                            showToast("当前聊天对象获取失败!")
                             return@setOnLongClickListener true
                         }
 
@@ -137,9 +122,9 @@ object ChatInputBarEnhancements : SwitchHookItem() {
                                         }
                                     }
                                     val mimeType = contentResolver.getType(uri) ?: return@launch
-                                    val isAmr = mimeType == "audio/amr"
+                                    val isSilk = mimeType == "audio/amr"
                                     showToastSuspend("语音文件准备完成")
-                                    val durationMs = if (!isAmr) {
+                                    val durationMs = if (!isSilk) {
                                         runCatching { mp3DurationMs(tempPath.absolutePathString()) }.getOrDefault(0L)
                                     } else 0L
 
@@ -155,36 +140,53 @@ object ChatInputBarEnhancements : SwitchHookItem() {
                                                         onValueChange = { durationInput = it.filter { c -> c.isDigit() } },
                                                         label = { Text("语音时长 (毫秒)") })
                                                 },
-                                                dismissButton = { TextButton(dismiss) { Text("取消") } },
+                                                dismissButton = { TextButton(onDismiss) { Text("取消") } },
                                                 confirmButton = {
                                                     Button(onClick = {
                                                         val durationMs = durationInput.toLongOrNull()
                                                         if (durationMs == null) {
-                                                            ToastUtils.showToast("时长格式不正确!")
+                                                            showToast("时长格式不正确!")
                                                             return@Button
                                                         }
 
                                                         var success = false
-                                                        if (isAmr) {
+                                                        if (isSilk) {
+                                                            showToast("正在发送 SILK...")
                                                             success = WeMessageApi.sendVoice(
                                                                 currentConv,
                                                                 tempPath.absolutePathString(),
                                                                 durationMs.coerceToInt()
                                                             )
                                                         } else {
-                                                            // TODO
-                                                            ToastUtils.showToast("暂未支持 MP3 文件转码发送!")
+                                                            showToast("正在将 MP3 转换为 SILK...")
+                                                            val tempSilkPath = KnownPaths.moduleCache / "voice.2.tmp"
+                                                            val convSuccess = SilkCodec.mp3ToSilk(
+                                                                tempPath.absolutePathString(),
+                                                                tempSilkPath.absolutePathString())
+                                                            if (convSuccess) {
+                                                                showToast("转换成功! 正在发送...")
+                                                                success = WeMessageApi.sendVoice(
+                                                                    currentConv,
+                                                                    tempSilkPath.absolutePathString(),
+                                                                    durationMs.coerceToInt()
+                                                                )
+                                                            }
+                                                            else {
+                                                                showToast("转换失败! 查看日志以了解错误详情")
+                                                            }
+                                                            tempSilkPath.deleteIfExists()
                                                             return@Button
                                                         }
-                                                        ToastUtils.showToast("语音发送${if (success) "成功" else "失败!"}")
+                                                        showToast("语音发送${if (success) "成功" else "失败!"}")
                                                         tempPath.deleteIfExists()
-                                                        dismiss()
+                                                        onDismiss()
                                                     }) { Text("确定") }
                                                 })
                                         }
                                     }
                                 }
                             }
+                            // android couldn't distinguish AMR-extension SILK files, so we just use amr here
                             importLauncher.launch(arrayOf("audio/amr", "audio/mpeg"))
                         }
 
@@ -218,18 +220,18 @@ object ChatInputBarEnhancements : SwitchHookItem() {
                                                             val currentConv = currentConv
                                                             val content = methodGetLastText.invoke(chatFooter) as String
                                                             if (currentConv.isNullOrBlank()) {
-                                                                ToastUtils.showToast("当前聊天对象获取失败!")
+                                                                showToast("当前聊天对象获取失败!")
                                                                 return@ActionItem
                                                             }
 
                                                             if (content.isEmpty()) {
-                                                                ToastUtils.showToast("输入内容为空!")
+                                                                showToast("输入内容为空!")
                                                                 return@ActionItem
                                                             }
 
                                                             val isSuccess = WeMessageApi.sendXmlAppMsg(currentConv, content)
                                                             if (!isSuccess) {
-                                                                ToastUtils.showToast("发送卡片消息失败, 请检查格式")
+                                                                showToast("发送卡片消息失败, 请检查格式")
                                                                 return@ActionItem
                                                             }
 
@@ -243,10 +245,6 @@ object ChatInputBarEnhancements : SwitchHookItem() {
                                                         label = "测试",
                                                         onClick = { },
                                                     )
-
-                                                    for (provider in providers) {
-                                                        provider.Content(chatFooter) { shouldShow = false }
-                                                    }
                                                 }
                                             }
                                         }
@@ -276,7 +274,7 @@ private fun mp3DurationMs(path: String): Long {
 }
 
 @Composable
-fun ActionItem(
+private fun ActionItem(
     icon: ImageVector,
     label: String,
     onClick: () -> Unit,

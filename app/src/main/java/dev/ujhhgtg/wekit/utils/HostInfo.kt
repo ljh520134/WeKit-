@@ -7,7 +7,6 @@ import androidx.core.content.pm.PackageInfoCompat
 import com.highcapable.kavaref.KavaRef.Companion.asResolver
 import com.highcapable.kavaref.extension.toClass
 import dev.ujhhgtg.wekit.constants.PackageNames
-import dev.ujhhgtg.wekit.utils.logging.WeLogger
 
 enum class HostSpecies { WeChat, WeKit, Unknown }
 
@@ -50,7 +49,7 @@ object HostInfo {
         val packageInfo = try {
             pm.getPackageInfo(packageName, PackageManager.GET_META_DATA)
         } catch (e: PackageManager.NameNotFoundException) {
-            WeLogger.e("Cannot get PackageInfo!", e)
+            WeLogger.e("failed to get package info", e)
             throw e
         }
 
@@ -61,10 +60,12 @@ object HostInfo {
             versionCode = PackageInfoCompat.getLongVersionCode(packageInfo),
             versionCode32 = PackageInfoCompat.getLongVersionCode(packageInfo).toInt(),
             versionName = packageInfo.versionName.orEmpty(),
-            hostSpecies = when (packageName) {
-                PackageNames.WECHAT -> HostSpecies.WeChat
-                PackageNames.THIS -> HostSpecies.WeKit
-                else -> HostSpecies.Unknown
+            hostSpecies = run {
+                if (PackageNames.isWeChat(packageName)) return@run HostSpecies.WeChat
+                return@run when (packageName) {
+                    PackageNames.THIS -> HostSpecies.WeKit
+                    else -> HostSpecies.Unknown
+                }
             }
         )
     }

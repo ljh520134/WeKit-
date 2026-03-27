@@ -1,14 +1,6 @@
 # App
--keep class **.R$* { *; }
 -keep interface dev.ujhhgtg.wekit.dexkit.abc.IResolvesDex { *; }
--keep class * implements dev.ujhhgtg.wekit.dexkit.abc.IResolvesDex {
-    public void resolveDex(...);
-}
--keep class dev.ujhhgtg.wekit.loader.entry.lsp10x.Lsp10xUnifiedHookEntry { *; }
--keep class dev.ujhhgtg.wekit.loader.entry.xp51.Xp51HookEntry { *; }
--keep class dev.ujhhgtg.wekit.loader.entry.frida.FridaInjectEntry { *; }
--keep class io.github.libxposed.** { *; }
--keep class de.robv.** { *; }
+-keep class * implements dev.ujhhgtg.wekit.dexkit.abc.IResolvesDex
 
 # Attributes
 -keepattributes Signature,RuntimeVisibleAnnotations,AnnotationDefault,LineNumberTable,SourceFile,*Annotation*

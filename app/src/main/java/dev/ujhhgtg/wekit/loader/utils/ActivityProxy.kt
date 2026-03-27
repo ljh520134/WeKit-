@@ -24,7 +24,7 @@ import dev.ujhhgtg.nameof.nameof
 import dev.ujhhgtg.wekit.constants.PackageNames
 import dev.ujhhgtg.wekit.utils.HostInfo
 import dev.ujhhgtg.wekit.utils.ModuleRes
-import dev.ujhhgtg.wekit.utils.logging.WeLogger
+import dev.ujhhgtg.wekit.utils.WeLogger
 import java.lang.reflect.InvocationHandler
 import java.lang.reflect.InvocationTargetException
 import java.lang.reflect.Method
@@ -187,7 +187,7 @@ object ActivityProxy {
         private fun createTokenWrapper(raw: Intent): Intent {
             val token = IntentTokenCache.put(Intent(raw))
             return Intent().apply {
-                component = ComponentName(PackageNames.WECHAT, ActProxyMgr.STUB_DEFAULT_ACTIVITY)
+                component = ComponentName(HostInfo.packageName, ActProxyMgr.STUB_DEFAULT_ACTIVITY)
                 flags = raw.flags
                 action = raw.action
                 setDataAndType(raw.data, raw.type)
@@ -515,12 +515,12 @@ object ActivityProxy {
     object CounterfeitActivityInfoFactory {
         fun makeProxyActivityInfo(className: String) = ActivityInfo().apply {
             name = className
-            packageName = PackageNames.WECHAT
+            packageName = HostInfo.packageName
             enabled = true
             exported = false
-            processName = PackageNames.WECHAT
+            processName = HostInfo.packageName
             applicationInfo = runCatching { HostInfo.appInfo }.getOrElse {
-                ApplicationInfo().apply { packageName = PackageNames.WECHAT }
+                ApplicationInfo().apply { packageName = HostInfo.packageName }
             }
             launchMode = ActivityInfo.LAUNCH_MULTIPLE
         }

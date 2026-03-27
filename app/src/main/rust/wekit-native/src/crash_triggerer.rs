@@ -52,18 +52,16 @@ pub fn trigger_test_crash(crash_type: i32) {
         3 => {
             logi!("Triggering SIGILL (illegal instruction)…");
             unsafe {
-                #[cfg(any(target_arch = "aarch64", target_arch = "arm"))]
-                core::arch::asm!(".word 0xf7f0a000");
-                #[cfg(target_arch = "x86_64")]
+                #[cfg(any(target_arch = "x86", target_arch = "x86_64"))]
                 core::arch::asm!("ud2");
+                #[cfg(any(target_arch = "arm", target_arch = "aarch64"))]
+                core::arch::asm!("udf #0");
             }
         }
         4 => {
             logi!("Triggering SIGBUS (unaligned write)…");
-            let mut buf = [0u8; 16];
             unsafe {
-                let unaligned = buf.as_mut_ptr().add(1) as *mut u64;
-                core::ptr::write_volatile(unaligned, 0x1234_5678_90AB_CDEF);
+                libc::raise(libc::SIGBUS);
             }
         }
         other => loge!("Unknown crash type: {}", other),

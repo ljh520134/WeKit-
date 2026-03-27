@@ -25,8 +25,7 @@ import dev.ujhhgtg.wekit.hooks.core.SwitchHookItem
 import dev.ujhhgtg.wekit.utils.HostInfo
 import dev.ujhhgtg.wekit.utils.KnownPaths
 import dev.ujhhgtg.wekit.utils.LruCache
-import dev.ujhhgtg.wekit.utils.TargetProcesses
-import dev.ujhhgtg.wekit.utils.logging.WeLogger
+import dev.ujhhgtg.wekit.utils.WeLogger
 import dev.ujhhgtg.wekit.utils.replaceEmojis
 import dev.ujhhgtg.wekit.utils.replaceRichContent
 import kotlinx.coroutines.CoroutineScope
@@ -47,9 +46,6 @@ import kotlin.io.path.writeBytes
 object NotificationsEvolved : SwitchHookItem() {
 
     private val TAG = nameof(NotificationsEvolved)
-
-    override val targetProcesses: Int
-        get() = TargetProcesses.PROC_MAIN or TargetProcesses.PROC_PUSH
 
     private val lastGroupChatSender = LruCache<String, String>()
 

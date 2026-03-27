@@ -33,8 +33,8 @@ import dev.ujhhgtg.wekit.ui.content.Button
 import dev.ujhhgtg.wekit.ui.content.DefaultColumn
 import dev.ujhhgtg.wekit.ui.content.TextButton
 import dev.ujhhgtg.wekit.ui.utils.showComposeDialog
-import dev.ujhhgtg.wekit.utils.ToastUtils
-import dev.ujhhgtg.wekit.utils.logging.WeLogger
+import dev.ujhhgtg.wekit.utils.showToast
+import dev.ujhhgtg.wekit.utils.WeLogger
 import org.json.JSONObject
 import org.luckypray.dexkit.DexKitBridge
 import java.util.concurrent.ConcurrentHashMap
@@ -221,7 +221,7 @@ object AutoOpenRedPacket : ClickableHookItem(), WeDatabaseListenerApi.IInsertLis
             val displayName = WeDatabaseApi.getDisplayName(info.talker)
             val isGroup = info.talker.endsWith("@chatroom")
             val sourceLabel = if (isGroup) "群组" else "私聊"
-            ToastUtils.showToast("抢到来自${sourceLabel}中来自 '${displayName}' 的红包 ¥${displayAmount}")
+            showToast("抢到来自${sourceLabel}中来自 '${displayName}' 的红包 ¥${displayAmount}")
         }
     }
 
@@ -285,10 +285,10 @@ object AutoOpenRedPacket : ClickableHookItem(), WeDatabaseListenerApi.IInsertLis
                         WePrefs.putBool("red_packet_self", self)
                         WePrefs.putBool("red_packet_delay_random", useRandomDelay)
                         WePrefs.putString("red_packet_delay_custom", delayInput.ifBlank { "500" })
-                        dismiss()
+                        onDismiss()
                     }) { Text("确定") }
                 },
-                dismissButton = { TextButton(onClick = dismiss) { Text("取消") } }
+                dismissButton = { TextButton(onClick = onDismiss) { Text("取消") } }
             )
         }
     }
@@ -345,10 +345,10 @@ object AutoOpenRedPacket : ClickableHookItem(), WeDatabaseListenerApi.IInsertLis
                     confirmButton = {
                         Button(onClick = {
                             applyToggle(true)
-                            dismiss()
+                            onDismiss()
                         }) { Text("确定") }
                     },
-                    dismissButton = { TextButton(dismiss) { Text("取消") } }
+                    dismissButton = { TextButton(onDismiss) { Text("取消") } }
                 )
             }
             return false

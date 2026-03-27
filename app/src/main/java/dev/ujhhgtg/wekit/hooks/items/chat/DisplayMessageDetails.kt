@@ -12,6 +12,7 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import dev.ujhhgtg.wekit.R
 import dev.ujhhgtg.wekit.hooks.api.ui.WeChatMessageContextMenuApi
 import dev.ujhhgtg.wekit.hooks.core.HookItem
 import dev.ujhhgtg.wekit.hooks.core.SwitchHookItem
@@ -19,7 +20,7 @@ import dev.ujhhgtg.wekit.ui.content.AlertDialogContent
 import dev.ujhhgtg.wekit.ui.content.Button
 import dev.ujhhgtg.wekit.ui.utils.showComposeDialog
 import dev.ujhhgtg.wekit.utils.ModuleRes
-import dev.ujhhgtg.wekit.utils.ToastUtils
+import dev.ujhhgtg.wekit.utils.showToast
 
 @HookItem(path = "聊天/显示消息详情", desc = "向消息长按菜单添加菜单项, 可查看消息详情")
 object DisplayMessageDetails : SwitchHookItem(),
@@ -37,7 +38,7 @@ object DisplayMessageDetails : SwitchHookItem(),
         return listOf(
             WeChatMessageContextMenuApi.MenuItem(
                 777005, "查看详情",
-                { ModuleRes.getDrawable("chat_info_24px")!! }, { _ -> true })
+                { ModuleRes.getDrawable(R.drawable.chat_info_24px)!! }, { _ -> true })
             { view, _, msgInfo ->
                 val displayItems = mutableListOf<Pair<String, String>>()
                 displayItems += "类型" to msgInfo.type.toString()
@@ -64,12 +65,12 @@ object DisplayMessageDetails : SwitchHookItem(),
                                                 view.context.getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                                             val clip = ClipData.newPlainText("Value", value)
                                             clipboard.setPrimaryClip(clip)
-                                            ToastUtils.showToast("已复制")
+                                            showToast("已复制")
                                         })
                                 }
                             }
                         },
-                        confirmButton = { Button(dismiss) { Text("关闭") } })
+                        confirmButton = { Button(onDismiss) { Text("关闭") } })
                 }
             }
         )

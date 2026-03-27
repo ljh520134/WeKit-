@@ -15,8 +15,8 @@ import dev.ujhhgtg.wekit.ui.content.AlertDialogContent
 import dev.ujhhgtg.wekit.ui.content.DefaultColumn
 import dev.ujhhgtg.wekit.ui.content.TextButton
 import dev.ujhhgtg.wekit.ui.utils.showComposeDialog
-import dev.ujhhgtg.wekit.utils.ToastUtils
-import dev.ujhhgtg.wekit.utils.logging.WeLogger
+import dev.ujhhgtg.wekit.utils.showToast
+import dev.ujhhgtg.wekit.utils.WeLogger
 
 @HookItem(path = "调试/发包调试", desc = "发送自定义数据包到微信服务器")
 object SendPacket : ClickableHookItem() {
@@ -53,7 +53,7 @@ object SendPacket : ClickableHookItem() {
                     }
                 },
                 dismissButton = {
-                    TextButton(onClick = dismiss) { Text("取消") }
+                    TextButton(onClick = onDismiss) { Text("取消") }
                 },
                 confirmButton = {
                     TextButton(onClick = {
@@ -64,12 +64,12 @@ object SendPacket : ClickableHookItem() {
                         val payload = jsonPayloadStr.trim()
 
                         if (uri.isEmpty()) {
-                            ToastUtils.showToast(context, "URI 不能为空")
+                            showToast(context, "URI 不能为空")
                             return@TextButton
                         }
 
                         if (cmdId == null || funcId == null || routeId == null) {
-                            ToastUtils.showToast(context, "cmdId, funcId 和 routeId 必须为整数")
+                            showToast(context, "cmdId, funcId 和 routeId 必须为整数")
                             return@TextButton
                         }
 
@@ -87,7 +87,7 @@ object SendPacket : ClickableHookItem() {
                                         title = { Text("发送成功, 响应结果:") },
                                         text = { Text("json: $json\n\nbyteArray: ${byteArray?.size ?: 0} 字节") },
                                         confirmButton = {
-                                            TextButton(onClick = dismiss) { Text("关闭") }
+                                            TextButton(onClick = onDismiss) { Text("关闭") }
                                         }
                                     )
                                 }
@@ -99,13 +99,13 @@ object SendPacket : ClickableHookItem() {
                                         title = { Text("发送失败, 响应结果:") },
                                         text = { Text("type: $type, code: $code, msg: $msg") },
                                         confirmButton = {
-                                            TextButton(onClick = dismiss) { Text("关闭") }
+                                            TextButton(onClick = onDismiss) { Text("关闭") }
                                         }
                                     )
                                 }
                             }
                         }
-                        dismiss()
+                        onDismiss()
                     }) { Text("确定") }
                 })
         }

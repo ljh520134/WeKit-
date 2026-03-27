@@ -5,7 +5,8 @@ import android.content.Context
 import android.content.res.Resources
 import android.graphics.drawable.Drawable
 import dev.ujhhgtg.nameof.nameof
-import dev.ujhhgtg.wekit.utils.logging.WeLogger
+import dev.ujhhgtg.wekit.R
+import dev.ujhhgtg.wekit.constants.PackageNames
 
 /**
  * 模块资源加载器助手
@@ -18,7 +19,6 @@ object ModuleRes {
 
     var moduleContext: Context? = null
     var resources: Resources? = null
-    private lateinit var packageName: String
 
     /**
      * 初始化加载器，只需在 Hook 入口处调用一次
@@ -30,52 +30,18 @@ object ModuleRes {
     fun init(hostContext: Context, modulePkgName: String) {
         if (moduleContext != null) return
 
-        try {
+        runCatching {
             moduleContext = hostContext.createPackageContext(
-                modulePkgName,
+                PackageNames.THIS,
                 Context.CONTEXT_IGNORE_SECURITY or Context.CONTEXT_INCLUDE_CODE
             )
             resources = moduleContext!!.resources
-            packageName = modulePkgName
-
-            val themeId = resources!!.getIdentifier("Theme.WeKit", "style", packageName)
-            if (themeId != 0) {
-                moduleContext!!.setTheme(themeId)
-            } else {
-                WeLogger.e(TAG, "theme not found! module ui might crash")
-            }
-        } catch (e: Exception) {
-            WeLogger.e(TAG, "failed to initialize", e)
-        }
-    }
-
-    @SuppressLint("DiscouragedApi")
-    fun getId(resName: String, resType: String): Int {
-        val res = resources ?: return 0
-        val id = res.getIdentifier(resName, resType, packageName)
-        if (id == 0) WeLogger.e(TAG, "resource $resType/$resName not found")
-        return id
-    }
-
-    fun getString(resName: String): String {
-        val id = getId(resName, "string")
-        return if (id == 0) "" else resources!!.getString(id)
-    }
-
-    fun getColor(resName: String): Int {
-        val id = getId(resName, "color")
-        return if (id == 0) 0 else resources!!.getColor(id, null)
+            moduleContext!!.setTheme(R.style.Theme_WeKit)
+        }.onFailure { WeLogger.e(TAG, "failed to initialize module resources", it) }
     }
 
     @SuppressLint("UseCompatLoadingForDrawables")
-    fun getDrawable(resName: String): Drawable? {
-        var id = getId(resName, "drawable")
-        if (id == 0) id = getId(resName, "mipmap")
-        return if (id == 0) null else resources!!.getDrawable(id, null)
-    }
-
-    fun getDimen(resName: String): Float {
-        val id = getId(resName, "dimen")
-        return if (id == 0) 0f else resources!!.getDimension(id)
+    fun getDrawable(resId: Int): Drawable? {
+        return resources!!.getDrawable(resId, null)
     }
 }

@@ -2,7 +2,7 @@ package dev.ujhhgtg.wekit.hooks.items.scripting_js
 
 import dev.ujhhgtg.nameof.nameof
 import dev.ujhhgtg.wekit.hooks.api.core.WeMessageApi
-import dev.ujhhgtg.wekit.utils.logging.WeLogger
+import dev.ujhhgtg.wekit.utils.WeLogger
 import org.json.JSONObject
 import org.mozilla.javascript.Context
 import org.mozilla.javascript.Function

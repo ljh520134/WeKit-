@@ -1,19 +1,19 @@
 package dev.ujhhgtg.wekit.hooks.items.shortvideos
 
-import android.annotation.SuppressLint
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
 import dev.ujhhgtg.nameof.nameof
+import dev.ujhhgtg.wekit.R
 import dev.ujhhgtg.wekit.hooks.api.ui.WeShortVideosShareMenuApi
 import dev.ujhhgtg.wekit.hooks.core.HookItem
 import dev.ujhhgtg.wekit.hooks.core.SwitchHookItem
 import dev.ujhhgtg.wekit.utils.HostInfo
 import dev.ujhhgtg.wekit.utils.KnownPaths
 import dev.ujhhgtg.wekit.utils.ModuleRes
-import dev.ujhhgtg.wekit.utils.ToastUtils
+import dev.ujhhgtg.wekit.utils.showToast
+import dev.ujhhgtg.wekit.utils.WeLogger
 import dev.ujhhgtg.wekit.utils.formatBytesSize
-import dev.ujhhgtg.wekit.utils.logging.WeLogger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -27,7 +27,6 @@ import kotlin.io.path.div
 import kotlin.io.path.inputStream
 import kotlin.io.path.outputStream
 
-@SuppressLint("StaticFieldLeak")
 @HookItem(
     path = "视频号/下载媒体",
     desc = "向视频分享菜单中添加「复制链接」与「下载」菜单项"
@@ -50,7 +49,7 @@ object DownloadMedia : SwitchHookItem(),
             WeShortVideosShareMenuApi.MenuItem(
                 777004,
                 "复制链接",
-                { ModuleRes.getDrawable("link_24px")!! }
+                { ModuleRes.getDrawable(R.drawable.link_24px)!! }
             )
             { _, mediaType, mediaList ->
                 if (mediaType == 2) {
@@ -62,7 +61,7 @@ object DownloadMedia : SwitchHookItem(),
                         .getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                     val clip = ClipData.newPlainText("Url", imageUrls.joinToString("\n"))
                     clipboard.setPrimaryClip(clip)
-                    ToastUtils.showToast("已复制")
+                    showToast("已复制")
                     return@MenuItem
                 }
 
@@ -98,17 +97,17 @@ object DownloadMedia : SwitchHookItem(),
                         "Content",
                         clipItems.joinToString("\n") { pair -> "${pair.first}: ${pair.second}" })
                     cm.setPrimaryClip(clip)
-                    ToastUtils.showToast("已复制")
+                    showToast("已复制")
 
                     return@MenuItem
                 }
 
-                ToastUtils.showToast("未知的媒体类型, 无法复制链接")
+                showToast("未知的媒体类型, 无法复制链接")
             },
             WeShortVideosShareMenuApi.MenuItem(
                 777007,
                 "下载",
-                { ModuleRes.getDrawable("download_24px")!! }
+                { ModuleRes.getDrawable(R.drawable.download_24px)!! }
             )
             { _, mediaType, mediaList ->
                 if (mediaType == 2) {
@@ -147,7 +146,7 @@ object DownloadMedia : SwitchHookItem(),
                     return@MenuItem
                 }
 
-                ToastUtils.showToast("未知的媒体类型, 无法下载")
+                showToast("未知的媒体类型, 无法下载")
             }
         )
     }
@@ -157,7 +156,7 @@ object DownloadMedia : SwitchHookItem(),
             val fileName = "image_${System.currentTimeMillis()}.png"
 
             withContext(Dispatchers.Main) {
-                ToastUtils.showToast("开始下载第 ${index + 1} 张图片")
+                showToast("开始下载第 ${index + 1} 张图片")
             }
 
             runCatching {
@@ -165,11 +164,11 @@ object DownloadMedia : SwitchHookItem(),
             }.onFailure {
                 WeLogger.e(TAG, "failed to download ${index + 1}th image", it)
                 withContext(Dispatchers.Main) {
-                    ToastUtils.showToast("第 ${index + 1} 张图片下载成功")
+                    showToast("第 ${index + 1} 张图片下载成功")
                 }
             }.onSuccess {
                 withContext(Dispatchers.Main) {
-                    ToastUtils.showToast("已将图片下载到 /sdcard/Download/WeKit/$fileName")
+                    showToast("已将图片下载到 /sdcard/Download/WeKit/$fileName")
                 }
             }
         }
@@ -181,7 +180,7 @@ object DownloadMedia : SwitchHookItem(),
         urlToken: String
     ) = withContext(Dispatchers.IO) {
         withContext(Dispatchers.Main) {
-            ToastUtils.showToast("开始下载并解密视频")
+            showToast("开始下载并解密视频")
         }
 
         val baseDir = KnownPaths.downloads
@@ -195,7 +194,7 @@ object DownloadMedia : SwitchHookItem(),
             downloadFile(fullUrl, tempFilePath)
 
             withContext(Dispatchers.Main) {
-                ToastUtils.showToast("开始解密视频")
+                showToast("开始解密视频")
             }
             val key = BigInteger(decodeKey)
             decryptFile(tempFilePath, finalFilePath, key)
@@ -204,11 +203,11 @@ object DownloadMedia : SwitchHookItem(),
         }.onFailure {
             WeLogger.e(TAG, "failed to download video", it)
             withContext(Dispatchers.Main) {
-                ToastUtils.showToast("视频下载失败")
+                showToast("视频下载失败")
             }
         }.onSuccess {
             withContext(Dispatchers.Main) {
-                ToastUtils.showToast("已将视频下载到 /sdcard/Download/WeKit/$fileName")
+                showToast("已将视频下载到 /sdcard/Download/WeKit/$fileName")
             }
         }
     }
@@ -217,7 +216,7 @@ object DownloadMedia : SwitchHookItem(),
         url: String
     ) = withContext(Dispatchers.IO) {
         withContext(Dispatchers.Main) {
-            ToastUtils.showToast("开始下载视频")
+            showToast("开始下载视频")
         }
 
         val fileName = "video_${System.currentTimeMillis()}.mp4"
@@ -226,11 +225,11 @@ object DownloadMedia : SwitchHookItem(),
         }.onFailure {
             WeLogger.e(TAG, "failed to download video", it)
             withContext(Dispatchers.Main) {
-                ToastUtils.showToast("视频下载失败")
+                showToast("视频下载失败")
             }
         }.onSuccess {
             withContext(Dispatchers.Main) {
-                ToastUtils.showToast("已将视频下载到 /sdcard/Download/WeKit/$fileName")
+                showToast("已将视频下载到 /sdcard/Download/WeKit/$fileName")
             }
         }
     }

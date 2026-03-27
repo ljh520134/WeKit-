@@ -45,7 +45,7 @@ import dev.ujhhgtg.wekit.preferences.WePrefs
 import dev.ujhhgtg.wekit.ui.content.AlertDialogContent
 import dev.ujhhgtg.wekit.ui.content.TextButton
 import dev.ujhhgtg.wekit.ui.utils.showComposeDialog
-import dev.ujhhgtg.wekit.utils.logging.WeLogger
+import dev.ujhhgtg.wekit.utils.WeLogger
 import dev.ujhhgtg.wekit.utils.replaceEmojis
 import io.noties.markwon.AbstractMarkwonPlugin
 import io.noties.markwon.Markwon
@@ -384,7 +384,7 @@ object MarkdownRendering : ClickableHookItem(), IResolvesDex {
                             trailingContent = { Switch(compactHtml, null) })
                     }
                 },
-                confirmButton = { TextButton(dismiss) { Text("关闭") } }
+                confirmButton = { TextButton(onDismiss) { Text("关闭") } }
             )
         }
     }

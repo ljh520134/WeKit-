@@ -19,36 +19,27 @@ import androidx.compose.runtime.setValue
 import com.highcapable.kavaref.KavaRef.Companion.asResolver
 import com.highcapable.kavaref.extension.toClass
 import dev.ujhhgtg.nameof.nameof
-import dev.ujhhgtg.wekit.dexkit.abc.IResolvesDex
-import dev.ujhhgtg.wekit.dexkit.dsl.dexClass
 import dev.ujhhgtg.wekit.hooks.core.ClickableHookItem
 import dev.ujhhgtg.wekit.hooks.core.HookItem
 import dev.ujhhgtg.wekit.preferences.WePrefs
 import dev.ujhhgtg.wekit.ui.content.AlertDialogContent
 import dev.ujhhgtg.wekit.ui.content.Button
+import dev.ujhhgtg.wekit.ui.content.DefaultColumn
 import dev.ujhhgtg.wekit.ui.utils.showComposeDialog
-import dev.ujhhgtg.wekit.utils.logging.WeLogger
-import org.luckypray.dexkit.DexKitBridge
-import java.lang.reflect.Modifier
+import dev.ujhhgtg.wekit.utils.WeLogger
 import kotlin.math.roundToInt
 
 @HookItem(path = "界面美化/对话框窗口级背景模糊", desc = "为模块与宿主的对话框添加窗口级模糊处理")
-object ApplyDialogBackgroundBlur : ClickableHookItem(), IResolvesDex {
+object ApplyDialogBackgroundBlur : ClickableHookItem() {
 
     private val TAG = nameof(ApplyDialogBackgroundBlur)
 
-    const val KEY_BLUR_RADIUS = "blur_radius"
-    const val DEFAULT_BLUR_RADIUS = 20
-
-    private val classMmAlertDialog by dexClass()
-    private val classMmProgressDialog by dexClass()
-    private val classMmQuickDialog by dexClass()
+    private const val KEY_BLUR_RADIUS = "blur_radius"
+    private const val DEFAULT_BLUR_RADIUS = 20
 
     override fun onEnable() {
         listOf(
-            classMmAlertDialog.clazz,
-            classMmProgressDialog.clazz,
-            classMmQuickDialog.clazz,
+            Dialog::class,
             "com.tencent.mm.ui.halfscreen.HalfScreenTransparentActivity".toClass()
         ).forEach {
             it.asResolver()
@@ -78,39 +69,6 @@ object ApplyDialogBackgroundBlur : ClickableHookItem(), IResolvesDex {
         }
     }
 
-    override fun resolveDex(dexKit: DexKitBridge) {
-        classMmAlertDialog.find(dexKit) {
-            matcher {
-                usingEqStrings("MicroMsg.MMAlertDialog", "dialog dismiss error!")
-            }
-        }
-
-        classMmProgressDialog.find(dexKit) {
-            matcher {
-                usingEqStrings($$"com/tencent/mm/ui/widget/dialog/MMProgressDialog$Builder", "show")
-            }
-        }
-
-        classMmQuickDialog.find(dexKit) {
-            matcher {
-                superClass("android.app.Dialog")
-                addField {
-                    type = "int"
-                    modifiers(Modifier.STATIC or Modifier.FINAL)
-                }
-                addFieldForType("android.widget.TextView")
-                addFieldForType("com.tencent.mm.ui.widget.imageview.WeImageView")
-                addFieldForType("android.widget.ProgressBar")
-                addFieldForType("android.view.View")
-                addFieldForType("int")
-                addField {
-                    type = "boolean"
-                    modifiers(Modifier.FINAL)
-                }
-            }
-        }
-    }
-
     override fun onClick(context: Context) {
         showComposeDialog(context) {
             AlertDialogContent(
@@ -124,45 +82,49 @@ object ApplyDialogBackgroundBlur : ClickableHookItem(), IResolvesDex {
                         )
                     }
 
-                    Text("如果本对话框背景没有模糊, 说明系统 Android 版本过低 (SDK < 31) 或未在开发者选项中启用")
-                    HorizontalDivider()
-                    ListItem(
-                        headlineContent = { Text("模糊半径 (即时生效)") },
-                        supportingContent = {
-                            IntSlider(
-                                blurRadius,
-                                {
-                                    blurRadius = it
-                                    WePrefs.putInt(KEY_BLUR_RADIUS, blurRadius)
-                                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-                                        window.attributes.blurBehindRadius = blurRadius
-                                    } else {
-                                        WeLogger.w(TAG, "sdk < 31, not applying blur behind dialog")
-                                    }
-                                },
-                                5..30
-                            )
-                        }
-                    )
+                    DefaultColumn {
+                        Text("如果本对话框背景没有模糊, 说明系统 Android 版本过低 (SDK < 31) 或未在开发者选项中启用")
+                        HorizontalDivider()
+                        ListItem(
+                            headlineContent = { Text("模糊半径 (即时生效)") },
+                            supportingContent = {
+                                IntSlider(
+                                    blurRadius,
+                                    {
+                                        blurRadius = it
+                                        WePrefs.putInt(KEY_BLUR_RADIUS, blurRadius)
+                                        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+                                            window.attributes.blurBehindRadius = blurRadius
+                                            window.callback.onWindowAttributesChanged(window.attributes)
+                                        } else {
+                                            WeLogger.w(TAG, "sdk < 31, not applying blur behind dialog")
+                                        }
+                                    },
+                                    5..30
+                                )
+                            }
+                        )
+                    }
                 },
-                dismissButton = { Button(dismiss) { Text("关闭") } })
+                dismissButton = { Button(onDismiss) { Text("关闭") } })
         }
     }
 
-    @Composable
-    fun IntSlider(
-        value: Int,
-        onValueChange: (Int) -> Unit,
-        valueRange: IntRange = 0..100
-    ) {
-        Column {
-            Text(text = "Value: $value")
-            Slider(
-                value = value.toFloat(),
-                onValueChange = { onValueChange(it.roundToInt()) },
-                valueRange = valueRange.first.toFloat()..valueRange.last.toFloat(),
-                steps = valueRange.last - valueRange.first - 1
-            )
-        }
+}
+
+@Composable
+private fun IntSlider(
+    value: Int,
+    onValueChange: (Int) -> Unit,
+    valueRange: IntRange = 0..100
+) {
+    Column {
+        Text(text = "当前值: $value | 范围: $valueRange")
+        Slider(
+            value = value.toFloat(),
+            onValueChange = { onValueChange(it.roundToInt()) },
+            valueRange = valueRange.first.toFloat()..valueRange.last.toFloat(),
+            steps = valueRange.last - valueRange.first - 1
+        )
     }
 }

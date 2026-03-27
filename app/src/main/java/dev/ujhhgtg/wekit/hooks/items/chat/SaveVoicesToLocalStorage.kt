@@ -3,6 +3,7 @@ package dev.ujhhgtg.wekit.hooks.items.chat
 import com.highcapable.kavaref.KavaRef.Companion.asResolver
 import com.highcapable.kavaref.extension.toClass
 import dev.ujhhgtg.nameof.nameof
+import dev.ujhhgtg.wekit.R
 import dev.ujhhgtg.wekit.dexkit.abc.IResolvesDex
 import dev.ujhhgtg.wekit.dexkit.dsl.dexClass
 import dev.ujhhgtg.wekit.dexkit.dsl.dexMethod
@@ -13,18 +14,20 @@ import dev.ujhhgtg.wekit.hooks.core.HookItem
 import dev.ujhhgtg.wekit.hooks.core.SwitchHookItem
 import dev.ujhhgtg.wekit.utils.KnownPaths
 import dev.ujhhgtg.wekit.utils.ModuleRes
-import dev.ujhhgtg.wekit.utils.ToastUtils
-import dev.ujhhgtg.wekit.utils.logging.WeLogger
+import dev.ujhhgtg.wekit.utils.SilkCodec
+import dev.ujhhgtg.wekit.utils.WeLogger
+import dev.ujhhgtg.wekit.utils.showToast
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import org.luckypray.dexkit.DexKitBridge
-import xyz.xxin.silkdecoder.SilkDecoder
 import java.lang.reflect.Method
 import java.lang.reflect.Modifier
 import kotlin.io.path.Path
+import kotlin.io.path.absolutePathString
 import kotlin.io.path.copyTo
+import kotlin.io.path.deleteIfExists
 import kotlin.io.path.div
 import kotlin.io.path.name
 import kotlin.io.path.nameWithoutExtension
@@ -83,7 +86,7 @@ object SaveVoicesToLocalStorage : SwitchHookItem(), IResolvesDex,
             WeChatMessageContextMenuApi.MenuItem(
                 777003,
                 "存本地",
-                { ModuleRes.getDrawable("download_24px")!! },
+                { ModuleRes.getDrawable(R.drawable.download_24px)!! },
                 { msgInfo -> msgInfo.isType(MessageType.VOICE) }
             ) { _, _, msgInfo ->
                 CoroutineScope(Dispatchers.IO).launch {
@@ -93,23 +96,26 @@ object SaveVoicesToLocalStorage : SwitchHookItem(), IResolvesDex,
                         service =
                             WeServiceApi.getServiceByClass(methodGetAmrFullPath.method.declaringClass)
                     }
-                    val amrOriginalPath =
+                    val silkOriginalPath =
                         Path(methodGetAmrFullPath.method.invoke(service, null, encPath, true) as String)
-                    val mp3Name = amrOriginalPath.nameWithoutExtension + ".mp3"
-                    val amrPath = KnownPaths.downloads / amrOriginalPath.name
+                    val mp3Name = silkOriginalPath.nameWithoutExtension + ".mp3"
+                    val silkPath = KnownPaths.downloads / silkOriginalPath.name
+                    val pcmPath = KnownPaths.downloads / (silkOriginalPath.nameWithoutExtension + ".pcm")
                     val mp3Path = KnownPaths.downloads / mp3Name
 
                     runCatching {
-                        amrOriginalPath.copyTo(amrPath)
-                        SilkDecoder.decodeToMp3(amrOriginalPath.toString(), mp3Path.toString())
+                        silkOriginalPath.copyTo(silkPath, overwrite = true)
+                        SilkCodec.silkToPcm(silkPath.absolutePathString(), pcmPath.absolutePathString())
+                        SilkCodec.pcmToMp3(pcmPath.absolutePathString(), mp3Path.absolutePathString())
+                        pcmPath.deleteIfExists()
                     }.onSuccess {
                         withContext(Dispatchers.Main) {
-                            ToastUtils.showToast("已将语音保存到 /sdcard/Download/WeKit/$mp3Name")
+                            showToast("已将语音保存到 ${mp3Path.absolutePathString()}")
                         }
                     }.onFailure { e ->
-                        WeLogger.e(TAG, "failed to save voice $mp3Name", e)
+                        WeLogger.e(TAG, "failed to save voice to ${mp3Path.absolutePathString()}", e)
                         withContext(Dispatchers.Main) {
-                            ToastUtils.showToast("语音保存失败! 查看日志以了解错误详情")
+                            showToast("语音保存失败! 查看日志以了解错误详情")
                         }
                     }
                 }

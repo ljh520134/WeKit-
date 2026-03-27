@@ -33,7 +33,7 @@ object PredictiveBackGestures : SwitchHookItem() {
             .firstConstructor()
             .hookAfter { param ->
                 val info = param.thisObject as ActivityInfo
-                if (info.packageName != PackageNames.WECHAT) return@hookAfter
+                if (PackageNames.isWeChat(info.packageName)) return@hookAfter
                 // FIXME: workaround for conversation page being part of main activity
                 if (info.name == "com.tencent.mm.ui.LauncherUI") return@hookAfter
                 applyPbgFlag(info)
@@ -46,7 +46,7 @@ object PredictiveBackGestures : SwitchHookItem() {
                 val infoField =
                     record.asResolver().firstField { name = "activityInfo" }
                 val info = infoField.get() as ActivityInfo
-                if (info.packageName != PackageNames.WECHAT) return@hookBefore
+                if (PackageNames.isWeChat(info.packageName)) return@hookBefore
                 // FIXME: workaround for conversation page being part of main activity
                 if (info.name == "com.tencent.mm.ui.LauncherUI") return@hookBefore
                 applyPbgFlag(info)

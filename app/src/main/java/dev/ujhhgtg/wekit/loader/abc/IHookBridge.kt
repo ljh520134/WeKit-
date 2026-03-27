@@ -60,12 +60,4 @@ interface IHookBridge {
     val hookCounter: Long
 
     val hookedMethods: Set<Member?>?
-
-    companion object {
-        const val PRIORITY_DEFAULT: Int = 50
-
-        const val PRIORITY_LOWEST: Int = -10000
-
-        const val PRIORITY_HIGHEST: Int = 10000
-    }
 }

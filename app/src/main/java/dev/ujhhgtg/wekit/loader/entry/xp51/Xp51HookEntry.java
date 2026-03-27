@@ -1,11 +1,14 @@
 package dev.ujhhgtg.wekit.loader.entry.xp51;
 
+import androidx.annotation.Keep;
+
 import de.robv.android.xposed.IXposedHookLoadPackage;
 import de.robv.android.xposed.IXposedHookZygoteInit;
 import de.robv.android.xposed.callbacks.XC_LoadPackage;
 import dev.ujhhgtg.wekit.constants.PackageNames;
 import dev.ujhhgtg.wekit.loader.entry.common.ModuleLoader;
 
+@Keep
 public class Xp51HookEntry implements IXposedHookLoadPackage, IXposedHookZygoteInit {
 
     public static String sCurrentPackageName = null;
@@ -39,7 +42,7 @@ public class Xp51HookEntry implements IXposedHookLoadPackage, IXposedHookZygoteI
         sLoadPackageParam = lpparam;
         if (lpparam.packageName.equals(PackageNames.THIS)) {
             Xp51HookStatusInit.init(lpparam.classLoader);
-        } else if (lpparam.packageName.startsWith(PackageNames.WECHAT)) {
+        } else if (PackageNames.isWeChat(lpparam.packageName)) {
             if (sInitZygoteStartupParam == null) {
                 throw new IllegalStateException("handleLoadPackage: sInitZygoteStartupParam is null");
             }

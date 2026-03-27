@@ -1,24 +1,11 @@
 package dev.ujhhgtg.wekit.ui.utils
 
-import android.annotation.SuppressLint
 import android.app.Activity
 import android.view.View
 import android.view.ViewGroup
 import android.widget.ListAdapter
 import dev.ujhhgtg.nameof.nameof
-import dev.ujhhgtg.wekit.constants.PackageNames
-import dev.ujhhgtg.wekit.utils.logging.WeLogger
-
-private val idCache = HashMap<String, Int>()
-
-@SuppressLint("DiscouragedApi")
-fun <T : View> View.findViewByIdStr(idStr: String): T? {
-    val id = idCache.getOrPut(idStr) {
-        resources.getIdentifier(idStr, "id", PackageNames.WECHAT)
-    }
-    if (id == 0) return null
-    return this.findViewById<T>(id)
-}
+import dev.ujhhgtg.wekit.utils.WeLogger
 
 fun <T : View> View.findViewByClassName(className: String): T? {
     if (this.javaClass.name == className || this.javaClass.simpleName == className) {

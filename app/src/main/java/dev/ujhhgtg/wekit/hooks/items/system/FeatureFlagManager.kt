@@ -46,8 +46,8 @@ import dev.ujhhgtg.wekit.ui.content.Button
 import dev.ujhhgtg.wekit.ui.content.IconButton
 import dev.ujhhgtg.wekit.ui.content.TextButton
 import dev.ujhhgtg.wekit.ui.utils.showComposeDialog
-import dev.ujhhgtg.wekit.utils.ToastUtils
-import dev.ujhhgtg.wekit.utils.logging.WeLogger
+import dev.ujhhgtg.wekit.utils.showToast
+import dev.ujhhgtg.wekit.utils.WeLogger
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import org.luckypray.dexkit.DexKitBridge
@@ -161,7 +161,6 @@ object FeatureFlagManager : ClickableHookItem(), IResolvesDex {
         }
     }
 
-    @OptIn(ExperimentalMaterial3ExpressiveApi::class)
     override fun onClick(context: Context) {
         showComposeDialog(context) {
             var isLoading by remember { mutableStateOf(true) }
@@ -482,7 +481,7 @@ object FeatureFlagManager : ClickableHookItem(), IResolvesDex {
                                                                     TAG,
                                                                     "tried to remove override for $internalName but not found"
                                                                 )
-                                                                ToastUtils.showToast("未找到该灰度测试的覆盖值!")
+                                                                showToast("未找到该灰度测试的覆盖值!")
                                                                 return@TextButton
                                                             }
 
@@ -506,14 +505,14 @@ object FeatureFlagManager : ClickableHookItem(), IResolvesDex {
                                                                 "i", "int" -> FeatureFlagOverride.IntValue(
                                                                     internalName,
                                                                     rawValue.toIntOrNull() ?: run {
-                                                                        ToastUtils.showToast("值格式不正确, 请重新输入")
+                                                                        showToast("值格式不正确, 请重新输入")
                                                                         return@Button
                                                                     })
 
                                                                 "l", "long" -> FeatureFlagOverride.LongValue(
                                                                     internalName,
                                                                     rawValue.toLongOrNull() ?: run {
-                                                                        ToastUtils.showToast("值格式不正确, 请重新输入")
+                                                                        showToast("值格式不正确, 请重新输入")
                                                                         return@Button
                                                                     })
 
@@ -521,12 +520,12 @@ object FeatureFlagManager : ClickableHookItem(), IResolvesDex {
                                                                     internalName,
                                                                     rawValue.toFloatOrNull()
                                                                         ?: run {
-                                                                            ToastUtils.showToast("值格式不正确, 请重新输入")
+                                                                            showToast("值格式不正确, 请重新输入")
                                                                             return@Button
                                                                         })
 
                                                                 else -> {
-                                                                    ToastUtils.showToast("类型格式不正确, 请重新输入")
+                                                                    showToast("类型格式不正确, 请重新输入")
                                                                     return@Button
                                                                 }
                                                             }
@@ -575,7 +574,7 @@ object FeatureFlagManager : ClickableHookItem(), IResolvesDex {
                     }
                 },
                 confirmButton = {
-                    TextButton(onClick = dismiss) {
+                    TextButton(onClick = onDismiss) {
                         Text("关闭")
                     }
                 }

@@ -3,7 +3,8 @@ package dev.ujhhgtg.wekit.utils
 import android.app.ActivityManager
 import android.content.Context
 import android.os.Process
-import dev.ujhhgtg.wekit.utils.logging.WeLogger
+import dev.ujhhgtg.nameof.nameof
+import dev.ujhhgtg.wekit.utils.WeLogger
 
 object TargetProcesses {
 
@@ -102,7 +103,7 @@ object TargetProcesses {
                     }
                 }
             } catch (e: Throwable) {
-                WeLogger.e("getProcessName error $e")
+                WeLogger.e(nameof(TargetProcesses), "getCurrentProcessName error $e")
             }
             retry++
         } while (retry < 3)

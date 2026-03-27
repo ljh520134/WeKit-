@@ -20,16 +20,14 @@ import dev.ujhhgtg.wekit.hooks.core.ApiHookItem
 import dev.ujhhgtg.wekit.hooks.core.HookItem
 import dev.ujhhgtg.wekit.ui.content.MainSettingsDialog
 import dev.ujhhgtg.wekit.utils.KnownPaths
+import dev.ujhhgtg.wekit.utils.WeLogger
 import dev.ujhhgtg.wekit.utils.createDirectoriesNoThrow
-import dev.ujhhgtg.wekit.utils.logging.WeLogger
 import org.luckypray.dexkit.DexKitBridge
 import org.luckypray.dexkit.query.enums.StringMatchType
 import java.lang.reflect.InvocationHandler
 import java.lang.reflect.Modifier
-import java.nio.file.Path
 import kotlin.io.path.div
 
-@SuppressLint("DiscouragedApi", "StaticFieldLeak")
 @HookItem(path = "API/设置模块入口")
 object WeSettingsInjector : ApiHookItem(), IResolvesDex {
 
@@ -270,16 +268,13 @@ object WeSettingsInjector : ApiHookItem(), IResolvesDex {
 
     private const val WEKIT_SETTING_ITEM_NAME_RES_ID = -1337
 
-    private fun createSettingItemClass(
-        cacheDir: Path,
-    ): Class<*> {
+    private val settingItemClass by lazy {
         val baseClass = classBaseSettingItem.clazz
         val settingGroupMainClass =
             "com.tencent.mm.plugin.setting.ui.setting_new.settings.SettingGroupMain".toClass()
         val settingGroupAccountInfoClass =
             "com.tencent.mm.plugin.setting.ui.setting_new.settings.SettingGroupAccountInfo".toClass()
-        settingGroupAccountInfoClass.declaredMethods
-            .apply {
+        settingGroupAccountInfoClass.declaredMethods.run {
                 val mGetClass = this.first { m -> m.returnType == Class::class.java }.name // C6
                 val mReturns1 = methodSettingGroupAccountInfoReturns1.method.name // K6
                 val mOnClick = this.first { m -> m.parameterCount == 3 }.name // Q6
@@ -321,8 +316,8 @@ object WeSettingsInjector : ApiHookItem(), IResolvesDex {
                     }
                 }
 
-                return ProxyBuilder.forClass(baseClass)
-                    .dexCache(cacheDir.toFile())
+                ProxyBuilder.forClass(baseClass)
+                    .dexCache((KnownPaths.moduleData / "generated_proxy_classes").createDirectoriesNoThrow().toFile())
                     .parentClassLoader(ClassLoaderProvider.classLoader!!)
                     // WeChat has a custom AppCompactActivity, so we mustn't use AppCompatActivity::class here
                     .constructorArgTypes("androidx.appcompat.app.AppCompatActivity".toClass())
@@ -335,20 +330,12 @@ object WeSettingsInjector : ApiHookItem(), IResolvesDex {
                         }
                     }
             }
-
     }
-
-    private lateinit var customSettingItemClass: Class<*>
 
     private fun tryHookNewSettingsMethod2() {
         val settingGroupMainClass =
             "com.tencent.mm.plugin.setting.ui.setting_new.settings.SettingGroupMain".toClassOrNull()
                 ?: return
-
-        if (!::customSettingItemClass.isInitialized)
-            customSettingItemClass = createSettingItemClass(
-                (KnownPaths.moduleData / "generated_proxy_classes").createDirectoriesNoThrow()
-            )
 
         // a simple way to inject string resource
         Context::class.asResolver()
@@ -371,7 +358,7 @@ object WeSettingsInjector : ApiHookItem(), IResolvesDex {
             .hookBefore { param ->
                 param.result = classSettingLocation.clazz.createInstance(
                     settingGroupMainClass.toClass(),
-                    customSettingItemClass
+                    settingItemClass
                 )
             }
 
@@ -380,7 +367,7 @@ object WeSettingsInjector : ApiHookItem(), IResolvesDex {
             .hookAfter { param ->
                 val map = param.result as? Map<*, *>? ?: return@hookAfter
                 val originalSet = map.values.first() as LinkedHashSet<*>
-                param.result = mapOf(map.keys.first() to originalSet + customSettingItemClass)
+                param.result = mapOf(map.keys.first() to originalSet + settingItemClass)
             }
 
         // inject into page
@@ -393,7 +380,7 @@ object WeSettingsInjector : ApiHookItem(), IResolvesDex {
 
                 @Suppress("UNCHECKED_CAST")
                 val settingItemClasses = param.args[0] as HashSet<Class<*>>
-                settingItemClasses.add(customSettingItemClass)
+                settingItemClasses.add(settingItemClass)
             }
     }
 

@@ -26,7 +26,6 @@ import androidx.compose.material3.CenterAlignedTopAppBar
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.ExperimentalMaterial3ExpressiveApi
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
@@ -74,20 +73,17 @@ import kotlinx.coroutines.delay
 
 class MainActivity : ComponentActivity() {
 
-    @OptIn(ExperimentalMaterial3ExpressiveApi::class)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        try {
-            HookStatus.init(this)
-        } catch (_: Exception) {
-        }
+        runCatching { HookStatus.init(this) }
 
         setContent {
             AppTheme {
                 AppContent(
-                    onUrlClick = { url -> url.toUri().openInSystem(this, true) }
+                    onUrlClick = { url ->
+                        url.toUri().openInSystem(this, true) }
                 )
             }
         }

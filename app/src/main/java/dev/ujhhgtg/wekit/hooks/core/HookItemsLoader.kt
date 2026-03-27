@@ -11,9 +11,10 @@ import dev.ujhhgtg.wekit.ui.utils.showComposeDialog
 import dev.ujhhgtg.wekit.utils.HostInfo
 import dev.ujhhgtg.wekit.utils.RuntimeConfig
 import dev.ujhhgtg.wekit.utils.TargetProcesses
-import dev.ujhhgtg.wekit.utils.logging.WeLogger
+import dev.ujhhgtg.wekit.utils.WeLogger
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.MainScope
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -58,19 +59,7 @@ object HookItemsLoader {
                     return@forEach
                 }
 
-                when (hookItem) {
-                    is ClickableHookItem -> {
-                        hookItem.setEnabledSilently(WePrefs.getBoolOrFalse(hookItem.path))
-                        if (hookItem.isEnabled || hookItem.alwaysRun) hookItem.enable(process)
-                    }
-
-                    is SwitchHookItem -> {
-                        hookItem.setEnabledSilently(WePrefs.getBoolOrFalse(hookItem.path))
-                        if (hookItem.isEnabled) hookItem.enable(process)
-                    }
-
-                    is ApiHookItem -> hookItem.enable(process)
-                }
+                hookItem.startup(process)
             }
         }
         WeLogger.i(TAG, "enabling all hook items took $elapsed")
@@ -151,9 +140,9 @@ object HookItemsLoader {
                         activity,
                         brokenItems,
                         appInfo,
-                        CoroutineScope(Dispatchers.Main + SupervisorJob()),
+                        MainScope(),
                         dialog,
-                        dismiss
+                        onDismiss
                     )
                 }
             }

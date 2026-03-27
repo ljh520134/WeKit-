@@ -1,17 +1,15 @@
 package dev.ujhhgtg.wekit.hooks.core
 
+import com.highcapable.kavaref.KavaRef.Companion.asResolver
 import com.highcapable.kavaref.resolver.ConstructorResolver
 import com.highcapable.kavaref.resolver.MethodResolver
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XposedBridge
-import dev.ujhhgtg.wekit.constants.PreferenceKeys
 import dev.ujhhgtg.wekit.dexkit.dsl.DexConstructorDelegate
 import dev.ujhhgtg.wekit.dexkit.dsl.DexDelegateBase
 import dev.ujhhgtg.wekit.dexkit.dsl.DexMethodDelegate
-import dev.ujhhgtg.wekit.preferences.WePrefs
 import dev.ujhhgtg.wekit.utils.HookAction
-import dev.ujhhgtg.wekit.utils.TargetProcesses
-import dev.ujhhgtg.wekit.utils.logging.WeLogger
+import dev.ujhhgtg.wekit.utils.WeLogger
 import java.lang.reflect.Executable
 
 abstract class BaseHookItem {
@@ -20,23 +18,23 @@ abstract class BaseHookItem {
 
     var description: String = ""
 
-    open val targetProcesses = TargetProcesses.PROC_MAIN
+    open fun startup(process: Int) {
+        error("You shouldn't inherit BaseHookItem")
+    }
 
     var hasEnabled: Boolean = false
         private set
 
-    fun enable(process: Int = 1) {
+    fun enable() {
         if (hasEnabled) return
-        if (process and targetProcesses == 0) return
         runCatching {
             hasEnabled = true
             onEnable()
         }.onFailure { e -> WeLogger.e("failed to enable item", e) }
     }
 
-    fun disable(process: Int = 1) {
+    fun disable() {
         if (!hasEnabled) return
-        if (process and targetProcesses == 0) return
         runCatching {
             hasEnabled = false
             onDisable()
@@ -56,7 +54,7 @@ abstract class BaseHookItem {
     // --- hookBefore ---
 
     inline fun Executable.hookBefore(
-        priority: Int = hookPriority,
+        priority: Int = 50,
         crossinline action: HookAction
     ) {
         XposedBridge.hookMethod(
@@ -72,7 +70,7 @@ abstract class BaseHookItem {
 
     @JvmName("hookBefore2")
     inline fun MethodResolver<*>.hookBefore(
-        priority: Int = hookPriority,
+        priority: Int = 50,
         crossinline action: HookAction
     ) {
         return this.self.hookBefore(priority, action)
@@ -80,18 +78,22 @@ abstract class BaseHookItem {
 
     @JvmName("hookBefore3")
     inline fun ConstructorResolver<*>.hookBefore(
-        priority: Int = hookPriority,
+        priority: Int = 50,
         crossinline action: HookAction
     ) {
         return this.self.hookBefore(priority, action)
     }
+
+    inline fun Class<*>.hookBeforeOnCreate(
+        crossinline action: HookAction
+    ) = this.asResolver().firstMethod { name = "onCreate" }.hookBefore(50, action)
 
     // --- end hookBefore ---
 
     // --- hookAfter ---
 
     inline fun Executable.hookAfter(
-        priority: Int = hookPriority,
+        priority: Int = 50,
         crossinline action: HookAction
     ) {
         XposedBridge.hookMethod(
@@ -107,7 +109,7 @@ abstract class BaseHookItem {
 
     @JvmName("hookAfter2")
     inline fun MethodResolver<*>.hookAfter(
-        priority: Int = hookPriority,
+        priority: Int = 50,
         crossinline action: HookAction
     ) {
         return this.self.hookAfter(priority, action)
@@ -115,7 +117,7 @@ abstract class BaseHookItem {
 
     @JvmName("hookAfter3")
     inline fun ConstructorResolver<*>.hookAfter(
-        priority: Int = hookPriority,
+        priority: Int = 50,
         crossinline action: HookAction
     ) {
         return this.self.hookAfter(priority, action)
@@ -126,28 +128,28 @@ abstract class BaseHookItem {
     // --- dex delegate ---
 
     inline fun DexMethodDelegate.hookBefore(
-        priority: Int = hookPriority,
+        priority: Int = 50,
         crossinline action: HookAction
     ) {
         return this.method.hookBefore(priority, action)
     }
 
     inline fun DexMethodDelegate.hookAfter(
-        priority: Int = hookPriority,
+        priority: Int = 50,
         crossinline action: HookAction
     ) {
         return this.method.hookAfter(priority, action)
     }
 
     inline fun DexConstructorDelegate.hookBefore(
-        priority: Int = hookPriority,
+        priority: Int = 50,
         crossinline action: HookAction
     ) {
         return this.constructor.hookBefore(priority, action)
     }
 
     inline fun DexConstructorDelegate.hookAfter(
-        priority: Int = hookPriority,
+        priority: Int = 50,
         crossinline action: HookAction
     ) {
         return this.constructor.hookAfter(priority, action)
@@ -161,9 +163,5 @@ abstract class BaseHookItem {
         runCatching {
             action(param)
         }.onFailure { e -> WeLogger.e("executeHookAction", "failed to execute hook of $path", e) }
-    }
-
-    companion object {
-        val hookPriority by lazy { WePrefs.getIntOrDef(PreferenceKeys.HOOK_PRIORITY, 50) }
     }
 }

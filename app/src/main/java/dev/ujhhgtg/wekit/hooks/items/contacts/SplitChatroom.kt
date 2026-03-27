@@ -41,8 +41,8 @@ import dev.ujhhgtg.wekit.ui.content.Button
 import dev.ujhhgtg.wekit.ui.content.TextButton
 import dev.ujhhgtg.wekit.ui.utils.showComposeDialog
 import dev.ujhhgtg.wekit.utils.RuntimeConfig
-import dev.ujhhgtg.wekit.utils.ToastUtils
-import dev.ujhhgtg.wekit.utils.logging.WeLogger
+import dev.ujhhgtg.wekit.utils.showToast
+import dev.ujhhgtg.wekit.utils.WeLogger
 
 @HookItem(path = "联系人与群组/分裂群组", desc = "让群聊一分为二")
 object SplitChatroom : ClickableHookItem() {
@@ -54,21 +54,21 @@ object SplitChatroom : ClickableHookItem() {
             WeDatabaseApi.getGroups()
         } catch (e: Exception) {
             WeLogger.e(TAG, "获取群聊列表失败", e)
-            ToastUtils.showToast(context, "获取数据失败: ${e.message}")
+            showToast(context, "获取数据失败: ${e.message}")
             return
         }
 
         if (groups.isEmpty()) {
-            ToastUtils.showToast(context, "未获取到群聊列表, 请确认是否已登录或数据是否同步")
+            showToast(context, "未获取到群聊列表, 请确认是否已登录或数据是否同步")
             return
         }
 
         showComposeDialog(context) {
             SplitChatroomDialog(
                 allGroups = groups,
-                onDismiss = dismiss,
+                onDismiss = onDismiss,
                 onSelect = { chatroomId ->
-                    dismiss()
+                    onDismiss()
                     jumpToSplitChatroom(chatroomId)
                 },
             )

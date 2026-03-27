@@ -12,7 +12,7 @@ import dev.ujhhgtg.wekit.hooks.core.ApiHookItem
 import dev.ujhhgtg.wekit.hooks.core.HookItem
 import dev.ujhhgtg.wekit.preferences.WePrefs
 import dev.ujhhgtg.wekit.utils.HostInfo
-import dev.ujhhgtg.wekit.utils.logging.WeLogger
+import dev.ujhhgtg.wekit.utils.WeLogger
 import java.util.concurrent.CopyOnWriteArrayList
 
 @SuppressLint("DiscouragedApi")
@@ -89,11 +89,6 @@ object WeDatabaseListenerApi : ApiHookItem() {
 
     // ==================== 私有辅助方法 ====================
 
-    private fun shouldLogDatabase(): Boolean {
-        return WePrefs.getBoolOrFalse(PreferenceKeys.VERBOSE_LOG) &&
-                WePrefs.getBoolOrFalse(PreferenceKeys.DB_VERBOSE_LOG)
-    }
-
     private fun formatArgs(args: Array<out Any?>): String {
         return args.mapIndexed { index, arg ->
             "arg[$index](${arg?.javaClass?.simpleName ?: "null"})=$arg"
@@ -106,7 +101,7 @@ object WeDatabaseListenerApi : ApiHookItem() {
         args: Array<out Any?>,
         result: Any? = null
     ) {
-        if (!shouldLogDatabase()) return
+        if (!WePrefs.getBoolOrFalse(PreferenceKeys.VERBOSE_LOG)) return
 
         val argsInfo = formatArgs(args)
         val resultStr = if (result != null) ", result=$result" else ""

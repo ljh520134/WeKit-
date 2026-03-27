@@ -16,7 +16,7 @@ import dev.ujhhgtg.wekit.ui.content.AlertDialogContent
 import dev.ujhhgtg.wekit.ui.content.Button
 import dev.ujhhgtg.wekit.ui.content.TextButton
 import dev.ujhhgtg.wekit.ui.utils.showComposeDialog
-import dev.ujhhgtg.wekit.utils.ToastUtils
+import dev.ujhhgtg.wekit.utils.showToast
 import org.luckypray.dexkit.DexKitBridge
 
 @HookItem(path = "聊天/伪装语音时长", desc = "预设定伪装发送语音显示的时长")
@@ -45,22 +45,18 @@ object FakeVoiceDuration : ClickableHookItem(), IResolvesDex {
                         label = { Text("语音时长 (毫秒)") })
                 },
                 dismissButton = {
-                    TextButton(dismiss) { Text("取消") }
-                    TextButton(onClick = {
-                        WePrefs.remove(KEY_DURATION)
-                        dismiss()
-                    }) { Text("清除") }
+                    TextButton(onDismiss) { Text("取消") }
                 },
                 confirmButton = {
                     Button(onClick = {
                         val durationMs = durationInput.toLongOrNull()
                         if (durationMs == null) {
-                            ToastUtils.showToast("时长格式不正确!")
+                            showToast("时长格式不正确!")
                             return@Button
                         }
 
                         WePrefs.putLong(KEY_DURATION, durationMs)
-                        dismiss()
+                        onDismiss()
                     }) { Text("确定") }
                 })
         }
