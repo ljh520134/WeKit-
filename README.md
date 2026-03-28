@@ -111,7 +111,9 @@ chmod +x ./gradlew
    - A: 忽略即可; 模块支持全部 Xposed API 版本
 6. - Q: 怎么让我的界面恢复正常???? (愚人节彩蛋)
    - A: 「模块设置 -> 投降」
-7. - Q: XXX
+7. - Q: 本模块与 QAuxiliary 均不加载, 且我正在使用 JingMatrix/LSPosed (Vector)
+   - A: 疑似为框架问题, 请暂时不要使用 [Commit 2024132](https://github.com/JingMatrix/LSPosed/actions/runs/23482412500) 以后的版本
+8. - Q: XXX
    - A: [![问 DeepWiki](https://deepwiki.com/badge.svg)](https://deepwiki.com/Ujhhgtg/WeKit)
 
 ## 注意

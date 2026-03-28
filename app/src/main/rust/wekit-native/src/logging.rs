@@ -17,8 +17,12 @@ pub const ANDROID_LOG_ERROR: c_int = 6;
 static LOG_TAG: &std::ffi::CStr = c"WeKit";
 
 pub fn android_log(prio: c_int, msg: &str) {
+    // Prepend "NativeLib: " to the message
+    let full_msg = format!("NativeLib: {}", msg);
     // CString handles null termination and interior-null sanitisation
-    let Ok(cmsg) = CString::new(msg) else { return };
+    let Ok(cmsg) = CString::new(full_msg) else {
+        return;
+    };
     unsafe {
         __android_log_write(prio, LOG_TAG.as_ptr(), cmsg.as_ptr());
     }

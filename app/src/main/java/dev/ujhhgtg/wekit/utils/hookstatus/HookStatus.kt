@@ -1,7 +1,7 @@
 package dev.ujhhgtg.wekit.utils.hookstatus
 
 import android.content.Context
-import dev.ujhhgtg.wekit.BuildConfig
+import dev.ujhhgtg.wekit.constants.PackageNames
 import io.github.libxposed.service.XposedService
 import io.github.libxposed.service.XposedServiceHelper
 import io.github.libxposed.service.XposedServiceHelper.OnServiceListener
@@ -46,7 +46,7 @@ object HookStatus {
         get() = File("/system/framework/edxp.jar").exists()
 
     fun init(context: Context) {
-        if (context.packageName == BuildConfig.APPLICATION_ID) {
+        if (context.packageName == PackageNames.THIS) {
             if (!xposedServiceListenerRegistered) {
                 XposedServiceHelper.registerListener(xposedServiceListener)
                 xposedServiceListenerRegistered = true

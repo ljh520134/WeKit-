@@ -10,7 +10,7 @@ import dev.ujhhgtg.wekit.hooks.core.SwitchHookItem
 import org.luckypray.dexkit.DexKitBridge
 import java.lang.reflect.Field
 
-@HookItem(path = "系统与隐私/阻止宿主清理模块数据", desc = "阻止微信「设置 → 存储空间 → 清理」删除模块数据")
+@HookItem(path = "系统与隐私/阻止微信清理模块数据", desc = "阻止微信「设置 → 存储空间 → 清理」删除模块数据")
 object PreventModuleDataDeletion : SwitchHookItem(), IResolvesDex {
 
     private val methodNativeFileSystemEntryDelete by dexMethod()

@@ -14,7 +14,7 @@ import dev.ujhhgtg.wekit.hooks.core.HookItem
 import dev.ujhhgtg.wekit.hooks.core.SwitchHookItem
 import dev.ujhhgtg.wekit.utils.KnownPaths
 import dev.ujhhgtg.wekit.utils.ModuleRes
-import dev.ujhhgtg.wekit.utils.SilkCodec
+import dev.ujhhgtg.wekit.utils.AudioUtils
 import dev.ujhhgtg.wekit.utils.WeLogger
 import dev.ujhhgtg.wekit.utils.showToast
 import kotlinx.coroutines.CoroutineScope
@@ -106,8 +106,8 @@ object SaveVoicesToLocalStorage : SwitchHookItem(), IResolvesDex,
                     runCatching {
                         silkPath.deleteIfExists()
                         silkOriginalPath.copyTo(silkPath, overwrite = true)
-                        SilkCodec.silkToPcm(silkPath.absolutePathString(), pcmPath.absolutePathString())
-                        SilkCodec.pcmToMp3(pcmPath.absolutePathString(), mp3Path.absolutePathString())
+                        AudioUtils.silkToPcm(silkPath.absolutePathString(), pcmPath.absolutePathString())
+                        AudioUtils.pcmToMp3(pcmPath.absolutePathString(), mp3Path.absolutePathString())
                         pcmPath.deleteIfExists()
                     }.onSuccess {
                         withContext(Dispatchers.Main) {

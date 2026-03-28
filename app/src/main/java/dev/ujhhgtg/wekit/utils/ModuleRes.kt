@@ -5,7 +5,6 @@ import android.content.Context
 import android.content.res.Resources
 import android.graphics.drawable.Drawable
 import dev.ujhhgtg.nameof.nameof
-import dev.ujhhgtg.wekit.R
 import dev.ujhhgtg.wekit.constants.PackageNames
 
 /**
@@ -20,12 +19,6 @@ object ModuleRes {
     var moduleContext: Context? = null
     var resources: Resources? = null
 
-    /**
-     * 初始化加载器，只需在 Hook 入口处调用一次
-     *
-     * @param hostContext   宿主的 Context
-     * @param modulePkgName 模块的包名
-     */
     @SuppressLint("DiscouragedApi")
     fun init(hostContext: Context, modulePkgName: String) {
         if (moduleContext != null) return
@@ -36,7 +29,6 @@ object ModuleRes {
                 Context.CONTEXT_IGNORE_SECURITY or Context.CONTEXT_INCLUDE_CODE
             )
             resources = moduleContext!!.resources
-            moduleContext!!.setTheme(R.style.Theme_WeKit)
         }.onFailure { WeLogger.e(TAG, "failed to initialize module resources", it) }
     }
 

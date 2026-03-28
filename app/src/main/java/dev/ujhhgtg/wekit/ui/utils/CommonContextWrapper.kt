@@ -7,8 +7,6 @@ import android.content.res.Resources
 import android.util.AttributeSet
 import android.view.LayoutInflater
 import android.view.View
-import dev.ujhhgtg.nameof.nameof
-import dev.ujhhgtg.wekit.R
 import dev.ujhhgtg.wekit.utils.ModuleRes
 import java.lang.reflect.Constructor
 
@@ -27,7 +25,7 @@ import java.lang.reflect.Constructor
  * 2025.1.19 - 移除了 Theme.setTo(baseTheme)，防止宿主资源 ID 污染模块 Theme
  * - 代理 getAssets() 以确保资源加载链路完整
  */
-class CommonContextWrapper(base: Context?, themeResId: Int) : ContextWrapper(base) {
+class CommonContextWrapper(base: Context?) : ContextWrapper(base) {
 
     private val mTheme: Resources.Theme
     private var mInflater: LayoutInflater? = null
@@ -40,14 +38,6 @@ class CommonContextWrapper(base: Context?, themeResId: Int) : ContextWrapper(bas
 
         // 创建独立 Theme
         this.mTheme = this.mResources.newTheme()
-
-        // 应用模块 Theme
-        if (themeResId != 0) {
-            this.mTheme.applyStyle(themeResId, true)
-        } else {
-            // 尝试自动获取默认 Theme
-            this.mTheme.applyStyle(R.style.Theme_WeKit, true)
-        }
     }
 
     override fun getClassLoader(): ClassLoader? {
@@ -167,13 +157,11 @@ class CommonContextWrapper(base: Context?, themeResId: Int) : ContextWrapper(bas
     }
 
     companion object {
-        private val TAG = nameof(CommonContextWrapper::class)
-
         fun create(base: Context): Context {
             if (ModuleRes.moduleContext == null) {
                 return base
             }
-            return CommonContextWrapper(base, R.style.Theme_WeKit)
+            return CommonContextWrapper(base)
         }
     }
 }

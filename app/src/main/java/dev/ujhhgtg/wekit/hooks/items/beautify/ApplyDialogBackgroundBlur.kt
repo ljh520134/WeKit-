@@ -29,7 +29,7 @@ import dev.ujhhgtg.wekit.ui.utils.showComposeDialog
 import dev.ujhhgtg.wekit.utils.WeLogger
 import kotlin.math.roundToInt
 
-@HookItem(path = "界面美化/对话框窗口级背景模糊", desc = "为模块与宿主的对话框添加窗口级模糊处理")
+@HookItem(path = "界面美化/对话框窗口级背景模糊", desc = "为模块与微信的对话框添加窗口级模糊处理")
 object ApplyDialogBackgroundBlur : ClickableHookItem() {
 
     private val TAG = nameof(ApplyDialogBackgroundBlur)

@@ -12,7 +12,7 @@ import dev.ujhhgtg.wekit.ui.utils.showComposeDialog
 import dev.ujhhgtg.wekit.utils.showToast
 import org.luckypray.dexkit.DexKitBridge
 
-@HookItem(path = "系统与隐私/虚拟定位", desc = "预设定宿主获取到的经纬度")
+@HookItem(path = "系统与隐私/虚拟定位", desc = "预设定微信获取到的经纬度")
 object FakeLocation : ClickableHookItem(), IResolvesDex {
 
     private val methodListener by dexMethod()

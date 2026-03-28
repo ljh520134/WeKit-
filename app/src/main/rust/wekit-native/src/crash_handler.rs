@@ -9,7 +9,6 @@
 //! - `_Unwind_Backtrace` is technically not async-signal-safe, but this
 //!   matches the original C++ behaviour and is standard practice on Android.
 
-use crate::shared::G_CRASH_LOG_DIR;
 use core::{ffi::CStr, mem::MaybeUninit, sync::atomic::Ordering};
 use libc::*;
 
@@ -26,6 +25,7 @@ const SIGNALS: &[c_int] = &[SIGSEGV, SIGABRT, SIGFPE, SIGILL, SIGBUS, SIGTRAP];
 const MAX_SIGNALS: usize = 32;
 const MAX_FRAMES: usize = 128;
 
+static mut G_CRASH_LOG_DIR: [u8; 512] = [0u8; 512];
 static mut G_OLD_HANDLERS: [MaybeUninit<sigaction>; MAX_SIGNALS] =
     [MaybeUninit::uninit(); MAX_SIGNALS];
 

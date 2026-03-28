@@ -380,7 +380,7 @@ dependencies {
     implementation(libs.composablehorizons.material.symbols.outlined)
 
     implementation(libs.google.guava)
-    implementation(libs.google.protobuf.java)
+    implementation(libs.google.protobuf.javalite)
     implementation(libs.kotlinx.serialization.json)
     implementation(libs.mmkv)
 
@@ -406,17 +406,13 @@ dependencies {
     annotationProcessor(libs.lombok)
 
     implementation(libs.markwon.core)
-    implementation(libs.markwon.ext.latex)
     implementation(libs.markwon.ext.strikethrough)
     implementation(libs.markwon.ext.tables)
     implementation(libs.markwon.ext.tasklist)
     implementation(libs.markwon.html)
     implementation(libs.markwon.image)
-    implementation(libs.markwon.linkify)
     implementation(libs.svg)
     implementation(libs.gif)
-
-    implementation(libs.mp3agic)
 
     implementation(libs.mcp.server)
     implementation(platform(libs.ktor.bom))

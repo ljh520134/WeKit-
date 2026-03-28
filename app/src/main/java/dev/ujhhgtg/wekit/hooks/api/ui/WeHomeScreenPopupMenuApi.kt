@@ -48,8 +48,15 @@ object WeHomeScreenPopupMenuApi : ApiHookItem(), IResolvesDex {
     private val classMenuItemWrapper by dexClass()
 
     override fun onEnable() {
+        // WeChat 8.0.70 moved this to com.tencent.mm.ui.HomeUI
         methodAddItem.hookAfter { param ->
-            val thisObj = param.thisObject
+            var thisObj = param.thisObject
+
+            if (thisObj.javaClass.simpleName == "HomeUI") {
+                thisObj = thisObj.asResolver()
+                    .firstField { type = methodHandleItemClick.method.declaringClass }
+                    .get()!!
+            }
 
             @Suppress("UNCHECKED_CAST")
             val items = thisObj.asResolver()

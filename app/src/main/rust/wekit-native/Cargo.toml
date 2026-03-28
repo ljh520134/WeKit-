@@ -17,11 +17,10 @@ symphonia = { version = "0.5", features = [
     "pcm",
 ], default-features = false }
 mp3lame-encoder = "0.2"
-bytemuck = "1"
 anyhow = "1"
 
 [profile.release]
-opt-level = "s"
+opt-level = "z"
 lto = true
 codegen-units = 1
 strip = true

@@ -24,7 +24,7 @@ import dev.ujhhgtg.wekit.ui.content.DefaultColumn
 import dev.ujhhgtg.wekit.ui.utils.showComposeDialog
 import dev.ujhhgtg.wekit.utils.WeLogger
 
-@HookItem(path = "调试/重定向宿主日志", desc = "将宿主日志打印至模块日志")
+@HookItem(path = "调试/重定向微信日志", desc = "将微信内部日志打印至模块日志")
 object RedirectHostLogs : ClickableHookItem() {
 
     private val TAG = nameof(RedirectHostLogs)
@@ -108,7 +108,7 @@ object RedirectHostLogs : ClickableHookItem() {
         showComposeDialog(context) {
 
             AlertDialogContent(
-                title = { Text("重定向宿主日志") },
+                title = { Text("重定向微信日志") },
                 text = {
                     var v by remember { mutableStateOf(getBoolOrFalse("${KEY_PREFIX}v")) }
                     var d by remember { mutableStateOf(getBoolOrFalse("${KEY_PREFIX}d")) }

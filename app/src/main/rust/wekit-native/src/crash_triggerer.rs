@@ -1,4 +1,3 @@
-use crate::shared::G_CRASH_LOG_DIR;
 use std::sync::atomic::{AtomicBool, Ordering};
 
 use libc::abort;
@@ -17,19 +16,6 @@ pub fn trigger_test_crash(crash_type: i32) {
         "Handler installed: {}",
         HANDLER_INSTALLED.load(Ordering::SeqCst)
     );
-    unsafe {
-        logi!(
-            "Crash log dir: {}",
-            core::str::from_utf8_unchecked(
-                &G_CRASH_LOG_DIR[..(&raw const G_CRASH_LOG_DIR)
-                    .as_ref()
-                    .unwrap()
-                    .iter()
-                    .position(|&b| b == 0)
-                    .unwrap_or(0)]
-            )
-        );
-    }
     logi!("========================================");
 
     match crash_type {

@@ -63,8 +63,7 @@ object NotificationsEvolved : SwitchHookItem() {
 
     // cache friends to avoid repeating sql queries
     // TODO: build a sql statement to directly query target contact
-    private val friends by lazy { WeDatabaseApi.getFriends() }
-    private val groups by lazy { WeDatabaseApi.getGroups() }
+    private val contacts by lazy { WeDatabaseApi.getContacts() }
 
     private lateinit var meAvatarIcon: Icon
 
@@ -160,14 +159,9 @@ object NotificationsEvolved : SwitchHookItem() {
                         ?: "未知内容 (请向模块开发者报告错误)"
 
                 // 1. Resolve exact WXID immediately during notification creation
-                val friend =
-                    friends.firstOrNull { it.nickname == notifTitle || it.remarkName == notifTitle }
-                var convWxId = friend?.wxId
-                if (convWxId == null) {
-                    val group =
-                        groups.firstOrNull { it.nickname == notifTitle }
-                    convWxId = group?.wxId
-                }
+                val contact =
+                    contacts.firstOrNull { it.nickname == notifTitle || it.remarkName == notifTitle }
+                val convWxId = contact?.wxId
                 if (convWxId == null) {
                     WeLogger.w(TAG, "could not resolve wxid for $notifTitle, skipping enhancements")
                     return@hookBefore

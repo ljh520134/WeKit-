@@ -3,6 +3,9 @@ package dev.ujhhgtg.wekit.hooks.api.ui
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Context
+import android.content.Intent
+import android.os.Handler
+import android.os.Looper
 import com.android.dx.stock.ProxyBuilder
 import com.highcapable.kavaref.KavaRef.Companion.asResolver
 import com.highcapable.kavaref.extension.ClassLoaderProvider
@@ -185,6 +188,8 @@ object WeSettingsInjector : ApiHookItem(), IResolvesDex {
         // tryHookNewSettingsMethod1()
         tryHookNewSettingsMethod2()
         // tryHookNewSettingsMethod3()
+
+        hookLauncherUi()
     }
 
     /**
@@ -391,6 +396,31 @@ object WeSettingsInjector : ApiHookItem(), IResolvesDex {
 //            param.result = null
 //        }
 //    }
+
+    private fun hookLauncherUi() {
+        "com.tencent.mm.ui.LauncherUI".toClass().asResolver().apply {
+            firstMethod { name = "onCreate" }
+                .hookBefore { param ->
+                    val activity = param.thisObject as Activity
+                    val intent = activity.intent ?: return@hookBefore
+                    if (intent.hasExtra(BuildConfig.TAG)) {
+                        // wait for resources & theme to init
+                        Handler(Looper.getMainLooper()).postDelayed({
+                            openSettingsDialog(activity)
+                        }, 500)
+                    }
+                }
+
+            firstMethod { name = "onNewIntent" }
+                .hookBefore { param ->
+                    val activity = param.thisObject as Activity
+                    val intent = param.args[0] as? Intent? ?: return@hookBefore
+                    if (intent.hasExtra(BuildConfig.TAG)) {
+                        openSettingsDialog(activity)
+                    }
+                }
+        }
+    }
 
     private fun openSettingsDialog(context: Context) {
         MainSettingsDialog(context).show()

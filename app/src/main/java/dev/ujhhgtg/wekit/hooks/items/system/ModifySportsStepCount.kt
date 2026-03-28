@@ -20,7 +20,7 @@ import dev.ujhhgtg.wekit.ui.utils.showComposeDialog
 import dev.ujhhgtg.wekit.utils.showToast
 import org.luckypray.dexkit.DexKitBridge
 
-@HookItem(path = "系统与隐私/修改运动步数", desc = "修改宿主获取到的或手动上传运动步数")
+@HookItem(path = "系统与隐私/修改运动步数", desc = "修改微信获取到的或手动上传运动步数")
 object ModifySportsStepCount : ClickableHookItem(), IResolvesDex {
 
     private val methodGetSteps by dexMethod()

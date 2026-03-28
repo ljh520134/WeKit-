@@ -62,3 +62,6 @@ fun Uri.openInSystem(
         context.startActivity(intent)
     }
 }
+
+val Uri.fileExtension: String
+    get() = pathSegments.last().substringAfterLast('.', "")

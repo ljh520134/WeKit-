@@ -9,7 +9,7 @@ import dev.ujhhgtg.wekit.hooks.core.HookItem
 import dev.ujhhgtg.wekit.hooks.core.SwitchHookItem
 
 // https://github.com/Ujhhgtg/PandorasBox
-@HookItem(path = "系统与隐私/预见性返回动画", desc = "为宿主的活动强制启用预见性返回动画")
+@HookItem(path = "系统与隐私/预见性返回动画", desc = "为微信的活动强制启用预见性返回动画")
 object PredictiveBackGestures : SwitchHookItem() {
 
     private const val PRIVATE_FLAG_ENABLE_ON_BACK_INVOKED_CALLBACK = 1 shl 2

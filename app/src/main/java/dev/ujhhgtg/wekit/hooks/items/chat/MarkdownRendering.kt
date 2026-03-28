@@ -252,21 +252,6 @@ object MarkdownRendering : ClickableHookItem(), IResolvesDex {
             .setIncludePad(true)
             .setBreakStrategy(LineBreaker.BREAK_STRATEGY_SIMPLE)
             .setHyphenationFrequency(Layout.HYPHENATION_FREQUENCY_NONE)
-//            .apply {
-//                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-//                    setLineBreakConfig(
-//                        LineBreakConfig.Builder()
-//                            .setLineBreakStyle(LineBreakConfig.LINE_BREAK_STYLE_NONE)
-//                            .setLineBreakWordStyle(LineBreakConfig.LINE_BREAK_WORD_STYLE_NONE)
-//                            .apply {
-//                                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.VANILLA_ICE_CREAM) {
-//                                    setHyphenation(LineBreakConfig.HYPHENATION_DISABLED)
-//                                }
-//                            }
-//                            .build()
-//                    )
-//                }
-//            }
             .build()
     }
 
@@ -293,28 +278,10 @@ object MarkdownRendering : ClickableHookItem(), IResolvesDex {
                     }
                 }
             })
-            // FIXME: doesn't work
-//                        .usePlugin(MarkwonInlineParserPlugin.create())
-//                        .usePlugin(JLatexMathPlugin.create(17f) {
-//                            it.inlinesEnabled(true)
-//                            it.blocksEnabled(true)
-//                            it.blocksLegacy(false)
-            // Force synchronous execution so drawables are ready before canvas draw
-//                            it.executorService(object : AbstractExecutorService() {
-//                                override fun execute(command: Runnable) = command.run()
-//                                override fun shutdown() {}
-//                                override fun shutdownNow() = mutableListOf<Runnable>()
-//                                override fun isShutdown() = false
-//                                override fun isTerminated() = false
-//                                override fun awaitTermination(timeout: Long, unit: TimeUnit) = true
-//                            })
-//                        })
             .usePlugin(StrikethroughPlugin.create())
             .usePlugin(TablePlugin.create {})
             .usePlugin(TaskListPlugin.create(context))
             .usePlugin(ImagesPlugin.create())
-            // FIXME: doesn't work
-//                        .usePlugin(LinkifyPlugin.create(Linkify.WEB_URLS))
             .build()
     }
 

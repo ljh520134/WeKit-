@@ -86,17 +86,12 @@ object WeDatabaseApi : ApiHookItem(), IResolvesDex {
         // 联系人查询
         // =========================================
 
-        /** 所有人类账号（排除群聊和公众号和系统账号） */
+        /** 所有账号 */
         val CONTACTS = """
             SELECT $CONTACT_FIELDS, r.type
             FROM rcontact r
             $LEFT_JOIN_IMG_FLAG
-            WHERE
-                r.username != 'filehelper'
-                AND r.verifyFlag = 0
-                AND (r.type & 1) != 0
-                AND (r.type & 8) = 0
-                AND (r.type & 32) = 0
+            WHERE r.verifyFlag = 0
         """.trimIndent()
 
         /** 好友列表（排除群聊和公众号和系统账号和自己和假好友） */
@@ -104,16 +99,7 @@ object WeDatabaseApi : ApiHookItem(), IResolvesDex {
             SELECT $CONTACT_FIELDS, r.type
             FROM rcontact r
             $LEFT_JOIN_IMG_FLAG
-            WHERE
-                (
-                    r.encryptUsername != '' -- 是真好友
-                    OR
-                    r.username = (SELECT value FROM userinfo WHERE id = 2) -- 是我自己
-                )
-                AND r.verifyFlag = 0
-                AND (r.type & 1) != 0
-                AND (r.type & 8) = 0
-                AND (r.type & 32) = 0
+            WHERE r.verifyFlag = 0 AND r.username LIKE 'wxid_%'
         """.trimIndent()
 
         // =========================================
@@ -297,7 +283,7 @@ object WeDatabaseApi : ApiHookItem(), IResolvesDex {
 
     /**
      * 获取【全部联系人】
-     * 返回所有人类账号（包含好友、陌生人、自己），但排除群和公众号
+     * 返回所有账号
      */
     fun getContacts(): List<WeContact> {
         return mapToContacts(executeQuery(SqlStatements.CONTACTS))

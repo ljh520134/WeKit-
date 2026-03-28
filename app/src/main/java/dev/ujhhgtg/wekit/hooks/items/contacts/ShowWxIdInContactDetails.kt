@@ -4,7 +4,6 @@ import android.app.Activity
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
-import dev.ujhhgtg.wekit.hooks.api.core.WeDatabaseApi
 import dev.ujhhgtg.wekit.hooks.api.ui.WeContactPrefsScreenApi
 import dev.ujhhgtg.wekit.hooks.api.ui.WeContactPrefsScreenApi.ContactInfoItem
 import dev.ujhhgtg.wekit.hooks.api.ui.WeContactPrefsScreenApi.IContactInfoProvider
@@ -22,18 +21,9 @@ object ShowWxIdInContactDetails : SwitchHookItem(), IContactInfoProvider {
     private const val SEPARATOR = ";"
 
     override fun getContactInfoItem(activity: Activity): ContactInfoItem {
-        var wxId: String?
-        val intentField = activity.intent.getStringExtra("Contact_User")
-        wxId = if (intentField != null) {
-            if (!intentField.startsWith("wxid_")) {
-                val friends = WeDatabaseApi.getFriends()
-                friends.firstOrNull { it.customWxid == intentField }?.wxId ?: intentField
-            } else {
-                intentField
-            }
-        } else {
-            activity.intent.getStringExtra("RoomInfo_Id")
-        }
+        val wxId = activity.intent.getStringExtra("Contact_User") ?:
+            activity.intent.getStringExtra("RoomInfo_Id") ?:
+            activity.intent.getStringExtra("Chat_User")
 
         return ContactInfoItem(
             key = "$PREF_KEY$SEPARATOR$wxId",

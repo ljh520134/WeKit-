@@ -1,10 +1,9 @@
 //! JNI entry points
 
+mod audio_utils;
 mod crash_handler;
 mod crash_triggerer;
 mod logging;
-mod shared;
-mod silk_codec;
 mod utils;
 
 use std::ffi::CString;
@@ -13,8 +12,8 @@ use crash_handler::{install_crash_handler, uninstall_crash_handler};
 use crash_triggerer::trigger_test_crash;
 
 use jni::sys::{
-    JNI_FALSE, JNI_TRUE, JNI_VERSION_1_6, JNIEnv as RawJNIEnv, JavaVM, jboolean, jint, jobject,
-    jstring,
+    JNI_FALSE, JNI_TRUE, JNI_VERSION_1_6, JNIEnv as RawJNIEnv, JavaVM, jboolean, jint, jlong,
+    jobject, jstring,
 };
 use libc::c_void;
 
@@ -89,7 +88,7 @@ pub unsafe extern "C" fn Java_dev_ujhhgtg_wekit_hooks_items_chat_MarkdownRenderi
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn Java_dev_ujhhgtg_wekit_utils_SilkCodec_mp3ToSilk(
+pub extern "C" fn Java_dev_ujhhgtg_wekit_utils_AudioUtils_mp3ToSilk(
     env: *mut RawJNIEnv,
     _thiz: jobject,
     mp3_path: jstring,
@@ -99,7 +98,7 @@ pub extern "C" fn Java_dev_ujhhgtg_wekit_utils_SilkCodec_mp3ToSilk(
     with_jstring(env, mp3_path, |mp3| {
         with_jstring(env, silk_path, |silk| {
             logi!("converting {} to {}", mp3, silk);
-            match silk_codec::mp3_to_silk(mp3, silk) {
+            match audio_utils::mp3_to_silk(mp3, silk) {
                 Ok(_) => {
                     logi!("mp3ToSilk succeeded");
                     JNI_TRUE
@@ -114,7 +113,7 @@ pub extern "C" fn Java_dev_ujhhgtg_wekit_utils_SilkCodec_mp3ToSilk(
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn Java_dev_ujhhgtg_wekit_utils_SilkCodec_silkToPcm(
+pub extern "C" fn Java_dev_ujhhgtg_wekit_utils_AudioUtils_silkToPcm(
     env: *mut RawJNIEnv,
     _thiz: jobject,
     silk_path: jstring,
@@ -124,7 +123,7 @@ pub extern "C" fn Java_dev_ujhhgtg_wekit_utils_SilkCodec_silkToPcm(
     with_jstring(env, silk_path, |silk| {
         with_jstring(env, pcm_path, |pcm| {
             logi!("converting {} to {}", silk, pcm);
-            match silk_codec::silk_to_pcm(silk, pcm, 24000) {
+            match audio_utils::silk_to_pcm(silk, pcm, 24000) {
                 Ok(_) => {
                     logi!("silkToPcm succeeded");
                     JNI_TRUE
@@ -139,7 +138,7 @@ pub extern "C" fn Java_dev_ujhhgtg_wekit_utils_SilkCodec_silkToPcm(
 }
 
 #[unsafe(no_mangle)]
-pub extern "C" fn Java_dev_ujhhgtg_wekit_utils_SilkCodec_pcmToMp3(
+pub extern "C" fn Java_dev_ujhhgtg_wekit_utils_AudioUtils_pcmToMp3(
     env: *mut RawJNIEnv,
     _thiz: jobject,
     pcm_path: jstring,
@@ -149,7 +148,7 @@ pub extern "C" fn Java_dev_ujhhgtg_wekit_utils_SilkCodec_pcmToMp3(
     with_jstring(env, pcm_path, |pcm| {
         with_jstring(env, mp3_path, |mp3| {
             logi!("converting {} to {}", pcm, mp3);
-            if silk_codec::pcm_to_mp3(pcm, mp3, 24000, 128) {
+            if audio_utils::pcm_to_mp3(pcm, mp3, 24000, 128) {
                 logi!("pcmToMp3 succeeded");
                 JNI_TRUE
             } else {
@@ -157,6 +156,25 @@ pub extern "C" fn Java_dev_ujhhgtg_wekit_utils_SilkCodec_pcmToMp3(
                 JNI_FALSE
             }
         })
+    })
+}
+
+#[unsafe(no_mangle)]
+pub extern "C" fn Java_dev_ujhhgtg_wekit_utils_AudioUtils_getDurationMs(
+    env: *mut RawJNIEnv,
+    _thiz: jobject,
+    path: jstring,
+) -> jlong {
+    logi!("reading audio duration...");
+    with_jstring(env, path, |p| match audio_utils::get_audio_duration_ms(p) {
+        Ok(val) => {
+            logi!("getDurationMs succeeded");
+            val
+        }
+        Err(err) => {
+            loge!("getDurationMs failed: {:?}", err);
+            0
+        }
     })
 }
 

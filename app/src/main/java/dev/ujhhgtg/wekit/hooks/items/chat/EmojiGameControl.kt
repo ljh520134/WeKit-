@@ -2,11 +2,9 @@ package dev.ujhhgtg.wekit.hooks.items.chat
 
 import android.app.Activity
 import android.widget.Toast
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.rememberScrollState
@@ -27,7 +25,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import de.robv.android.xposed.XC_MethodHook
-import de.robv.android.xposed.XposedBridge
 import de.robv.android.xposed.XposedHelpers
 import dev.ujhhgtg.nameof.nameof
 import dev.ujhhgtg.wekit.dexkit.abc.IResolvesDex
@@ -36,12 +33,13 @@ import dev.ujhhgtg.wekit.hooks.core.HookItem
 import dev.ujhhgtg.wekit.hooks.core.SwitchHookItem
 import dev.ujhhgtg.wekit.ui.content.AlertDialogContent
 import dev.ujhhgtg.wekit.ui.content.Button
+import dev.ujhhgtg.wekit.ui.content.DefaultColumn
 import dev.ujhhgtg.wekit.ui.content.TextButton
 import dev.ujhhgtg.wekit.ui.utils.showComposeDialog
 import dev.ujhhgtg.wekit.utils.RuntimeConfig
-import dev.ujhhgtg.wekit.utils.showToast
-import dev.ujhhgtg.wekit.utils.invokeOriginal
 import dev.ujhhgtg.wekit.utils.WeLogger
+import dev.ujhhgtg.wekit.utils.invokeOriginal
+import dev.ujhhgtg.wekit.utils.showToast
 import org.luckypray.dexkit.DexKitBridge
 import org.luckypray.dexkit.query.enums.MatchType
 import kotlin.random.Random
@@ -217,56 +215,54 @@ object EmojiGameControl : SwitchHookItem(), IResolvesDex {
         AlertDialogContent(
             title = { Text(if (isDice) "选择骰子点数" else "选择猜拳结果") },
             text = {
-                Text(
-                    "发送模式",
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-                Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                    listOf("单次" to true, "多次" to false).forEach { (label, single) ->
-                        FilterChip(
-                            selected = isSingleMode == single,
-                            onClick = { isSingleMode = single },
-                            label = { Text(label) }
-                        )
-                    }
-                }
-
-                HorizontalDivider()
-
-                // ── Single mode: radio buttons ─────────────────────────────────
-                AnimatedVisibility(visible = isSingleMode) {
-                    Row(
-                        modifier = Modifier.horizontalScroll(rememberScrollState()),
-                        horizontalArrangement = Arrangement.spacedBy(2.dp),
-                    ) {
-                        options.forEachIndexed { index, label ->
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically,
-                                modifier = Modifier.clickable { selectedIndex = index }
-                            ) {
-                                RadioButton(
-                                    selected = selectedIndex == index,
-                                    onClick = { selectedIndex = index }
-                                )
-                                Text(label)
-                            }
-                        }
-                    }
-                }
-
-                // ── Multiple mode: text input ──────────────────────────────────
-                AnimatedVisibility(visible = !isSingleMode) {
-                    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
+                DefaultColumn {
+                    Row(horizontalArrangement = Arrangement.spacedBy(8.dp),
+                        verticalAlignment = Alignment.CenterVertically) {
                         Text(
-                            text = if (isDice) "输入多个点数 (1-6)" else "输入多个选项 (1-3)\n1=剪刀, 2=石头, 3=布",
-                            style = MaterialTheme.typography.bodySmall,
+                            "发送模式: ",
+                            style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
+                        listOf("单次" to true, "多次" to false).forEach { (label, single) ->
+                            FilterChip(
+                                selected = isSingleMode == single,
+                                onClick = { isSingleMode = single },
+                                label = { Text(label) }
+                            )
+                        }
+                    }
+
+                    HorizontalDivider()
+
+                    // FIXME: animation is weird, so we remove it for now
+                    if (isSingleMode) {
+                        // --- Single Mode: Radio Buttons ---
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .horizontalScroll(rememberScrollState()),
+                            horizontalArrangement = Arrangement.spacedBy(2.dp),
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            options.forEachIndexed { index, label ->
+                                Row(
+                                    verticalAlignment = Alignment.CenterVertically,
+                                    modifier = Modifier.clickable { selectedIndex = index }
+                                ) {
+                                    RadioButton(
+                                        selected = selectedIndex == index,
+                                        onClick = { selectedIndex = index }
+                                    )
+                                    Text(label)
+                                }
+                            }
+                        }
+                    } else {
+                        // --- Multiple Mode: TextField ---
                         OutlinedTextField(
                             value = inputText,
-                            onValueChange = { inputText = it },
-                            placeholder = { Text(if (isDice) "例如: 123456" else "例如: 123") },
+                            onValueChange = { inputText = it.filter { c -> c.isDigit() } },
+                            placeholder = { Text(if (isDice) "输入 1~6" else "输入 1:剪刀 2:石头 3:布") },
                             singleLine = true,
                             modifier = Modifier.fillMaxWidth()
                         )
@@ -274,15 +270,19 @@ object EmojiGameControl : SwitchHookItem(), IResolvesDex {
                 }
             },
             dismissButton = {
-                TextButton(onClick = { onDismiss() }) { Text("取消") }
-                TextButton(onClick = { onRandom(isSingleMode); onDismiss() }) { Text("随机") }
+                TextButton(onDismiss) { Text("取消") }
+                TextButton(onClick = {
+                    onRandom(isSingleMode)
+                    onDismiss()
+                }) { Text("随机") }
             },
             confirmButton = {
                 Button(onClick = {
                     onSend(
                         isSingleMode,
                         inputText
-                    ); onDismiss()
+                    )
+                    onDismiss()
                 }) { Text("发送") }
             })
     }

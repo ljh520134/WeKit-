@@ -17,11 +17,7 @@ import androidx.core.graphics.drawable.toDrawable
 import androidx.lifecycle.setViewTreeLifecycleOwner
 import androidx.lifecycle.setViewTreeViewModelStoreOwner
 import androidx.savedstate.setViewTreeSavedStateRegistryOwner
-import dev.ujhhgtg.nameof.nameof
-import dev.ujhhgtg.wekit.hooks.items.beautify.ApplyDialogBackgroundBlur
 import dev.ujhhgtg.wekit.utils.HostInfo
-
-private val TAG = nameof(::showComposeDialog)
 
 // useful for showing a compose dialog in non-compose context,
 // or when you don't want to manage the state for a dialog inside a composable
@@ -48,21 +44,7 @@ fun showComposeDialog(
     dialog.apply {
         window!!.apply {
             setBackgroundDrawableResource(android.R.color.transparent)
-
-            if (!ApplyDialogBackgroundBlur.isEnabled) {
-                return@apply
-            }
-
             requestFeature(Window.FEATURE_NO_TITLE)
-//            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
-//                addFlags(WindowManager.LayoutParams.FLAG_BLUR_BEHIND)
-//                attributes.blurBehindRadius = WePrefs.getIntOrDef(
-//                    ApplyDialogBackgroundBlur.KEY_BLUR_RADIUS,
-//                    ApplyDialogBackgroundBlur.DEFAULT_BLUR_RADIUS
-//                )
-//            } else {
-//                WeLogger.w(TAG, "sdk < 31, not applying blur behind dialog")
-//            }
         }
 
         // FIXME: this doesn't work:
@@ -90,7 +72,7 @@ fun showComposeDialog(
             }
         )
 
-        window?.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
+        window!!.setBackgroundDrawable(Color.TRANSPARENT.toDrawable())
         setOnDismissListener { lifecycleOwner.onDestroy() }
         show()
     }
