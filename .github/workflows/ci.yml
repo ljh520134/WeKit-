@@ -126,6 +126,8 @@ jobs:
           
           apks=(artifacts/*.apk)
           
+          echo $apks
+          
           if [ ${#apks[@]} -eq 1 ]; then
             # Single APK — use sendDocument (supports caption)
             curl -s -X POST "http://localhost:8081/bot${BOT_TOKEN}/sendDocument" \
@@ -150,6 +152,8 @@ jobs:
               fi
             done
             media_json+="]"
+          
+            echo $media_json
           
             curl -s -X POST "http://localhost:8081/bot${BOT_TOKEN}/sendMediaGroup" \
               -F chat_id="${CHAT_ID}" \
