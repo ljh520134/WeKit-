@@ -146,27 +146,32 @@ configure<ApplicationExtension> {
         buildConfigField("String", "GIT_HASH", "\"${gitHash}\"")
         buildConfigField("String", "TAG", "\"WeKit\"")
         buildConfigField("long", "BUILD_TIMESTAMP", "${System.currentTimeMillis()}L")
+
+        // ========== 优化：只保留 arm64-v8a 的 ndk 配置 ==========
+        ndk {
+            abiFilters.add("arm64-v8a")
+        }
+        // =======================================================
     }
 
+    // ========== 优化：只打包 arm64-v8a，不要 universal APK ==========
     splits {
         abi {
             isEnable = true
             reset()
-            include("arm64-v8a", "x86_64", "armeabi-v7a", "x86")
-            isUniversalApk = true
+            include("arm64-v8a")  // 只保留主流架构
+            isUniversalApk = false  // 不要 universal APK
         }
     }
+    // ==============================================================
 
     sourceSets["main"].jniLibs.directories += "src/main/jniLibs"
 
-    // ========== 修改开始：签名配置 ==========
     signingConfigs {
         create("release") {
-            // 安全读取环境变量（处理空字符串情况）
             val keystoreFile = System.getenv("WEKIT_KEYSTORE_FILE")?.takeIf { it.isNotBlank() }
             
             if (keystoreFile != null) {
-                // 有签名配置，使用正式签名
                 storeFile = file(keystoreFile)
                 storePassword = System.getenv("WEKIT_KEYSTORE_PASSWORD")?.takeIf { it.isNotBlank() } ?: ""
                 keyAlias = System.getenv("WEKIT_KEY_ALIAS")?.takeIf { it.isNotBlank() } ?: ""
@@ -177,7 +182,6 @@ configure<ApplicationExtension> {
                 enableV3Signing = true
                 enableV4Signing = true
             } else {
-                // 没有签名配置，使用 debug 签名
                 logger.lifecycle("No keystore configured, using debug signing")
                 val debugKeystore = File(System.getProperty("user.home"), ".android/debug.keystore")
                 storeFile = debugKeystore
@@ -187,16 +191,15 @@ configure<ApplicationExtension> {
             }
         }
     }
-    // ========== 修改结束 ==========
 
     buildTypes {
         debug {
-            signingConfig = signingConfigs.getByName("release")
+            signingConfig = null
         }
 
         release {
-            isMinifyEnabled = true
-            isShrinkResources = true
+            isMinifyEnabled = true      // 代码压缩已开启
+            isShrinkResources = true    // 资源压缩已开启
             signingConfig = signingConfigs.getByName("release")
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
@@ -219,6 +222,12 @@ configure<ApplicationExtension> {
             "META-INF/xposed/*",
             "org/mozilla/javascript/**"
         )
+        
+        // ========== 优化：压缩 so 文件 ==========
+        jniLibs {
+            useLegacyPackaging = false  // 使用新压缩方式
+        }
+        // ======================================
     }
 
     @Suppress("UnstableApiUsage")
@@ -347,7 +356,11 @@ val abiToTarget = mapOf(
     "armeabi-v7a" to "armv7-linux-androideabi",
     "x86" to "i686-linux-android"
 )
-val cargoTasks = abiToTarget.map { (abi, target) ->
+
+// ========== 优化：只编译 arm64-v8a ==========
+val cargoTasks = listOf("arm64-v8a").map { abi ->
+    val target = abiToTarget[abi]!!
+// ==========================================
     tasks.register<Exec>("cargoBuild_${abi.replace('-', '_')}") {
         group = "rust"
         description = "Compile Rust for $abi"
@@ -363,6 +376,14 @@ val cargoTasks = abiToTarget.map { (abi, target) ->
             val soDir = layout.projectDirectory
                 .dir("src/main/jniLibs/$abi").asFile
             soDir.mkdirs()
+            
+            // ========== 优化：strip 调试符号 ==========
+            exec {
+                commandLine("llvm-strip", "--strip-all", soSrc.absolutePath)
+                isIgnoreExitValue = true
+            }
+            // =========================================
+            
             soSrc.copyTo(soDir.resolve(rustLibName), overwrite = true)
         }
     }
