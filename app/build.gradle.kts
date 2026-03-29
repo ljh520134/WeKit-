@@ -145,8 +145,6 @@ configure<ApplicationExtension> {
         buildConfigField("String", "GIT_HASH", "\"${gitHash}\"")
         buildConfigField("String", "TAG", "\"WeKit\"")
         buildConfigField("long", "BUILD_TIMESTAMP", "${System.currentTimeMillis()}L")
-
-        // 删除了 ndk.abiFilters，只用 splits.abi
     }
 
     splits {
@@ -163,17 +161,18 @@ configure<ApplicationExtension> {
     signingConfigs {
         create("release") {
             val keystoreFile = System.getenv("WEKIT_KEYSTORE_FILE")?.takeIf { it.isNotBlank() }
-
+            
             if (keystoreFile != null) {
                 storeFile = file(keystoreFile)
                 storePassword = System.getenv("WEKIT_KEYSTORE_PASSWORD")?.takeIf { it.isNotBlank() } ?: ""
                 keyAlias = System.getenv("WEKIT_KEY_ALIAS")?.takeIf { it.isNotBlank() } ?: ""
                 keyPassword = System.getenv("WEKIT_KEY_PASSWORD")?.takeIf { it.isNotBlank() } ?: ""
-
+                
                 enableV1Signing = false
                 enableV2Signing = true
                 enableV3Signing = true
                 enableV4Signing = true
+                logger.lifecycle("Using release keystore: $keystoreFile")
             } else {
                 logger.lifecycle("No keystore configured, using debug signing")
                 val debugKeystore = File(System.getProperty("user.home"), ".android/debug.keystore")
@@ -186,8 +185,12 @@ configure<ApplicationExtension> {
     }
 
     buildTypes {
+        // 修复：debug 也使用签名配置，体积更小
         debug {
-            signingConfig = null
+            signingConfig = signingConfigs.getByName("release")
+            isDebuggable = true
+            isMinifyEnabled = false
+            isShrinkResources = false
         }
 
         release {
@@ -215,7 +218,7 @@ configure<ApplicationExtension> {
             "META-INF/xposed/*",
             "org/mozilla/javascript/**"
         )
-
+        
         jniLibs {
             useLegacyPackaging = false
         }
