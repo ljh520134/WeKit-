@@ -96,13 +96,10 @@ jobs:
 
       - name: Build Release (Unsigned/Debug)
         if: env.KEYSTORE_BASE64 == '' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/master'
-        # 关键修复：添加空的环境变量，防止 Gradle 报错
-        env:
-          WEKIT_KEYSTORE_FILE: ""
-          WEKIT_KEYSTORE_PASSWORD: ""
-          WEKIT_KEY_ALIAS: ""
-          WEKIT_KEY_PASSWORD: ""
-        run: ./gradlew assembleDebug --warning-mode all --stacktrace
+        run: |
+          mkdir -p ~/.android
+          keytool -genkey -v -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+          ./gradlew assembleDebug --warning-mode all --stacktrace
 
       - name: Upload Release
         if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/master'
