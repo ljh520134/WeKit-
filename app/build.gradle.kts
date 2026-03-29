@@ -163,13 +163,13 @@ configure<ApplicationExtension> {
     signingConfigs {
         create("release") {
             val keystoreFile = System.getenv("WEKIT_KEYSTORE_FILE")?.takeIf { it.isNotBlank() }
-            
+
             if (keystoreFile != null) {
                 storeFile = file(keystoreFile)
                 storePassword = System.getenv("WEKIT_KEYSTORE_PASSWORD")?.takeIf { it.isNotBlank() } ?: ""
                 keyAlias = System.getenv("WEKIT_KEY_ALIAS")?.takeIf { it.isNotBlank() } ?: ""
                 keyPassword = System.getenv("WEKIT_KEY_PASSWORD")?.takeIf { it.isNotBlank() } ?: ""
-                
+
                 enableV1Signing = false
                 enableV2Signing = true
                 enableV3Signing = true
@@ -215,7 +215,7 @@ configure<ApplicationExtension> {
             "META-INF/xposed/*",
             "org/mozilla/javascript/**"
         )
-        
+
         jniLibs {
             useLegacyPackaging = false
         }
@@ -346,6 +346,12 @@ val abiToTarget = mapOf(
     "x86" to "i686-linux-android"
 )
 
+// 全局变量存储 NDK 路径，供 cargo 任务使用
+val androidHome = gradleLocalProperties(rootDir, providers).getProperty("sdk.dir")
+    ?: System.getenv("ANDROID_HOME")
+    ?: error("ANDROID_HOME / sdk.dir not set")
+val ndkVer = libs.versions.ndk.get()
+
 val cargoTasks = listOf("arm64-v8a").map { abi ->
     val target = abiToTarget[abi]!!
     tasks.register<Exec>("cargoBuild_${abi.replace('-', '_')}") {
@@ -364,12 +370,17 @@ val cargoTasks = listOf("arm64-v8a").map { abi ->
                 .dir("src/main/jniLibs/$abi").asFile
             soDir.mkdirs()
             
-            ProcessBuilder("llvm-strip", "--strip-all", soSrc.absolutePath)
+            // 使用 NDK 中的 llvm-strip 完整路径
+            val llvmStrip = "$androidHome/ndk/$ndkVer/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip"
+            
+            logger.lifecycle("Stripping $abi library with: $llvmStrip")
+            ProcessBuilder(llvmStrip, "--strip-all", soSrc.absolutePath)
                 .inheritIO()
                 .start()
                 .waitFor()
             
             soSrc.copyTo(soDir.resolve(rustLibName), overwrite = true)
+            logger.lifecycle("Copied stripped library to: ${soDir.resolve(rustLibName).absolutePath}")
         }
     }
 }
