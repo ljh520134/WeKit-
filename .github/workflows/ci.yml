@@ -28,7 +28,6 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    # 添加环境变量，将 secrets 映射到这里
     env:
       KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
     if: |
@@ -82,13 +81,11 @@ jobs:
           sudo apt install -y gcc-multilib
 
       - name: Decode keystore
-        # 修改：使用 env 而不是 secrets，去掉 ${{ }}
         if: env.KEYSTORE_BASE64 != ''
         run: |
           echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > $RUNNER_TEMP/wekit-keystore.jks
 
       - name: Build Release (Signed)
-        # 修改：使用 env 而不是 secrets，去掉 ${{ }}
         if: env.KEYSTORE_BASE64 != '' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/master'
         env:
           WEKIT_KEYSTORE_FILE: ${{ runner.temp }}/wekit-keystore.jks
@@ -98,7 +95,6 @@ jobs:
         run: ./gradlew assembleRelease --warning-mode all --stacktrace
 
       - name: Build Release (Unsigned/Debug)
-        # 修改：使用 env 而不是 secrets，去掉 ${{ }}
         if: env.KEYSTORE_BASE64 == '' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/master'
         run: ./gradlew assembleDebug --warning-mode all --stacktrace
 
@@ -111,14 +107,14 @@ jobs:
             app/build/outputs/apk/release/*.apk
             app/build/outputs/apk/debug/*.apk
 
+  # 修改：使用 outputs 来传递是否需要上传的信息
   upload-telegram:
     needs: build
     runs-on: ubuntu-latest
-    # 添加环境变量，将 secrets 映射到这里
-    env:
-      TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
-    # 修改：使用 env 而不是 secrets，去掉 ${{ }}
-    if: success() && github.ref == 'refs/heads/master' && env.TELEGRAM_TOKEN != ''
+    # 修改：job 级别的 if 不能使用 env，所以先只判断基本条件和 needs 状态
+    # 把 TELEGRAM_TOKEN 的判断放到 step 级别
+    if: success() && github.ref == 'refs/heads/master'
+    
     services:
       telegram-bot-api:
         image: aiogram/telegram-bot-api:latest
@@ -130,13 +126,29 @@ jobs:
           - 8081:8081
 
     steps:
+      # 修改：在 step 级别检查 TELEGRAM_TOKEN
+      - name: Check Telegram Token
+        id: check_token
+        env:
+          TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
+        run: |
+          if [ -n "$TELEGRAM_TOKEN" ]; then
+            echo "has_token=true" >> $GITHUB_OUTPUT
+          else
+            echo "has_token=false" >> $GITHUB_OUTPUT
+            echo "警告: TELEGRAM_TOKEN 未设置，跳过 Telegram 上传"
+          fi
+
       - name: Download APK artifact
+        # 修改：使用 steps.check_token.outputs.has_token 判断
+        if: steps.check_token.outputs.has_token == 'true'
         uses: actions/download-artifact@v8
         with:
           name: wekit-apk
           path: artifacts
 
       - name: Wait for Telegram API
+        if: steps.check_token.outputs.has_token == 'true'
         run: |
           until curl -s http://localhost:8081 > /dev/null; do
           echo "Waiting for Telegram API server..."
@@ -144,6 +156,7 @@ jobs:
           done
 
       - name: Send APKs via Telegram API
+        if: steps.check_token.outputs.has_token == 'true'
         env:
           BOT_TOKEN:     ${{ secrets.TELEGRAM_TOKEN }}
           CHAT_ID:       ${{ secrets.TELEGRAM_CHAT_ID }}
