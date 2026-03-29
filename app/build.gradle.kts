@@ -55,7 +55,6 @@ fun setCargoClang(androidHome: String) {
     val clangPath = findNdkClang(androidHome, minSdk) ?: error("No NDK >= $minSdk found in $androidHome/ndk")
     logger.lifecycle("Found NDK clang: $clangPath")
 
-    // TOML requires forward slashes on all platforms
     val ndkBinDir = File(clangPath).parent.replace('\\', '/')
     val configToml = rootProject.file("app/src/main/rust/wekit-native/.cargo/config.toml")
 
@@ -108,7 +107,7 @@ configure<ApplicationExtension> {
         logger.lifecycle("NDK $ndkVer not found, installing via sdkmanager...")
         val isWindows = System.getProperty("os.name").orEmpty().contains("Windows", ignoreCase = true)
         val sdkmanager = "$androidHome/cmdline-tools/latest/bin/sdkmanager" + if (isWindows) ".bat" else ""
-        providers.exec { commandLine(sdkmanager, "--install", "ndk;$ndkVer") }
+        providers.exec { commandLine(sdkmanager, "--install", "ndk;$ndkVer") }.result.get()
         logger.lifecycle("NDK $ndkVer installed")
     }
 
@@ -147,23 +146,19 @@ configure<ApplicationExtension> {
         buildConfigField("String", "TAG", "\"WeKit\"")
         buildConfigField("long", "BUILD_TIMESTAMP", "${System.currentTimeMillis()}L")
 
-        // ========== 优化：只保留 arm64-v8a 的 ndk 配置 ==========
         ndk {
             abiFilters.add("arm64-v8a")
         }
-        // =======================================================
     }
 
-    // ========== 优化：只打包 arm64-v8a，不要 universal APK ==========
     splits {
         abi {
             isEnable = true
             reset()
-            include("arm64-v8a")  // 只保留主流架构
-            isUniversalApk = false  // 不要 universal APK
+            include("arm64-v8a")
+            isUniversalApk = false
         }
     }
-    // ==============================================================
 
     sourceSets["main"].jniLibs.directories += "src/main/jniLibs"
 
@@ -198,8 +193,8 @@ configure<ApplicationExtension> {
         }
 
         release {
-            isMinifyEnabled = true      // 代码压缩已开启
-            isShrinkResources = true    // 资源压缩已开启
+            isMinifyEnabled = true
+            isShrinkResources = true
             signingConfig = signingConfigs.getByName("release")
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
@@ -223,11 +218,9 @@ configure<ApplicationExtension> {
             "org/mozilla/javascript/**"
         )
         
-        // ========== 优化：压缩 so 文件 ==========
         jniLibs {
-            useLegacyPackaging = false  // 使用新压缩方式
+            useLegacyPackaging = false
         }
-        // ======================================
     }
 
     @Suppress("UnstableApiUsage")
@@ -283,8 +276,6 @@ tasks.withType<JavaCompile>().configureEach {
         }
     }
 }
-
-// --- tasks ---
 
 abstract class GenerateMethodHashesTask : DefaultTask() {
     @get:InputDirectory
@@ -357,10 +348,8 @@ val abiToTarget = mapOf(
     "x86" to "i686-linux-android"
 )
 
-// ========== 优化：只编译 arm64-v8a ==========
 val cargoTasks = listOf("arm64-v8a").map { abi ->
     val target = abiToTarget[abi]!!
-// ==========================================
     tasks.register<Exec>("cargoBuild_${abi.replace('-', '_')}") {
         group = "rust"
         description = "Compile Rust for $abi"
@@ -377,12 +366,11 @@ val cargoTasks = listOf("arm64-v8a").map { abi ->
                 .dir("src/main/jniLibs/$abi").asFile
             soDir.mkdirs()
             
-            // ========== 优化：strip 调试符号 ==========
-            exec {
-                commandLine("llvm-strip", "--strip-all", soSrc.absolutePath)
-                isIgnoreExitValue = true
-            }
-            // =========================================
+            // 修复：使用 Runtime.exec 代替 exec {}
+            ProcessBuilder("llvm-strip", "--strip-all", soSrc.absolutePath)
+                .inheritIO()
+                .start()
+                .waitFor()
             
             soSrc.copyTo(soDir.resolve(rustLibName), overwrite = true)
         }
@@ -391,8 +379,6 @@ val cargoTasks = listOf("arm64-v8a").map { abi ->
 
 tasks.matching { it.name.startsWith("merge") && it.name.endsWith("JniLibFolders") }
     .configureEach { cargoTasks.forEach { t -> dependsOn(t) } }
-
-// --- end tasks ---
 
 dependencies {
     implementation(libs.androidx.core.ktx)
@@ -468,7 +454,6 @@ dependencies {
     compileOnly(project(":libs:common:stubs"))
 }
 
-// markwon conflict
 configurations.all {
     exclude(group = "org.jetbrains", module = "annotations-java5")
 }
