@@ -5,6 +5,7 @@ import android.os.Looper
 import androidx.core.os.postDelayed
 import com.highcapable.kavaref.KavaRef.Companion.asResolver
 import com.highcapable.kavaref.extension.ClassLoaderProvider
+import com.tencent.kinda.framework.module.impl.WXPCommReqResp
 import de.robv.android.xposed.XposedHelpers
 import dev.ujhhgtg.nameof.nameof
 import dev.ujhhgtg.wekit.dexkit.abc.IResolvesDex
@@ -88,14 +89,10 @@ object WePacketDispatcher : ApiHookItem(), IResolvesDex {
                             "onGYNetEnd" -> {
                                 try {
                                     val respV0 = args!![4] ?: v0Var
-                                    val className = respV0.javaClass.name
 
                                     // 处理 Kinda 框架的 WXPCommReqResp
-                                    if (className == "com.tencent.kinda.framework.module.impl.WXPCommReqResp") {
-                                        val originalRespBytes = XposedHelpers.callMethod(
-                                            respV0,
-                                            "getWXPRespData"
-                                        ) as? ByteArray
+                                    if (respV0 is WXPCommReqResp) {
+                                        val originalRespBytes = respV0.wxpRespData
                                         if (originalRespBytes != null) {
                                             WePacketManager.handleResponseTamper(
                                                 uri,

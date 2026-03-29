@@ -104,7 +104,7 @@ object WeAppMsgApi : ApiHookItem(), IResolvesDex {
             WeLogger.i(TAG, "准备发送 AppMsg -> $toUser")
             val contentObj = parseXmlMethod!!.invoke(null, xmlContent)
             if (contentObj == null) {
-                WeLogger.e(TAG, "XML 解析返回 null，请检查 XML 格式")
+                WeLogger.e(TAG, "XML 解析返回 null, 请检查 XML 格式")
                 return false
             }
 

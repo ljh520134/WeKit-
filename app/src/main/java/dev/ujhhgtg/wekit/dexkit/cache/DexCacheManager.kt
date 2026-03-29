@@ -6,8 +6,8 @@ import dev.ujhhgtg.wekit.dexkit.abc.IResolvesDex
 import dev.ujhhgtg.wekit.hooks.core.BaseHookItem
 import dev.ujhhgtg.wekit.preferences.WePrefs
 import dev.ujhhgtg.wekit.utils.KnownPaths
-import dev.ujhhgtg.wekit.utils.createDirectoriesNoThrow
 import dev.ujhhgtg.wekit.utils.WeLogger
+import dev.ujhhgtg.wekit.utils.createDirectoriesNoThrow
 import org.json.JSONObject
 import java.nio.file.Path
 import kotlin.io.path.deleteIfExists
@@ -44,11 +44,11 @@ object DexCacheManager {
         val versionFile = cacheDir / HOST_VERSION_FILE
         if (versionFile.exists()) {
             val cachedVersion = versionFile.readText().trim()
-            if (cachedVersion != hostVersion) {
-                WeLogger.i(TAG, "Host version changed: $cachedVersion -> $hostVersion, clearing all cache")
+            if (!cachedVersion.isBlank() && cachedVersion != hostVersion) {
+                WeLogger.i(TAG, "Host version changed: $cachedVersion -> $hostVersion, reseting cache")
                 clearAllCache()
                 WePrefs.putBool(PreferenceKeys.NO_DEX_RESOLVE, false)
-                WeLogger.i(TAG, "Reset disable_version_adaptation to false due to version change")
+                WeLogger.i(TAG, "setting NO_DEX_RESOLVE to false due to version change")
             }
         }
 

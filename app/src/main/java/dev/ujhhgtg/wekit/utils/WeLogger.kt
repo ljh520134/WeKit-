@@ -101,7 +101,7 @@ object WeLogger {
     // ========== 分段打印 ==========
     fun logChunked(priority: Int, tag: String, msg: String) {
         if (msg.length <= CHUNK_SIZE) {
-            Log.println(priority, BuildConfig.TAG, "[$tag]$msg")
+            Log.println(priority, BuildConfig.TAG, "$tag: $msg")
             return
         }
 
@@ -130,7 +130,7 @@ object WeLogger {
             Log.println(
                 priority,
                 BuildConfig.TAG,
-                "[$tag][part $part/$chunkCount] $chunk"
+                "$tag: [part $part/$chunkCount] $chunk"
             )
             i += CHUNK_SIZE
             part++

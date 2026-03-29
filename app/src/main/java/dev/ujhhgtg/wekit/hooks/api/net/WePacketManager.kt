@@ -35,7 +35,7 @@ object WePacketManager {
             val data = WeProtoData.fromBytes(respBytes)
             WeLogger.logChunkedI(
                 "WePacketInterceptor.Response",
-                "Received: $uri, CGI=$cgiId, LEN=${respBytes.size}, Data=${data.toJsonObject()}"
+                "Response: $uri, CGI=$cgiId, LEN=${respBytes.size}, Data=${data.toJsonObject()}"
             )
         }
         for (listener in listeners) {
