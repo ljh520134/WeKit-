@@ -146,9 +146,7 @@ configure<ApplicationExtension> {
         buildConfigField("String", "TAG", "\"WeKit\"")
         buildConfigField("long", "BUILD_TIMESTAMP", "${System.currentTimeMillis()}L")
 
-        ndk {
-            abiFilters.add("arm64-v8a")
-        }
+        // 删除了 ndk.abiFilters，只用 splits.abi
     }
 
     splits {
@@ -366,7 +364,6 @@ val cargoTasks = listOf("arm64-v8a").map { abi ->
                 .dir("src/main/jniLibs/$abi").asFile
             soDir.mkdirs()
             
-            // 修复：使用 Runtime.exec 代替 exec {}
             ProcessBuilder("llvm-strip", "--strip-all", soSrc.absolutePath)
                 .inheritIO()
                 .start()
