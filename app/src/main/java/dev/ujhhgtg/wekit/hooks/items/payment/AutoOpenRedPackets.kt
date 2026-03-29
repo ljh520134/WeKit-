@@ -295,7 +295,7 @@ object AutoOpenRedPackets : ClickableHookItem(), WeDatabaseListenerApi.IInsertLi
 
     override fun resolveDex(dexKit: DexKitBridge) {
         // 查找接收红包类
-        classReceiveLuckyMoney.find(dexKit, allowMultiple = false) {
+        classReceiveLuckyMoney.find(dexKit, allowMultiple = true) {
             matcher {
                 methods {
                     add {
@@ -307,7 +307,7 @@ object AutoOpenRedPackets : ClickableHookItem(), WeDatabaseListenerApi.IInsertLi
         }
 
         // 查找开红包类
-        classOpenLuckyMoney.find(dexKit, allowMultiple = false) {
+        classOpenLuckyMoney.find(dexKit, allowMultiple = true) {
             matcher {
                 methods {
                     add {
@@ -318,29 +318,18 @@ object AutoOpenRedPackets : ClickableHookItem(), WeDatabaseListenerApi.IInsertLi
             }
         }
 
-        // 获取类描述符，添加空安全检查
-        val receiveClassDesc = classReceiveLuckyMoney.getDescriptorString()
-            ?: throw IllegalStateException("Failed to resolve ReceiveLuckyMoney class")
-        
-        val openClassDesc = classOpenLuckyMoney.getDescriptorString()
-            ?: throw IllegalStateException("Failed to resolve OpenLuckyMoney class")
-
-        WeLogger.i(TAG, "Resolved receive class: $receiveClassDesc")
-        WeLogger.i(TAG, "Resolved open class: $openClassDesc")
-
-        // 查找接收红包的 onGYNetEnd 回调
-        methodOnGYNetEnd.find(dexKit, false) {
+        // 查找 onGYNetEnd 回调方法
+        methodOnGYNetEnd.find(dexKit, true) {
             matcher {
-                declaredClass = receiveClassDesc
+                declaredClass = classReceiveLuckyMoney.getDescriptorString()!!
                 name = "onGYNetEnd"
                 paramCount = 3
             }
         }
 
-        // 查找开红包的 onGYNetEnd 回调 - 修复：使用 openClassDesc 而不是 receiveClassDesc
-        methodOnOpenGYNetEnd.find(dexKit, false) {
+        methodOnOpenGYNetEnd.find(dexKit, true) {
             matcher {
-                declaredClass = openClassDesc  // 修复：这里原来是 receiveClassDesc，改为 openClassDesc
+                declaredClass = classReceiveLuckyMoney.getDescriptorString()!!
                 name = "onGYNetEnd"
                 paramCount = 3
             }
