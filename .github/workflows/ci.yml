@@ -96,6 +96,12 @@ jobs:
 
       - name: Build Release (Unsigned/Debug)
         if: env.KEYSTORE_BASE64 == '' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/master'
+        # 关键修复：添加空的环境变量，防止 Gradle 报错
+        env:
+          WEKIT_KEYSTORE_FILE: ""
+          WEKIT_KEYSTORE_PASSWORD: ""
+          WEKIT_KEY_ALIAS: ""
+          WEKIT_KEY_PASSWORD: ""
         run: ./gradlew assembleDebug --warning-mode all --stacktrace
 
       - name: Upload Release
@@ -107,12 +113,9 @@ jobs:
             app/build/outputs/apk/release/*.apk
             app/build/outputs/apk/debug/*.apk
 
-  # 修改：使用 outputs 来传递是否需要上传的信息
   upload-telegram:
     needs: build
     runs-on: ubuntu-latest
-    # 修改：job 级别的 if 不能使用 env，所以先只判断基本条件和 needs 状态
-    # 把 TELEGRAM_TOKEN 的判断放到 step 级别
     if: success() && github.ref == 'refs/heads/master'
     
     services:
@@ -126,7 +129,6 @@ jobs:
           - 8081:8081
 
     steps:
-      # 修改：在 step 级别检查 TELEGRAM_TOKEN
       - name: Check Telegram Token
         id: check_token
         env:
@@ -140,7 +142,6 @@ jobs:
           fi
 
       - name: Download APK artifact
-        # 修改：使用 steps.check_token.outputs.has_token 判断
         if: steps.check_token.outputs.has_token == 'true'
         uses: actions/download-artifact@v8
         with:
@@ -177,7 +178,6 @@ jobs:
           echo $apks
           
           if [ ${#apks[@]} -eq 1 ]; then
-            # Single APK — use sendDocument (supports caption)
             curl -s -X POST "http://localhost:8081/bot${BOT_TOKEN}/sendDocument" \
               -F chat_id="${CHAT_ID}" \
               -F document=@"${apks[0]}" \
