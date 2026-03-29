@@ -159,6 +159,7 @@ configure<ApplicationExtension> {
 
     sourceSets["main"].jniLibs.directories += "src/main/jniLibs"
 
+    // ========== 修改开始：签名配置 ==========
     signingConfigs {
         create("release") {
             // 安全读取环境变量（处理空字符串情况）
@@ -186,12 +187,11 @@ configure<ApplicationExtension> {
             }
         }
     }
+    // ========== 修改结束 ==========
 
-    // ========== 修改开始：buildTypes ==========
     buildTypes {
         debug {
-            // debug 构建不需要签名
-            signingConfig = null
+            signingConfig = signingConfigs.getByName("release")
         }
 
         release {
@@ -201,7 +201,6 @@ configure<ApplicationExtension> {
             proguardFiles(getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro")
         }
     }
-    // ========== 修改结束 ==========
 
     compileOptions {
         sourceCompatibility = JavaVersion.toVersion(libs.versions.jdk.get().toInt())
