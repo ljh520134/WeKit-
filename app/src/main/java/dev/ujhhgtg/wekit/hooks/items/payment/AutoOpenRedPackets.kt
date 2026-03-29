@@ -4,7 +4,6 @@ import android.annotation.SuppressLint
 import android.content.ContentValues
 import android.content.Context
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.Switch
@@ -24,7 +23,6 @@ import dev.ujhhgtg.wekit.dexkit.dsl.dexClass
 import dev.ujhhgtg.wekit.dexkit.dsl.dexMethod
 import dev.ujhhgtg.wekit.hooks.api.core.WeDatabaseApi
 import dev.ujhhgtg.wekit.hooks.api.core.WeDatabaseListenerApi
-import dev.ujhhgtg.wekit.hooks.api.core.WeMessageApi
 import dev.ujhhgtg.wekit.hooks.api.core.WeNetworkApi
 import dev.ujhhgtg.wekit.hooks.api.core.model.MessageType
 import dev.ujhhgtg.wekit.hooks.core.ClickableHookItem
@@ -199,6 +197,9 @@ object AutoOpenRedPackets : ClickableHookItem(), WeDatabaseListenerApi.IInsertLi
 
     private fun hookOpenReqEndCallback() {
         methodOnOpenGYNetEnd.hookAfter { param ->
+            val notifEnabled = WePrefs.getBoolOrFalse("red_packet_notification")
+            if (!notifEnabled) return@hookAfter
+
             val json = param.args[2] as? JSONObject ?: return@hookAfter
             val sendId = json.optString("sendId")
             if (sendId.isNullOrEmpty()) return@hookAfter
@@ -220,27 +221,7 @@ object AutoOpenRedPackets : ClickableHookItem(), WeDatabaseListenerApi.IInsertLi
             val displayName = WeDatabaseApi.getDisplayName(info.talker)
             val isGroup = info.talker.endsWith("@chatroom")
             val sourceLabel = if (isGroup) "群组" else "私聊"
-            
-            val notifEnabled = WePrefs.getBoolOrFalse("red_packet_notification")
-            if (notifEnabled) {
-                showToast("抢到来自${sourceLabel}中来自 '${displayName}' 的红包 ¥${displayAmount}")
-            }
-
-            // 自动回复逻辑
-            val autoReplyText = WePrefs.getStringOrDef("red_packet_auto_reply_content", "")
-            if (autoReplyText.isNotEmpty()) {
-                val finalReply = autoReplyText.replace("[amount]", displayAmount.toString())
-                Thread {
-                    try {
-                        // 延迟 1s-2s 发送回复，显得更自然
-                        Thread.sleep(Random.nextLong(1000, 2000))
-                        WeMessageApi.sendText(info.talker, finalReply)
-                        WeLogger.i(TAG, "sent auto reply to ${info.talker}: $finalReply")
-                    } catch (e: Throwable) {
-                        WeLogger.e(TAG, "failed to send auto reply", e)
-                    }
-                }.start()
-            }
+            showToast("抢到来自${sourceLabel}中来自 '${displayName}' 的红包 ¥${displayAmount}")
         }
     }
 
@@ -266,7 +247,6 @@ object AutoOpenRedPackets : ClickableHookItem(), WeDatabaseListenerApi.IInsertLi
             var self by remember { mutableStateOf(WePrefs.getBoolOrFalse("red_packet_self")) }
             var delayInput by remember { mutableStateOf(WePrefs.getStringOrDef("red_packet_delay_custom", "500")) }
             var useRandomDelay by remember { mutableStateOf(WePrefs.getBoolOrFalse("red_packet_delay_random")) }
-            var autoReplyContent by remember { mutableStateOf(WePrefs.getStringOrDef("red_packet_auto_reply_content", "")) }
 
             AlertDialogContent(
                 title = { Text("自动抢红包") },
@@ -287,81 +267,104 @@ object AutoOpenRedPackets : ClickableHookItem(), WeDatabaseListenerApi.IInsertLi
                         TextField(
                             value = delayInput,
                             onValueChange = { delayInput = it.take(5) },
-                            label = { Text("延迟毫秒数") },
+                            label = { Text("基础延迟 (毫秒)") },
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
-                            modifier = Modifier.fillMaxWidth()
+                            singleLine = true,
                         )
                         ListItem(
-                            headlineContent = { Text("随机延迟") },
-                            supportingContent = { Text("在上方延迟基础上上下浮动 300ms") },
+                            headlineContent = { Text("随机延时") },
+                            supportingContent = { Text("在基础延迟上增加 ±300ms 随机偏移, 防止风控") },
                             trailingContent = { Switch(checked = useRandomDelay, onCheckedChange = { useRandomDelay = it }) },
                             modifier = Modifier.clickable { useRandomDelay = !useRandomDelay }
-                        )
-                        TextField(
-                            value = autoReplyContent,
-                            onValueChange = { autoReplyContent = it },
-                            label = { Text("自动回复内容 (留空禁用)") },
-                            placeholder = { Text("例如：谢谢老板的 [amount] 元红包！") },
-                            modifier = Modifier.fillMaxWidth()
                         )
                     }
                 },
                 confirmButton = {
-                    TextButton(onClick = {
+                    Button(onClick = {
                         WePrefs.putBool("red_packet_notification", notification)
                         WePrefs.putBool("red_packet_self", self)
-                        WePrefs.putString("red_packet_delay_custom", delayInput)
                         WePrefs.putBool("red_packet_delay_random", useRandomDelay)
-                        WePrefs.putString("red_packet_auto_reply_content", autoReplyContent)
-                        showToast("配置已保存")
-                    }) {
-                        Text("保存")
-                    }
+                        WePrefs.putString("red_packet_delay_custom", delayInput.ifBlank { "500" })
+                        onDismiss()
+                    }) { Text("确定") }
                 },
-                dismissButton = {
-                    Button(onClick = { /* dismiss handled by showComposeDialog */ }) {
-                        Text("取消")
-                    }
-                }
+                dismissButton = { TextButton(onClick = onDismiss) { Text("取消") } }
             )
         }
     }
 
     override fun resolveDex(dexKit: DexKitBridge) {
-        classReceiveLuckyMoney.find(dexKit) {
+        // 查找接收红包类
+        classReceiveLuckyMoney.find(dexKit, allowMultiple = false) {
             matcher {
-                usingEqStrings(
-                    "MicroMsg.LuckyMoneyReceiveLogic",
-                    "CgiReceiveLuckyMoney",
-                    "/cgi-bin/mmpay-bin/receivewcreward"
+                methods {
+                    add {
+                        name = "<init>"
+                        usingStrings("MicroMsg.NetSceneReceiveLuckyMoney")
+                    }
+                }
+            }
+        }
+
+        // 查找开红包类
+        classOpenLuckyMoney.find(dexKit, allowMultiple = false) {
+            matcher {
+                methods {
+                    add {
+                        name = "<init>"
+                        usingStrings("MicroMsg.NetSceneOpenLuckyMoney")
+                    }
+                }
+            }
+        }
+
+        // 获取类描述符，添加空安全检查
+        val receiveClassDesc = classReceiveLuckyMoney.getDescriptorString()
+            ?: throw IllegalStateException("Failed to resolve ReceiveLuckyMoney class")
+        
+        val openClassDesc = classOpenLuckyMoney.getDescriptorString()
+            ?: throw IllegalStateException("Failed to resolve OpenLuckyMoney class")
+
+        WeLogger.i(TAG, "Resolved receive class: $receiveClassDesc")
+        WeLogger.i(TAG, "Resolved open class: $openClassDesc")
+
+        // 查找接收红包的 onGYNetEnd 回调
+        methodOnGYNetEnd.find(dexKit, false) {
+            matcher {
+                declaredClass = receiveClassDesc
+                name = "onGYNetEnd"
+                paramCount = 3
+            }
+        }
+
+        // 查找开红包的 onGYNetEnd 回调 - 修复：使用 openClassDesc 而不是 receiveClassDesc
+        methodOnOpenGYNetEnd.find(dexKit, false) {
+            matcher {
+                declaredClass = openClassDesc  // 修复：这里原来是 receiveClassDesc，改为 openClassDesc
+                name = "onGYNetEnd"
+                paramCount = 3
+            }
+        }
+    }
+
+    override fun onBeforeToggle(newState: Boolean, context: Context): Boolean {
+        if (newState) {
+            showComposeDialog(context) {
+                AlertDialogContent(
+                    title = { Text(text = "警告") },
+                    text = { Text(text = "此功能可能导致账号异常, 确定要启用吗?") },
+                    confirmButton = {
+                        Button(onClick = {
+                            applyToggle(true)
+                            onDismiss()
+                        }) { Text("确定") }
+                    },
+                    dismissButton = { TextButton(onDismiss) { Text("取消") } }
                 )
             }
+            return false
         }
 
-        classOpenLuckyMoney.find(dexKit) {
-            matcher {
-                usingEqStrings(
-                    "MicroMsg.LuckyMoneyOpenLogic",
-                    "CgiOpenLuckyMoney",
-                    "/cgi-bin/mmpay-bin/openwcreward"
-                )
-            }
-        }
-
-        methodOnGYNetEnd.find(dexKit) {
-            matcher {
-                declaredClass(classReceiveLuckyMoney.clazz)
-                paramCount(3)
-                usingStrings("MicroMsg.LuckyMoneyReceiveLogic", "onGYNetEnd")
-            }
-        }
-
-        methodOnOpenGYNetEnd.find(dexKit) {
-            matcher {
-                declaredClass(classOpenLuckyMoney.clazz)
-                paramCount(3)
-                usingStrings("MicroMsg.LuckyMoneyOpenLogic", "onGYNetEnd")
-            }
-        }
+        return true
     }
 }
