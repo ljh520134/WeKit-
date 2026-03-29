@@ -4,8 +4,6 @@ import android.annotation.SuppressLint
 import android.content.ContentValues
 import android.content.Context
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.ListItem
 import androidx.compose.material3.Switch
@@ -23,7 +21,6 @@ import dev.ujhhgtg.nameof.nameof
 import dev.ujhhgtg.wekit.dexkit.abc.IResolvesDex
 import dev.ujhhgtg.wekit.dexkit.dsl.dexClass
 import dev.ujhhgtg.wekit.dexkit.dsl.dexMethod
-import dev.ujhhgtg.wekit.hooks.api.core.WeChatApi
 import dev.ujhhgtg.wekit.hooks.api.core.WeDatabaseApi
 import dev.ujhhgtg.wekit.hooks.api.core.WeDatabaseListenerApi
 import dev.ujhhgtg.wekit.hooks.api.core.WeNetworkApi
@@ -200,6 +197,9 @@ object AutoOpenRedPackets : ClickableHookItem(), WeDatabaseListenerApi.IInsertLi
 
     private fun hookOpenReqEndCallback() {
         methodOnOpenGYNetEnd.hookAfter { param ->
+            val notifEnabled = WePrefs.getBoolOrFalse("red_packet_notification")
+            if (!notifEnabled) return@hookAfter
+
             val json = param.args[2] as? JSONObject ?: return@hookAfter
             val sendId = json.optString("sendId")
             if (sendId.isNullOrEmpty()) return@hookAfter
@@ -221,36 +221,7 @@ object AutoOpenRedPackets : ClickableHookItem(), WeDatabaseListenerApi.IInsertLi
             val displayName = WeDatabaseApi.getDisplayName(info.talker)
             val isGroup = info.talker.endsWith("@chatroom")
             val sourceLabel = if (isGroup) "群组" else "私聊"
-            
-            // 显示通知
-            val notifEnabled = WePrefs.getBoolOrFalse("red_packet_notification")
-            if (notifEnabled) {
-                showToast("抢到来自${sourceLabel}中来自 '${displayName}' 的红包 ¥${displayAmount}")
-            }
-
-            // 自动回复功能
-            val autoReplyEnabled = WePrefs.getBoolOrFalse("red_packet_auto_reply")
-            if (autoReplyEnabled) {
-                val replyTemplate = WePrefs.getStringOrDef(
-                    "red_packet_reply_text", 
-                    "谢谢老板的红包！[金额]元已收到~"
-                )
-                val replyText = replyTemplate.replace("[金额]", displayAmount.toString())
-                    .replace("[昵称]", info.nickName.takeIf { it.isNotEmpty() } ?: displayName)
-                    .replace("[群名]", if (isGroup) displayName else "私聊")
-                
-                // 添加随机延迟回复，避免被检测
-                val replyDelay = Random.nextLong(500, 2000)
-                Thread {
-                    try {
-                        Thread.sleep(replyDelay)
-                        WeChatApi.sendTextMessage(info.talker, replyText)
-                        WeLogger.i(TAG, "auto reply sent to ${info.talker}: $replyText")
-                    } catch (e: Throwable) {
-                        WeLogger.e(TAG, "failed to send auto reply", e)
-                    }
-                }.start()
-            }
+            showToast("抢到来自${sourceLabel}中来自 '${displayName}' 的红包 ¥${displayAmount}")
         }
     }
 
@@ -276,8 +247,6 @@ object AutoOpenRedPackets : ClickableHookItem(), WeDatabaseListenerApi.IInsertLi
             var self by remember { mutableStateOf(WePrefs.getBoolOrFalse("red_packet_self")) }
             var delayInput by remember { mutableStateOf(WePrefs.getStringOrDef("red_packet_delay_custom", "500")) }
             var useRandomDelay by remember { mutableStateOf(WePrefs.getBoolOrFalse("red_packet_delay_random")) }
-            var autoReply by remember { mutableStateOf(WePrefs.getBoolOrFalse("red_packet_auto_reply")) }
-            var replyText by remember { mutableStateOf(WePrefs.getStringOrDef("red_packet_reply_text", "谢谢老板的红包！[金额]元已收到~")) }
 
             AlertDialogContent(
                 title = { Text("自动抢红包") },
@@ -308,32 +277,6 @@ object AutoOpenRedPackets : ClickableHookItem(), WeDatabaseListenerApi.IInsertLi
                             trailingContent = { Switch(checked = useRandomDelay, onCheckedChange = { useRandomDelay = it }) },
                             modifier = Modifier.clickable { useRandomDelay = !useRandomDelay }
                         )
-                        
-                        // 自动回复设置
-                        ListItem(
-                            headlineContent = { Text("自动回复") },
-                            supportingContent = { Text("抢到红包后自动发送感谢消息") },
-                            trailingContent = { Switch(checked = autoReply, onCheckedChange = { autoReply = it }) },
-                            modifier = Modifier.clickable { autoReply = !autoReply }
-                        )
-                        
-                        if (autoReply) {
-                            Column(modifier = Modifier.fillMaxWidth()) {
-                                Text(
-                                    text = "回复模板 (可用变量: [金额], [昵称], [群名])",
-                                    style = androidx.compose.material3.MaterialTheme.typography.bodySmall,
-                                    modifier = Modifier.fillMaxWidth()
-                                )
-                                TextField(
-                                    value = replyText,
-                                    onValueChange = { replyText = it },
-                                    label = { Text("回复内容") },
-                                    singleLine = false,
-                                    maxLines = 3,
-                                    modifier = Modifier.fillMaxWidth()
-                                )
-                            }
-                        }
                     }
                 },
                 confirmButton = {
@@ -342,8 +285,6 @@ object AutoOpenRedPackets : ClickableHookItem(), WeDatabaseListenerApi.IInsertLi
                         WePrefs.putBool("red_packet_self", self)
                         WePrefs.putBool("red_packet_delay_random", useRandomDelay)
                         WePrefs.putString("red_packet_delay_custom", delayInput.ifBlank { "500" })
-                        WePrefs.putBool("red_packet_auto_reply", autoReply)
-                        WePrefs.putString("red_packet_reply_text", replyText.ifBlank { "谢谢老板的红包！[金额]元已收到~" })
                         onDismiss()
                     }) { Text("确定") }
                 },
