@@ -159,25 +159,35 @@ configure<ApplicationExtension> {
 
     sourceSets["main"].jniLibs.directories += "src/main/jniLibs"
 
+    // ========== 修改开始：签名配置 ==========
     signingConfigs {
         create("release") {
-            storeFile = file(
-                System.getenv("WEKIT_KEYSTORE_FILE")
-                    ?: project.property("WEKIT_KEYSTORE_FILE") as String
-            )
-            storePassword = System.getenv("WEKIT_KEYSTORE_PASSWORD")
-                ?: project.property("WEKIT_KEYSTORE_PASSWORD") as String
-            keyAlias = System.getenv("WEKIT_KEY_ALIAS")
-                ?: project.property("WEKIT_KEY_ALIAS") as String
-            keyPassword = System.getenv("WEKIT_KEY_PASSWORD")
-                ?: project.property("WEKIT_KEY_PASSWORD") as String
-
-            enableV1Signing = false
-            enableV2Signing = true
-            enableV3Signing = true
-            enableV4Signing = true
+            // 安全读取环境变量（处理空字符串情况）
+            val keystoreFile = System.getenv("WEKIT_KEYSTORE_FILE")?.takeIf { it.isNotBlank() }
+            
+            if (keystoreFile != null) {
+                // 有签名配置，使用正式签名
+                storeFile = file(keystoreFile)
+                storePassword = System.getenv("WEKIT_KEYSTORE_PASSWORD")?.takeIf { it.isNotBlank() } ?: ""
+                keyAlias = System.getenv("WEKIT_KEY_ALIAS")?.takeIf { it.isNotBlank() } ?: ""
+                keyPassword = System.getenv("WEKIT_KEY_PASSWORD")?.takeIf { it.isNotBlank() } ?: ""
+                
+                enableV1Signing = false
+                enableV2Signing = true
+                enableV3Signing = true
+                enableV4Signing = true
+            } else {
+                // 没有签名配置，使用 debug 签名
+                logger.lifecycle("No keystore configured, using debug signing")
+                val debugKeystore = File(System.getProperty("user.home"), ".android/debug.keystore")
+                storeFile = debugKeystore
+                storePassword = "android"
+                keyAlias = "androiddebugkey"
+                keyPassword = "android"
+            }
         }
     }
+    // ========== 修改结束 ==========
 
     buildTypes {
         debug {
