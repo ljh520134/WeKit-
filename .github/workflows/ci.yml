@@ -80,26 +80,26 @@ jobs:
         run: |
           sudo apt install -y gcc-multilib
 
-      - name: Decode keystore
-        if: env.KEYSTORE_BASE64 != ''
+      # 修复：统一处理密钥，无论有没有正式密钥都构建 Release
+      - name: Prepare keystore
         run: |
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > $RUNNER_TEMP/wekit-keystore.jks
+          if [ -n "$KEYSTORE_BASE64" ]; then
+            echo "Using release keystore"
+            echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > $RUNNER_TEMP/wekit-keystore.jks
+          else
+            echo "No release keystore, will use debug keystore"
+            mkdir -p ~/.android
+            keytool -genkey -v -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
+          fi
 
-      - name: Build Release (Signed)
-        if: env.KEYSTORE_BASE64 != '' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/master'
+      # 修复：统一使用 assembleRelease，体积更小且有签名
+      - name: Build Release APK
         env:
-          WEKIT_KEYSTORE_FILE: ${{ runner.temp }}/wekit-keystore.jks
+          WEKIT_KEYSTORE_FILE: ${{ env.KEYSTORE_BASE64 != '' && format('{0}/wekit-keystore.jks', runner.temp) || '' }}
           WEKIT_KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
           WEKIT_KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
           WEKIT_KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
         run: ./gradlew assembleRelease --warning-mode all --stacktrace
-
-      - name: Build Release (Unsigned/Debug)
-        if: env.KEYSTORE_BASE64 == '' && (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/master'
-        run: |
-          mkdir -p ~/.android
-          keytool -genkey -v -keystore ~/.android/debug.keystore -storepass android -alias androiddebugkey -keypass android -keyalg RSA -keysize 2048 -validity 10000 -dname "CN=Android Debug,O=Android,C=US"
-          ./gradlew assembleDebug --warning-mode all --stacktrace
 
       - name: Upload Release
         if: (github.event_name == 'push' || github.event_name == 'workflow_dispatch') && github.ref == 'refs/heads/master'
@@ -108,13 +108,12 @@ jobs:
           name: wekit-apk
           path: |
             app/build/outputs/apk/release/*.apk
-            app/build/outputs/apk/debug/*.apk
 
   upload-telegram:
     needs: build
     runs-on: ubuntu-latest
     if: success() && github.ref == 'refs/heads/master'
-    
+
     services:
       telegram-bot-api:
         image: aiogram/telegram-bot-api:latest
