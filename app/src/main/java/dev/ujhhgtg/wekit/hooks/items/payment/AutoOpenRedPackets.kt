@@ -370,3 +370,4 @@ object AutoOpenRedPackets : ClickableHookItem(), WeDatabaseListenerApi.IInsertLi
         }
     }
 }
+
