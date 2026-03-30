@@ -66,13 +66,13 @@ object AutoOpenRedPackets : ClickableHookItem(), WeDatabaseListenerApi.IInsertLi
         val nickName: String = ""
     )
 
-    fun onEnable() {
+    override fun onEnable() {
         WeDatabaseListenerApi.addListener(this)
         hookReceiveCallback()
         hookOpenReqEndCallback()
     }
 
-    fun onInsert(table: String, values: ContentValues) {
+    override fun onInsert(table: String, values: ContentValues) {
         if (table != "message") return
 
         val type = values.getAsInteger("type") ?: 0
@@ -109,7 +109,7 @@ object AutoOpenRedPackets : ClickableHookItem(), WeDatabaseListenerApi.IInsertLi
 
             WeLogger.i(TAG, "detected red packet (sendId=$sendId)")
 
-            currentRedPacketMap.put(sendId, RedPacketInfo(
+            currentRedPacketMap[sendId] = RedPacketInfo(
                 sendId = sendId,
                 nativeUrl = nativeUrl,
                 talker = talker,
@@ -117,7 +117,7 @@ object AutoOpenRedPackets : ClickableHookItem(), WeDatabaseListenerApi.IInsertLi
                 channelId = channelId,
                 headImg = headImg,
                 nickName = nickName
-            ))
+            )
 
             val isRandomDelay = WePrefs.getBoolOrFalse("red_packet_delay_random")
             val customDelay =
@@ -173,7 +173,7 @@ object AutoOpenRedPackets : ClickableHookItem(), WeDatabaseListenerApi.IInsertLi
 
             if (timingIdentifier.isNullOrEmpty() || sendId.isNullOrEmpty()) return@hookAfter
 
-            val info = currentRedPacketMap.get(sendId) ?: return@hookAfter
+            val info = currentRedPacketMap[sendId] ?: return@hookAfter
             WeLogger.i(
                 TAG,
                 "unpack request finished, sending open packet request ($sendId)"
@@ -226,7 +226,7 @@ object AutoOpenRedPackets : ClickableHookItem(), WeDatabaseListenerApi.IInsertLi
                 showToast("抢到来自${sourceLabel}中来自 '${displayName}' 的红包 ¥${displayAmount}")
             }
 
-            // 自动回复逻辑：确保在抢到红包后异步执行
+            // 自动回复逻辑
             val autoReplyText = WePrefs.getStringOrDef("red_packet_auto_reply_content", "")
             if (autoReplyText.isNotEmpty()) {
                 val finalReply = autoReplyText.replace("[amount]", displayAmount.toString())
@@ -258,14 +258,14 @@ object AutoOpenRedPackets : ClickableHookItem(), WeDatabaseListenerApi.IInsertLi
         return matchSimple?.groupValues?.get(1) ?: ""
     }
 
-    fun onDisable() {
+    override fun onDisable() {
         WeLogger.i(TAG, "unload() called, removing db listener")
         WeDatabaseListenerApi.removeListener(this)
         currentRedPacketMap.clear()
         WeLogger.i(TAG, "removed db listener and cleared red packet map")
     }
 
-    fun onClick(context: Context) {
+    override fun onClick(context: Context) {
         showComposeDialog(context) {
             var notification by remember { mutableStateOf(WePrefs.getBoolOrFalse("red_packet_notification")) }
             var self by remember { mutableStateOf(WePrefs.getBoolOrFalse("red_packet_self")) }
@@ -332,7 +332,7 @@ object AutoOpenRedPackets : ClickableHookItem(), WeDatabaseListenerApi.IInsertLi
         }
     }
 
-    fun resolveDex(dexKit: DexKitBridge) {
+    override fun resolveDex(dexKit: DexKitBridge) {
         classReceiveLuckyMoney.find(dexKit) {
             matcher {
                 usingEqStrings(
@@ -370,4 +370,3 @@ object AutoOpenRedPackets : ClickableHookItem(), WeDatabaseListenerApi.IInsertLi
         }
     }
 }
-
