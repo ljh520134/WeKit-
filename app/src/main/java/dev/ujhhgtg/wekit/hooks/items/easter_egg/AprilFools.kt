@@ -23,13 +23,13 @@ import java.time.Month
 import java.util.WeakHashMap
 
 
-@HookItem(path = "愚人节菜单", desc = "不显示于模块界面, 愚人节自动启用")
+@HookItem(path = "愚人节彩蛋", desc = "不显示于模块界面, 愚人节自动启用")
 object AprilFools : BaseHookItem() {
 
     const val KEY_SURRENDER = "april_fools_surrender"
 
-    override fun startup(process: Int) {
-        if (process != TargetProcesses.PROC_MAIN) return
+    override fun startup() {
+        if (!TargetProcesses.isInMain) return
 
         if (!LocalDate.now().isAprilFools) {
             WePrefs.putBool(KEY_SURRENDER, false)

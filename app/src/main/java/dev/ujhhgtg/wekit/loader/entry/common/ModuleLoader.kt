@@ -24,6 +24,6 @@ object ModuleLoader {
         isInitialized = true
 
         WeLogger.i(TAG, "loading in entry point ${loaderService.entryPointName}")
-        UnifiedEntryPoint.entry(loaderService, hostClassLoader, modulePath)
+        UnifiedEntryPoint.entry(loaderService, hookBridge, hostClassLoader, modulePath)
     }
 }

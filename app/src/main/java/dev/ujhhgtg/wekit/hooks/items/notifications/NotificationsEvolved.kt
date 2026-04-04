@@ -49,8 +49,8 @@ object NotificationsEvolved : SwitchHookItem() {
 
     private val TAG = nameOf(NotificationsEvolved)
 
-    override fun startup(process: Int) {
-        if (process != TargetProcesses.PROC_MAIN && process != TargetProcesses.PROC_PUSH) return
+    override fun startup() {
+        if (!TargetProcesses.isInMain && TargetProcesses.currentType != TargetProcesses.PROC_PUSH) return
         _isEnabled = WePrefs.getBoolOrFalse(path)
         if (_isEnabled) enable()
     }

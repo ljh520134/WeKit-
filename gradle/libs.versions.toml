@@ -43,8 +43,8 @@ dexmaker = "2.28.6"
 namespace = "dev.ujhhgtg.wekit"
 # noinspection UnusedVersionCatalogEntry
 minSdk = "29"
-# noinspection UnusedVersionCatalogEntry
-targetSdk = "37"
+# noinspection OldTargetApi,UnusedVersionCatalogEntry
+targetSdk = "36"
 # noinspection UnusedVersionCatalogEntry
 jdk = "21"
 # noinspection UnusedVersionCatalogEntry

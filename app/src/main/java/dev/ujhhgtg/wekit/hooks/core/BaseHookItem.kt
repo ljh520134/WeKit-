@@ -18,7 +18,7 @@ abstract class BaseHookItem {
 
     var description: String = ""
 
-    open fun startup(process: Int) {
+    open fun startup() {
         error("You shouldn't inherit BaseHookItem")
     }
 

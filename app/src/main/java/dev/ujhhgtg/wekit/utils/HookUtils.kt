@@ -1,6 +1,5 @@
 package dev.ujhhgtg.wekit.utils
 
-import com.highcapable.kavaref.KavaRef.Companion.asResolver
 import com.highcapable.kavaref.resolver.MethodResolver
 import de.robv.android.xposed.XC_MethodHook
 import de.robv.android.xposed.XposedBridge

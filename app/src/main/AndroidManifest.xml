@@ -27,7 +27,7 @@
         <activity-alias
             android:name=".activity.MainActivityAlias"
             android:exported="true"
-            android:icon="@drawable/wekit"
+            android:icon="@mipmap/ic_launcher"
             android:label="@string/app_name"
             android:targetActivity=".activity.MainActivity">
             <intent-filter>

@@ -54,7 +54,6 @@ import io.noties.markwon.core.spans.LastLineSpacingSpan
 import io.noties.markwon.ext.strikethrough.StrikethroughPlugin
 import io.noties.markwon.ext.tables.TablePlugin
 import io.noties.markwon.ext.tasklist.TaskListPlugin
-import io.noties.markwon.image.ImagesPlugin
 import org.commonmark.node.BlockQuote
 import org.commonmark.node.BulletList
 import org.commonmark.node.Heading
@@ -281,7 +280,6 @@ object MarkdownRendering : ClickableHookItem(), IResolvesDex {
             .usePlugin(StrikethroughPlugin.create())
             .usePlugin(TablePlugin.create {})
             .usePlugin(TaskListPlugin.create(context))
-            .usePlugin(ImagesPlugin.create())
             .build()
     }
 

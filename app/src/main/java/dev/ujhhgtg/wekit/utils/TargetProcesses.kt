@@ -4,7 +4,6 @@ import android.app.ActivityManager
 import android.content.Context
 import android.os.Process
 import dev.ujhhgtg.comptime.nameOf
-import dev.ujhhgtg.wekit.utils.WeLogger
 
 object TargetProcesses {
 
@@ -37,16 +36,29 @@ object TargetProcesses {
     const val PROC_MAGIC_EMOJI = 1 shl 26
     const val PROC_OTHERS = 1 shl 30
 
-    private var procType = 0
-    private var procName: String? = null
+    val isInMain get() = currentType == PROC_MAIN
 
-    fun getCurrentProcessType(): Int {
-        if (procType != 0) return procType
+    val currentName by lazy {
+        var retry = 0
+        do {
+            runCatching {
+                val ctx = HostInfo.application
+                val am = ctx.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
+                val myPid = Process.myPid()
 
-        val procName = getCurrentProcessName()
-        val parts = procName.split(":")
+                val name = am.runningAppProcesses?.find { it?.pid == myPid }?.processName
+                if (name != null) return@lazy name
+            }.onFailure { WeLogger.e(nameOf(TargetProcesses), "failed to get current process name", it) }
+            retry++
+        } while (retry < 3)
+        "unknown"
+    }
 
-        procType = if (parts.size == 1) {
+    val currentType by lazy {
+        val name = currentName
+        val parts = name.split(":")
+
+        if (parts.size == 1) {
             PROC_MAIN
         } else {
             when (val tail = parts.last()) {
@@ -81,33 +93,5 @@ object TargetProcesses {
                 }
             }
         }
-        return procType
-    }
-
-    @JvmStatic
-    fun isInMainProcess(): Boolean = getCurrentProcessType() == PROC_MAIN
-
-    fun getCurrentProcessName(): String {
-        procName?.let { return it }
-
-        var retry = 0
-        do {
-            try {
-                val ctx = HostInfo.application
-                val am = ctx.getSystemService(Context.ACTIVITY_SERVICE) as ActivityManager
-                val myPid = Process.myPid()
-                am.runningAppProcesses?.forEach { info ->
-                    if (info?.pid == myPid) {
-                        procName = info.processName
-                        return info.processName
-                    }
-                }
-            } catch (e: Throwable) {
-                WeLogger.e(nameOf(TargetProcesses), "getCurrentProcessName error $e")
-            }
-            retry++
-        } while (retry < 3)
-
-        return "unknown"
     }
 }

@@ -6,6 +6,7 @@ import android.app.Application
 import android.os.Build
 import com.highcapable.kavaref.extension.toClass
 import dev.ujhhgtg.comptime.nameOf
+import dev.ujhhgtg.wekit.loader.abc.IHookBridge
 import dev.ujhhgtg.wekit.loader.abc.ILoaderService
 import dev.ujhhgtg.wekit.loader.utils.LibXposedApiByteCodeGenerator
 import dev.ujhhgtg.wekit.loader.utils.NativeLoader
@@ -26,12 +27,14 @@ object StartupAgent {
     @OptIn(ExperimentalPathApi::class)
     fun startup(
         loaderService: ILoaderService,
+        hookBridge: IHookBridge?,
         modulePath: String
     ) {
         if (sInitialized) return
         sInitialized = true
 
         StartupInfo.loaderService = loaderService
+        StartupInfo.hookBridge = hookBridge
 
         ensureHiddenApiAccess()
         checkWriteXorExecuteForModulePath(modulePath)

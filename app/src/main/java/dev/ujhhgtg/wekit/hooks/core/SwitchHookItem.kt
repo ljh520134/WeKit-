@@ -8,8 +8,8 @@ import dev.ujhhgtg.wekit.utils.WeLogger
 
 abstract class SwitchHookItem : BaseHookItem() {
 
-    override fun startup(process: Int) {
-        if (process != TargetProcesses.PROC_MAIN) return
+    override fun startup() {
+        if (!TargetProcesses.isInMain) return
         _isEnabled = WePrefs.getBoolOrFalse(path)
         if (_isEnabled) enable()
     }

@@ -140,6 +140,12 @@ class MainSettingsDialog(context: Context) : BasePrefsDialog(context, BuildConfi
             summary = "输出高频日志 (这可能会暴露你的隐私信息）",
             icon = MaterialSymbols.Outlined.Frame_bug
         )
+        addSwitchPreference(
+            key = PreferenceKeys.SHOW_TOAST_ON_STARTUP_COMPLETE,
+            title = "显示加载完成 Toast",
+            summary = "全部功能加载完成后显示 Toast 提示",
+            icon = MaterialSymbols.Outlined.Notifications
+        )
 
         addCategory("兼容")
         addSwitchPreference(

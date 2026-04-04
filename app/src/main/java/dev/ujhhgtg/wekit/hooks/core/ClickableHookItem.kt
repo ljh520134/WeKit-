@@ -6,8 +6,8 @@ import dev.ujhhgtg.wekit.utils.TargetProcesses
 
 abstract class ClickableHookItem : SwitchHookItem() {
 
-    override fun startup(process: Int) {
-        if (process != TargetProcesses.PROC_MAIN) return
+    override fun startup() {
+        if (!TargetProcesses.isInMain) return
         _isEnabled = WePrefs.getBoolOrFalse(path)
         if (_isEnabled || alwaysRun) enable()
     }

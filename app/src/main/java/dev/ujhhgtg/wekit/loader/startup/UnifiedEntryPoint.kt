@@ -4,6 +4,7 @@ import android.app.Instrumentation
 import com.highcapable.kavaref.KavaRef.Companion.asResolver
 import com.highcapable.kavaref.extension.ClassLoaderProvider
 import dev.ujhhgtg.comptime.nameOf
+import dev.ujhhgtg.wekit.loader.abc.IHookBridge
 import dev.ujhhgtg.wekit.loader.abc.ILoaderService
 import dev.ujhhgtg.wekit.loader.utils.HybridClassLoader
 import dev.ujhhgtg.wekit.utils.WeLogger
@@ -15,6 +16,7 @@ object UnifiedEntryPoint {
 
     fun entry(
         loaderService: ILoaderService,
+        hookBridge: IHookBridge?,
         hostClassLoader: ClassLoader,
         modulePath: String
     ) {
@@ -41,6 +43,7 @@ object UnifiedEntryPoint {
                         runCatching {
                             StartupAgent.startup(
                                 loaderService,
+                                hookBridge,
                                 modulePath
                             )
                         }.onFailure { WeLogger.e(TAG, "StartupAgent failed", it) }

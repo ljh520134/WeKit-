@@ -11,6 +11,7 @@ import dev.ujhhgtg.wekit.dexkit.cache.DexCacheManager
 import dev.ujhhgtg.wekit.hooks.core.HookItemsLoader
 import dev.ujhhgtg.wekit.loader.utils.ActivityProxy
 import dev.ujhhgtg.wekit.loader.utils.ParcelableFixer
+import dev.ujhhgtg.wekit.utils.HostInfo
 import dev.ujhhgtg.wekit.utils.ModuleRes
 import dev.ujhhgtg.wekit.utils.RuntimeConfig
 import dev.ujhhgtg.wekit.utils.TargetProcesses
@@ -20,16 +21,14 @@ import dev.ujhhgtg.wekit.utils.hookAfterDirectly
 object WeLauncher {
 
     fun init(cl: ClassLoader, context: Context) {
-        val processType = TargetProcesses.getCurrentProcessType()
-        val currentProcessName = TargetProcesses.getCurrentProcessName()
-        WeLogger.d(TAG, "loading in processName=$currentProcessName, type=$processType")
+        WeLogger.d(TAG, "loading in process name=${TargetProcesses.currentName}, type=${TargetProcesses.currentType}")
 
         ParcelableFixer.init(cl, WeLauncher::class.java.classLoader!!)
 
         val pi = context.packageManager.getPackageInfo(context.packageName, 0)
         DexCacheManager.init(pi.versionName!!)
 
-        if (processType == TargetProcesses.PROC_MAIN) {
+        if (TargetProcesses.isInMain) {
             val appContext = context.applicationContext ?: context
             ActivityProxy.initForStubActivity(appContext)
 
@@ -37,7 +36,7 @@ object WeLauncher {
         }
 
         runCatching {
-            HookItemsLoader.loadHookItems(processType)
+            HookItemsLoader.loadHookItems(HostInfo.appInfo)
         }.onFailure { WeLogger.e(TAG, "failed to load hooks", it) }
     }
 
