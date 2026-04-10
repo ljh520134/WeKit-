@@ -77,8 +77,8 @@ markwon-ext-tasklist = { module = "io.noties.markwon:ext-tasklist", version.ref 
 markwon-html = { module = "io.noties.markwon:html", version.ref = "markwon" }
 osmdroid-android = { module = "org.osmdroid:osmdroid-android", version.ref = "osmdroid" }
 markwon-image = { module = "io.noties.markwon:image", version.ref = "markwon" }
-markwon-svg = { module = "io.noties.markwon:ext-svg", version.ref = "markwon" }
-markwon-gif = { module = "io.noties.markwon:image-gif", version.ref = "markwon" }
+markwon-svg = { module = "io.noties.markwon:ext-latex", version.ref = "markwon" }
+markwon-gif = { module = "io.noties.markwon:image", version.ref = "markwon" }
 
 kotlinx-serialization-json = { module = "org.jetbrains.kotlinx:kotlinx-serialization-json", version.ref = "serialization" }
 mmkv = { module = "com.tencent:mmkv", version.ref = "mmkv" }
