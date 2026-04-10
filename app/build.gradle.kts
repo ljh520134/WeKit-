@@ -1,4 +1,3 @@
-
 import com.android.build.api.dsl.ApplicationExtension
 import com.android.build.gradle.internal.cxx.configure.gradleLocalProperties
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
@@ -60,7 +59,8 @@ fun setCargoClang(androidHome: String) {
     val configToml = rootProject.file("app/src/main/rust/wekit-native/.cargo/config.toml")
 
     configToml.parentFile.mkdirs()
-    configToml.writeText("""
+    configToml.writeText(
+        """
         [target.aarch64-linux-android]
         ar = "$ndkBinDir/llvm-ar"
         linker = "$ndkBinDir/aarch64-linux-android${minSdk}-clang$ext"
@@ -93,7 +93,7 @@ fun setCargoClang(androidHome: String) {
         CC_i686-linux-android = "$ndkBinDir/i686-linux-android${minSdk}-clang$ext"
         CXX_i686-linux-android = "$ndkBinDir/i686-linux-android${minSdk}-clang++$ext"
         AR_i686-linux-android = "$ndkBinDir/llvm-ar"
-    """.trimIndent()
+        """.trimIndent()
     )
     logger.lifecycle("Written .cargo/config.toml to ${configToml.absolutePath}")
 }
@@ -143,7 +143,7 @@ configure<ApplicationExtension> {
         versionCode = commitCount
         versionName = "git+$gitHash"
 
-        buildConfigField("String", "GIT_HASH", "\"${gitHash}\"")
+        buildConfigField("String", "GIT_HASH", "\"$gitHash\"")
         buildConfigField("String", "TAG", "\"WeKit\"")
         buildConfigField("long", "BUILD_TIMESTAMP", "${System.currentTimeMillis()}L")
     }
@@ -186,7 +186,6 @@ configure<ApplicationExtension> {
     }
 
     buildTypes {
-        // 修复：debug 也使用签名配置，体积更小
         debug {
             signingConfig = signingConfigs.getByName("release")
             isDebuggable = true
@@ -219,7 +218,6 @@ configure<ApplicationExtension> {
             "META-INF/xposed/*",
             "org/mozilla/javascript/**"
         )
-
         jniLibs {
             useLegacyPackaging = false
         }
@@ -249,11 +247,7 @@ val adbProvider = androidComponents.sdkComponents.adb
 androidComponents {
     onVariants { variant ->
         val kotlinSources = variant.sources.kotlin ?: return@onVariants
-
-        kotlinSources.addGeneratedSourceDirectory(
-            generateMethodHashes,
-            GenerateMethodHashesTask::outputDir
-        )
+        kotlinSources.addGeneratedSourceDirectory(generateMethodHashes, GenerateMethodHashesTask::outputDir)
     }
 }
 
@@ -265,17 +259,13 @@ fun isHooksDirPresent(task: Task): Boolean {
 
 tasks.withType<KotlinCompile>().configureEach {
     if (name.contains("Release")) {
-        outputs.upToDateWhen { task ->
-            isHooksDirPresent(task)
-        }
+        outputs.upToDateWhen { task -> isHooksDirPresent(task) }
     }
 }
 
 tasks.withType<JavaCompile>().configureEach {
     if (name.contains("Release")) {
-        outputs.upToDateWhen { task ->
-            isHooksDirPresent(task)
-        }
+        outputs.upToDateWhen { task -> isHooksDirPresent(task) }
     }
 }
 
@@ -311,7 +301,8 @@ abstract class GenerateMethodHashesTask : DefaultTask() {
                         if (content[i] == '{') count++ else if (content[i] == '}') count--
                         if (count == 0) {
                             val body = content.substring(start, i + 1)
-                            val hash = MessageDigest.getInstance("MD5").digest(body.toByteArray()).joinToString("") { "%02x".format(it) }
+                            val hash = MessageDigest.getInstance("MD5").digest(body.toByteArray())
+                                .joinToString("") { "%02x".format(it) }
                             hashMap[fullClassName] = hash
                             break
                         }
@@ -328,7 +319,7 @@ abstract class GenerateMethodHashesTask : DefaultTask() {
                 private val hashes = mapOf(${hashMap.entries.sortedBy { it.key }.joinToString(",") { "\"${it.key}\" to \"${it.value}\"" }})
                 fun getHash(className: String) = hashes[className] ?: ""
             }
-        """.trimIndent()
+            """.trimIndent()
         )
     }
 }
@@ -350,7 +341,6 @@ val abiToTarget = mapOf(
     "x86" to "i686-linux-android"
 )
 
-// 全局变量存储 NDK 路径，供 cargo 任务使用
 val androidHome = gradleLocalProperties(rootDir, providers).getProperty("sdk.dir")
     ?: System.getenv("ANDROID_HOME")
     ?: error("ANDROID_HOME / sdk.dir not set")
@@ -362,26 +352,15 @@ val cargoTasks = listOf("arm64-v8a").map { abi ->
         group = "rust"
         description = "Compile Rust for $abi"
         workingDir = rustProjectDir
-        commandLine = listOf(
-            "cargo", "build",
-            "--release",
-            "--target", target,
-        )
+        commandLine = listOf("cargo", "build", "--release", "--target", target)
         doLast {
-            val soSrc = rustProjectDir
-                .resolve("target/$target/release/$rustLibName")
-            val soDir = layout.projectDirectory
-                .dir("src/main/jniLibs/$abi").asFile
+            val soSrc = rustProjectDir.resolve("target/$target/release/$rustLibName")
+            val soDir = layout.projectDirectory.dir("src/main/jniLibs/$abi").asFile
             soDir.mkdirs()
 
-            // 使用 NDK 中的 llvm-strip 完整路径
             val llvmStrip = "$androidHome/ndk/$ndkVer/toolchains/llvm/prebuilt/linux-x86_64/bin/llvm-strip"
-
             logger.lifecycle("Stripping $abi library with: $llvmStrip")
-            ProcessBuilder(llvmStrip, "--strip-all", soSrc.absolutePath)
-                .inheritIO()
-                .start()
-                .waitFor()
+            ProcessBuilder(llvmStrip, "--strip-all", soSrc.absolutePath).inheritIO().start().waitFor()
 
             soSrc.copyTo(soDir.resolve(rustLibName), overwrite = true)
             logger.lifecycle("Copied stripped library to: ${soDir.resolve(rustLibName).absolutePath}")
@@ -436,7 +415,6 @@ dependencies {
 
     implementation(libs.dalvik.dx)
     implementation(libs.okhttp3.okhttp)
-
     implementation(libs.rhino.android)
 
     compileOnly(libs.lombok)
@@ -450,6 +428,7 @@ dependencies {
     implementation(libs.markwon.image)
     implementation(libs.markwon.svg)
     implementation(libs.markwon.gif)
+
     implementation(libs.mcp.server)
     implementation(platform(libs.ktor.bom))
     implementation(libs.ktor.server.netty)
@@ -461,7 +440,7 @@ dependencies {
 
     implementation(libs.osmdroid.android)
 
-    implementation(project(":libs:external:nameof-kt:api"))
+    implementation(project(":libs:external:comptime-kt:api"))
     compileOnly(project(":libs:common:stubs"))
 }
 
@@ -469,9 +448,9 @@ configurations.all {
     exclude(group = "org.jetbrains", module = "annotations-java5")
 }
 
-evaluationDependsOn(":libs:external:nameof-kt:plugin")
+evaluationDependsOn(":libs:external:comptime-kt:plugin")
 tasks.withType<KotlinJvmCompile>().configureEach {
-    val pluginJarTask = project(":libs:external:nameof-kt:plugin").tasks.named<org.gradle.jvm.tasks.Jar>("jar")
+    val pluginJarTask = project(":libs:external:comptime-kt:plugin").tasks.named<org.gradle.jvm.tasks.Jar>("jar")
     dependsOn(pluginJarTask)
 
     compilerOptions {
