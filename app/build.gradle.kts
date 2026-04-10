@@ -447,9 +447,8 @@ dependencies {
     implementation(libs.markwon.ext.tasklist)
     implementation(libs.markwon.html)
     implementation(libs.markwon.image)
-    implementation(libs.svg)
-    implementation(libs.gif)
-
+    implementation(libs.markwon.svg)
+    implementation(libs.markwon.gif)
     implementation(libs.mcp.server)
     implementation(platform(libs.ktor.bom))
     implementation(libs.ktor.server.netty)
